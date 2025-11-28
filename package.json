@@ -20,6 +20,9 @@
     "frontend",
     "backend"
   ],
+  "overrides": {
+    "ws": "^8.18.0"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/YOUR_USERNAME/very-good-auctions.git"
