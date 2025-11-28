@@ -1,0 +1,26 @@
+{
+  "name": "very-good-auctions",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A modern auction platform hosted on Azure",
+  "scripts": {
+    "frontend:dev": "npm run dev --workspace=frontend",
+    "frontend:build": "npm run build --workspace=frontend",
+    "backend:dev": "npm run dev --workspace=backend",
+    "backend:build": "npm run build --workspace=backend",
+    "backend:start": "npm run start --workspace=backend",
+    "db:migrate": "npm run migrate --workspace=backend",
+    "test": "npm run test --workspaces",
+    "lint": "npm run lint --workspaces"
+  },
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/YOUR_USERNAME/very-good-auctions.git"
+  },
+  "author": "",
+  "license": "MIT"
+}

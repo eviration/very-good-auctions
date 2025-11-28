@@ -1,0 +1,37 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "environment": {
+      "value": "dev"
+    },
+    "location": {
+      "value": "westus2"
+    },
+    "baseName": {
+      "value": "vgauctions"
+    },
+    "sqlAdminLogin": {
+      "value": "sqladmin"
+    },
+    "sqlAdminPassword": {
+      "reference": {
+        "keyVault": {
+          "id": "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/<KEY_VAULT_RG>/providers/Microsoft.KeyVault/vaults/<KEY_VAULT_NAME>"
+        },
+        "secretName": "sql-admin-password-dev"
+      }
+    },
+    "entraTenantName": {
+      "value": "verygoodauctionsdev"
+    },
+    "stripeSecretKey": {
+      "reference": {
+        "keyVault": {
+          "id": "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/<KEY_VAULT_RG>/providers/Microsoft.KeyVault/vaults/<KEY_VAULT_NAME>"
+        },
+        "secretName": "stripe-secret-key-dev"
+      }
+    }
+  }
+}

@@ -1,0 +1,68 @@
+name: Database Migration
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'database/**'
+      - '.github/workflows/database-migrate.yml'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to run migrations on'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+
+env:
+  NODE_VERSION: '20.x'
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    name: Run Migrations
+    environment: ${{ github.event.inputs.environment || 'staging' }}
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: backend
+        run: npm ci
+
+      - name: Login to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Get Database Connection String
+        id: get-connection
+        run: |
+          CONNECTION_STRING=$(az sql db show-connection-string \
+            --server ${{ vars.SQL_SERVER_NAME }} \
+            --name ${{ vars.SQL_DATABASE_NAME }} \
+            --client ado.net \
+            --output tsv)
+          echo "connection_string=$CONNECTION_STRING" >> $GITHUB_OUTPUT
+
+      - name: Run Migrations
+        working-directory: backend
+        run: npm run migrate
+        env:
+          DB_CONNECTION_STRING: ${{ steps.get-connection.outputs.connection_string }}
+          DB_USER: ${{ secrets.SQL_ADMIN_USER }}
+          DB_PASSWORD: ${{ secrets.SQL_ADMIN_PASSWORD }}
+
+      - name: Logout from Azure
+        run: az logout
