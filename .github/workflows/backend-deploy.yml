@@ -19,7 +19,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     name: Lint and Test
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -29,9 +29,8 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - name: Install dependencies
-        working-directory: backend
-        run: npm install
+      - name: Install dependencies (monorepo)
+        run: npm ci
 
       - name: Run linter
         working-directory: backend
@@ -46,7 +45,7 @@ jobs:
     needs: test
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     name: Build and Deploy
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -56,19 +55,22 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - name: Install dependencies
-        working-directory: backend
-        run: npm install
+      - name: Install dependencies (monorepo)
+        run: npm ci
 
-      - name: Build
-        working-directory: backend
-        run: npm run build
+      - name: Build backend
+        run: npm run backend:build
 
-      - name: Install production dependencies only
-        working-directory: backend
+      - name: Prepare deployment package
         run: |
-          rm -rf node_modules
-          npm install --production
+          mkdir -p deploy
+          cp -r backend/dist deploy/
+          cp backend/package.json deploy/
+          cp backend/.deployment deploy/
+
+          # Install production dependencies for backend workspace
+          cd deploy
+          npm install --production --omit=dev
 
       - name: Login to Azure
         uses: azure/login@v1
@@ -79,7 +81,7 @@ jobs:
         uses: azure/webapps-deploy@v2
         with:
           app-name: ${{ env.AZURE_WEBAPP_NAME }}
-          package: backend
+          package: deploy
 
       - name: Logout from Azure
         run: az logout

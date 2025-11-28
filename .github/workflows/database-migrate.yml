@@ -1,5 +1,6 @@
 name: Database Migration
 
+
 on:
   push:
     branches: [main]
@@ -35,9 +36,8 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - name: Install dependencies
-        working-directory: backend
-        run: npm install
+      - name: Install dependencies (monorepo)
+        run: npm ci
 
       - name: Login to Azure
         uses: azure/login@v1
