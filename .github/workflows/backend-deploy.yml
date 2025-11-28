@@ -13,7 +13,7 @@ on:
 
 env:
   NODE_VERSION: '20.x'
-  AZURE_WEBAPP_NAME: vgauctions-api
+  AZURE_WEBAPP_NAME: app-vgauctions-api-dev
 
 jobs:
   test:
