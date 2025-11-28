@@ -25,7 +25,7 @@ router.get(
     try {
       const errors = validationResult(req)
       if (!errors.isEmpty()) {
-        throw badRequest('Validation failed', errors.mapped() as Record<string, string[]>)
+        throw badRequest('Validation failed', errors.mapped())
       }
 
       const page = parseInt(req.query.page as string) || 1
@@ -48,7 +48,7 @@ router.get(
         params.search = `%${search}%`
       }
 
-      const countResult = await dbQuery<{ total: number }>(
+      const countResult = await dbQuery(
         `SELECT COUNT(*) as total FROM auctions a 
          LEFT JOIN categories c ON a.category_id = c.id 
          ${whereClause}`,
@@ -218,7 +218,7 @@ router.post(
     try {
       const errors = validationResult(req)
       if (!errors.isEmpty()) {
-        throw badRequest('Validation failed', errors.mapped() as Record<string, string[]>)
+        throw badRequest('Validation failed', errors.mapped())
       }
 
       const userId = req.user!.id

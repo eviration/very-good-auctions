@@ -20,7 +20,7 @@ router.post(
     try {
       const errors = validationResult(req)
       if (!errors.isEmpty()) {
-        throw badRequest('Validation failed', errors.mapped() as Record<string, string[]>)
+        throw badRequest('Validation failed', errors.mapped())
       }
 
       const userId = req.user!.id
@@ -102,7 +102,7 @@ router.post(
     try {
       const errors = validationResult(req)
       if (!errors.isEmpty()) {
-        throw badRequest('Validation failed', errors.mapped() as Record<string, string[]>)
+        throw badRequest('Validation failed', errors.mapped())
       }
 
       const { paymentIntentId } = req.body

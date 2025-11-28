@@ -56,7 +56,12 @@ router.post(
           )
 
           if (paymentResult.recordset.length > 0) {
-            const payment = paymentResult.recordset[0]
+            const payment = paymentResult.recordset[0] as {
+              seller_id: string
+              amount: number
+              auction_id: string
+              auction_title: string
+            }
             
             // Notify seller
             await dbQuery(

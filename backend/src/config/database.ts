@@ -39,10 +39,19 @@ export async function getPool(): Promise<sql.ConnectionPool> {
   return pool
 }
 
-export async function query<T>(
+// Simplified query result type that avoids strict unknown typing
+export interface QueryResult {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  recordset: any[]
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  recordsets: any[][]
+  rowsAffected: number[]
+}
+
+export async function query(
   queryString: string,
   params?: Record<string, unknown>
-): Promise<sql.IResult<T>> {
+): Promise<QueryResult> {
   const pool = await getPool()
   const request = pool.request()
 
@@ -52,7 +61,12 @@ export async function query<T>(
     })
   }
 
-  return request.query(queryString)
+  const result = await request.query(queryString)
+  return {
+    recordset: result.recordset,
+    recordsets: result.recordsets as any[][],
+    rowsAffected: result.rowsAffected,
+  }
 }
 
 export { sql }

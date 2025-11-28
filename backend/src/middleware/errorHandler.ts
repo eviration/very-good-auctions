@@ -3,7 +3,8 @@ import { Request, Response, NextFunction } from 'express'
 export interface ApiError extends Error {
   statusCode?: number
   code?: string
-  details?: Record<string, unknown>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  details?: any
 }
 
 export function errorHandler(
@@ -35,7 +36,8 @@ export function createError(
   statusCode: number,
   message: string,
   code?: string,
-  details?: Record<string, unknown>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  details?: any
 ): ApiError {
   const error = new Error(message) as ApiError
   error.statusCode = statusCode
@@ -48,7 +50,8 @@ export function notFound(message: string = 'Resource not found'): ApiError {
   return createError(404, message, 'NOT_FOUND')
 }
 
-export function badRequest(message: string, details?: Record<string, unknown>): ApiError {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function badRequest(message: string, details?: any): ApiError {
   return createError(400, message, 'BAD_REQUEST', details)
 }
 
