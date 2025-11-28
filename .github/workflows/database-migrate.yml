@@ -47,9 +47,17 @@ jobs:
       - name: Get Database Connection String
         id: get-connection
         run: |
+          if [ -z "${{ vars.SQL_SERVER_NAME }}" ]; then
+            echo "Error: SQL_SERVER_NAME variable is not set for this environment"
+            exit 1
+          fi
+          if [ -z "${{ vars.SQL_DATABASE_NAME }}" ]; then
+            echo "Error: SQL_DATABASE_NAME variable is not set for this environment"
+            exit 1
+          fi
           CONNECTION_STRING=$(az sql db show-connection-string \
-            --server ${{ vars.SQL_SERVER_NAME }} \
-            --name ${{ vars.SQL_DATABASE_NAME }} \
+            --server "${{ vars.SQL_SERVER_NAME }}" \
+            --name "${{ vars.SQL_DATABASE_NAME }}" \
             --client ado.net \
             --output tsv)
           echo "connection_string=$CONNECTION_STRING" >> $GITHUB_OUTPUT
