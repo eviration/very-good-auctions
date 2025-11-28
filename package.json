@@ -22,5 +22,8 @@
     "url": "https://github.com/YOUR_USERNAME/very-good-auctions.git"
   },
   "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "express": "^5.1.0"
+  }
 }
