@@ -40,8 +40,8 @@ export function useAuth() {
       console.error('Token acquisition failed:', error)
       // If silent token acquisition fails, trigger interactive login
       try {
-        const response = await instance.acquireTokenRedirect(tokenRequest)
-        return response?.accessToken || null
+        await instance.acquireTokenRedirect(tokenRequest)
+        return null // Redirect doesn't return a value
       } catch (interactiveError) {
         console.error('Interactive token acquisition failed:', interactiveError)
         return null
