@@ -43,12 +43,12 @@ router.post(
       }
 
       // Get or create Stripe customer
-      let userResult = await dbQuery(
+      const userResult = await dbQuery(
         'SELECT stripe_customer_id FROM users WHERE id = @userId',
         { userId }
       )
 
-      let stripeCustomerId = userResult.recordset[0]?.stripe_customer_id
+      const stripeCustomerId = userResult.recordset[0]?.stripe_customer_id
 
       // Create payment intent with Stripe
       const paymentIntent = await createPaymentIntent({

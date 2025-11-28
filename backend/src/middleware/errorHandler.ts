@@ -3,14 +3,14 @@ import { Request, Response, NextFunction } from 'express'
 export interface ApiError extends Error {
   statusCode?: number
   code?: string
-  details?: Record<string, string[]>
+  details?: Record<string, unknown>
 }
 
 export function errorHandler(
   err: ApiError,
   req: Request,
   res: Response,
-  next: NextFunction
+  _next: NextFunction
 ): void {
   console.error('Error:', {
     message: err.message,
@@ -32,30 +32,30 @@ export function errorHandler(
 }
 
 export function createError(
+  statusCode: number,
   message: string,
-  statusCode: number = 500,
-  code?: string
+  code?: string,
+  details?: Record<string, unknown>
 ): ApiError {
   const error = new Error(message) as ApiError
   error.statusCode = statusCode
   error.code = code
-  return error
-}
-
-export function notFound(message: string = 'Resource not found'): ApiError {
-  return createError(message, 404, 'NOT_FOUND')
-}
-
-export function badRequest(message: string, details?: Record<string, string[]>): ApiError {
-  const error = createError(message, 400, 'BAD_REQUEST')
   error.details = details
   return error
 }
 
+export function notFound(message: string = 'Resource not found'): ApiError {
+  return createError(404, message, 'NOT_FOUND')
+}
+
+export function badRequest(message: string, details?: Record<string, unknown>): ApiError {
+  return createError(400, message, 'BAD_REQUEST', details)
+}
+
 export function unauthorized(message: string = 'Unauthorized'): ApiError {
-  return createError(message, 401, 'UNAUTHORIZED')
+  return createError(401, message, 'UNAUTHORIZED')
 }
 
 export function forbidden(message: string = 'Forbidden'): ApiError {
-  return createError(message, 403, 'FORBIDDEN')
+  return createError(403, message, 'FORBIDDEN')
 }
