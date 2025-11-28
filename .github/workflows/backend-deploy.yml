@@ -67,10 +67,11 @@ jobs:
           cp -r backend/dist deploy/
           cp backend/package.json deploy/
           cp backend/.deployment deploy/
+          cp package-lock.json deploy/
 
-          # Install production dependencies for backend workspace
-          cd deploy
-          npm install --production --omit=dev
+          # Copy node_modules from workspace (includes all dependencies)
+          # We'll use the monorepo's node_modules which has correct resolution
+          cp -r node_modules deploy/
 
       - name: Login to Azure
         uses: azure/login@v1
