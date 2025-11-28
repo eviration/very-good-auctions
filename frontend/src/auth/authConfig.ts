@@ -3,9 +3,9 @@ import { Configuration, LogLevel } from '@azure/msal-browser'
 // Microsoft Entra External ID configuration
 // This replaces the deprecated Azure AD B2C
 // Replace these values with your actual Entra External ID tenant details
-const tenantName = import.meta.env.VITE_ENTRA_TENANT_NAME || 'your-tenant'
-const tenantId = import.meta.env.VITE_ENTRA_TENANT_ID || 'your-tenant-id'
-const clientId = import.meta.env.VITE_ENTRA_CLIENT_ID || 'your-client-id'
+const tenantName = import.meta.env.VITE_AZURE_AD_TENANT_NAME || 'your-tenant'
+const tenantId = import.meta.env.VITE_AZURE_AD_TENANT_ID || 'your-tenant-id'
+const clientId = import.meta.env.VITE_AZURE_AD_CLIENT_ID || 'your-client-id'
 
 // Authority URL for Entra External ID (CIAM)
 // Format: https://{tenant-subdomain}.ciamlogin.com/{tenant-id}
