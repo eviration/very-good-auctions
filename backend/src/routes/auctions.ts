@@ -299,17 +299,22 @@ router.post(
       const { id } = req.params
       const userId = req.user!.id
 
+      console.log('Image upload request:', { auctionId: id, userId })
+
       // Verify ownership
       const auction = await dbQuery(
         'SELECT seller_id FROM auctions WHERE id = @id',
         { id }
       )
 
+      console.log('Auction lookup result:', auction.recordset)
+
       if (auction.recordset.length === 0) {
         throw notFound('Auction not found')
       }
 
       if (auction.recordset[0].seller_id !== userId) {
+        console.log('Ownership mismatch:', { sellerId: auction.recordset[0].seller_id, userId })
         throw badRequest('You can only upload images to your own auctions')
       }
 
@@ -317,12 +322,16 @@ router.post(
         throw badRequest('No image provided')
       }
 
+      console.log('Uploading image:', { filename: req.file.originalname, size: req.file.size })
+
       const blobUrl = await uploadImage(req.file.buffer, req.file.originalname, id)
+
+      console.log('Image uploaded to blob:', blobUrl)
 
       const imageId = uuidv4()
       await dbQuery(
         `INSERT INTO auction_images (id, auction_id, blob_url, display_order, is_primary, created_at)
-         VALUES (@imageId, @auctionId, @blobUrl, 
+         VALUES (@imageId, @auctionId, @blobUrl,
            (SELECT ISNULL(MAX(display_order), -1) + 1 FROM auction_images WHERE auction_id = @auctionId),
            CASE WHEN NOT EXISTS (SELECT 1 FROM auction_images WHERE auction_id = @auctionId) THEN 1 ELSE 0 END,
            GETUTCDATE())`,
@@ -331,6 +340,7 @@ router.post(
 
       res.status(201).json({ id: imageId, url: blobUrl })
     } catch (error) {
+      console.error('Image upload error:', error)
       next(error)
     }
   }

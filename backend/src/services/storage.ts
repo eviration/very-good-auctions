@@ -27,9 +27,11 @@ export async function uploadImage(
   originalFilename: string,
   auctionId: string
 ): Promise<string> {
+  console.log('Storage: Getting container client')
   const container = getContainerClient()
 
   // Ensure container exists
+  console.log('Storage: Ensuring container exists')
   await container.createIfNotExists({
     access: 'blob', // Public read access for blobs
   })
@@ -37,12 +39,13 @@ export async function uploadImage(
   // Generate unique filename
   const ext = path.extname(originalFilename).toLowerCase()
   const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp']
-  
+
   if (!allowedExtensions.includes(ext)) {
     throw new Error('Invalid file type. Allowed: jpg, jpeg, png, gif, webp')
   }
 
   const blobName = `${auctionId}/${uuidv4()}${ext}`
+  console.log('Storage: Uploading blob:', blobName)
   const blockBlobClient = container.getBlockBlobClient(blobName)
 
   // Determine content type
@@ -54,11 +57,17 @@ export async function uploadImage(
     '.webp': 'image/webp',
   }
 
-  await blockBlobClient.uploadData(buffer, {
-    blobHTTPHeaders: {
-      blobContentType: contentTypes[ext] || 'application/octet-stream',
-    },
-  })
+  try {
+    await blockBlobClient.uploadData(buffer, {
+      blobHTTPHeaders: {
+        blobContentType: contentTypes[ext] || 'application/octet-stream',
+      },
+    })
+    console.log('Storage: Upload successful')
+  } catch (error) {
+    console.error('Storage: Upload failed:', error)
+    throw error
+  }
 
   return blockBlobClient.url
 }
