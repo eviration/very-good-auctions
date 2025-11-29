@@ -58,6 +58,12 @@ export async function authenticate(
   const token = authHeader.substring(7)
 
   try {
+    // First decode without verification to log the token structure
+    const unverified = jwt.decode(token, { complete: true })
+    console.log('Token header:', JSON.stringify(unverified?.header))
+    console.log('Token payload (audience):', (unverified?.payload as any)?.aud)
+    console.log('Token payload (issuer):', (unverified?.payload as any)?.iss)
+
     const decoded = await new Promise<jwt.JwtPayload>((resolve, reject) => {
       jwt.verify(
         token,
@@ -71,7 +77,9 @@ export async function authenticate(
         },
         (err, decoded) => {
           if (err) {
-            console.error('Token verification error:', err)
+            console.error('Token verification error:', err.message)
+            console.error('Expected audience:', clientId)
+            console.error('Expected issuer:', `https://${tenantName}.ciamlogin.com/${tenantId}/v2.0`)
             reject(err)
           } else {
             resolve(decoded as jwt.JwtPayload)
