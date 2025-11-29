@@ -294,7 +294,7 @@ router.post(
   authenticate,
   param('id').isUUID(),
   upload.single('image'),
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: Request, res: Response, _next: NextFunction) => {
     try {
       const { id } = req.params
       const userId = req.user!.id
@@ -311,7 +311,8 @@ router.post(
 
       if (auction.recordset.length === 0) {
         console.log('Auction not found:', id)
-        throw notFound('Auction not found')
+        res.status(404).json({ error: 'Auction not found' })
+        return
       }
 
       const sellerId = auction.recordset[0].seller_id
@@ -319,12 +320,14 @@ router.post(
 
       if (sellerId !== userId) {
         console.log('Ownership mismatch:', { sellerId, userId })
-        throw badRequest('You can only upload images to your own auctions')
+        res.status(400).json({ error: 'You can only upload images to your own auctions' })
+        return
       }
 
       if (!req.file) {
         console.log('No file in request')
-        throw badRequest('No image provided')
+        res.status(400).json({ error: 'No image provided' })
+        return
       }
 
       console.log('Uploading image:', { filename: req.file.originalname, size: req.file.size })
