@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { apiClient } from '../services/api'
-import type { Auction } from '../types'
+import type { Category, AuctionCondition } from '../types'
 
 export default function CreateAuctionPage() {
   const navigate = useNavigate()
@@ -9,13 +9,20 @@ export default function CreateAuctionPage() {
   const [selectedImages, setSelectedImages] = useState<File[]>([])
   const [imagePreviews, setImagePreviews] = useState<string[]>([])
   const [error, setError] = useState<string | null>(null)
+  const [categories, setCategories] = useState<Category[]>([])
 
   // Form fields
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [startingPrice, setStartingPrice] = useState('')
   const [duration, setDuration] = useState('7')
-  const [category, setCategory] = useState('')
+  const [categoryId, setCategoryId] = useState('')
+  const [condition, setCondition] = useState<AuctionCondition>('good')
+  const [shippingInfo, setShippingInfo] = useState('')
+
+  useEffect(() => {
+    apiClient.getCategories().then(setCategories).catch(console.error)
+  }, [])
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
@@ -42,26 +49,23 @@ export default function CreateAuctionPage() {
     setIsSubmitting(true)
     setError(null)
 
-    try {
-      // Calculate end time based on duration
-      const endTime = new Date()
-      endTime.setDate(endTime.getDate() + parseInt(duration))
+    if (!categoryId) {
+      setError('Please select a category')
+      setIsSubmitting(false)
+      return
+    }
 
-      // Create the auction
-      const auctionData: Partial<Auction> = {
+    try {
+      // Create the auction with fields the backend expects
+      const auction = await apiClient.createAuction({
         title,
         description,
+        categoryId: parseInt(categoryId),
         startingPrice: parseFloat(startingPrice),
-        currentBid: parseFloat(startingPrice),
-        endTime: endTime.toISOString(),
-        status: 'active',
-      }
-
-      if (category) {
-        auctionData.categoryId = parseInt(category)
-      }
-
-      const auction = await apiClient.createAuction(auctionData)
+        condition,
+        durationDays: parseInt(duration),
+        shippingInfo: shippingInfo || undefined,
+      } as any)
 
       // Upload images if any
       if (selectedImages.length > 0) {
@@ -118,6 +122,39 @@ export default function CreateAuctionPage() {
 
         <div className="grid grid-cols-2 gap-4">
           <div>
+            <label className="block text-sm font-medium text-charcoal mb-2">Category</label>
+            <select
+              required
+              value={categoryId}
+              onChange={(e) => setCategoryId(e.target.value)}
+              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-sage focus:ring-0"
+            >
+              <option value="">Select a category</option>
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.id}>{cat.name}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-charcoal mb-2">Condition</label>
+            <select
+              value={condition}
+              onChange={(e) => setCondition(e.target.value as AuctionCondition)}
+              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-sage focus:ring-0"
+            >
+              <option value="new">New</option>
+              <option value="like-new">Like New</option>
+              <option value="excellent">Excellent</option>
+              <option value="very-good">Very Good</option>
+              <option value="good">Good</option>
+              <option value="fair">Fair</option>
+              <option value="poor">Poor</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
             <label className="block text-sm font-medium text-charcoal mb-2">Starting Price</label>
             <div className="relative">
               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">$</span>
@@ -146,6 +183,17 @@ export default function CreateAuctionPage() {
               <option value="10">10 days</option>
             </select>
           </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-charcoal mb-2">Shipping Information (optional)</label>
+          <textarea
+            rows={2}
+            value={shippingInfo}
+            onChange={(e) => setShippingInfo(e.target.value)}
+            className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-sage focus:ring-0"
+            placeholder="Shipping details, costs, restrictions..."
+          />
         </div>
 
         <div>
