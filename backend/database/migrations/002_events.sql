@@ -378,12 +378,23 @@ CREATE TABLE user_notifications (
     email_sent_at DATETIME2,
     facebook_sent_at DATETIME2,
 
-    created_at DATETIME2 DEFAULT GETUTCDATE(),
-
-    CONSTRAINT fk_notifications_user FOREIGN KEY (user_id) REFERENCES users(id),
-    CONSTRAINT fk_notifications_event FOREIGN KEY (event_id) REFERENCES auction_events(id) ON DELETE SET NULL,
-    CONSTRAINT fk_notifications_item FOREIGN KEY (item_id) REFERENCES event_items(id) ON DELETE SET NULL
+    created_at DATETIME2 DEFAULT GETUTCDATE()
 );
+
+GO
+
+-- Add FKs for user_notifications (separate for idempotency)
+IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE name = 'fk_notifications_user')
+    ALTER TABLE user_notifications ADD CONSTRAINT fk_notifications_user
+        FOREIGN KEY (user_id) REFERENCES users(id);
+
+IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE name = 'fk_notifications_event')
+    ALTER TABLE user_notifications ADD CONSTRAINT fk_notifications_event
+        FOREIGN KEY (event_id) REFERENCES auction_events(id) ON DELETE SET NULL;
+
+IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE name = 'fk_notifications_item')
+    ALTER TABLE user_notifications ADD CONSTRAINT fk_notifications_item
+        FOREIGN KEY (item_id) REFERENCES event_items(id) ON DELETE SET NULL;
 
 GO
 
