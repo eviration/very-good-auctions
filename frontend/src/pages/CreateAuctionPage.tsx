@@ -92,7 +92,7 @@ export default function CreateAuctionPage() {
 
     try {
       // Create the auction with fields the backend expects
-      const auction = await apiClient.createAuction({
+      const auctionPayload = {
         title,
         description,
         categoryId: parseInt(categoryId),
@@ -100,7 +100,10 @@ export default function CreateAuctionPage() {
         condition,
         durationDays: parseInt(duration),
         shippingInfo: shippingInfo || undefined,
-      } as any)
+      }
+
+      console.log('Creating auction with payload:', auctionPayload)
+      const auction = await apiClient.createAuction(auctionPayload as any)
 
       // Upload images if any
       if (selectedImages.length > 0) {
@@ -113,7 +116,14 @@ export default function CreateAuctionPage() {
       navigate(`/auctions/${auction.id}`)
     } catch (err) {
       console.error('Failed to create auction:', err)
-      setError(err instanceof Error ? err.message : 'Failed to create auction')
+      console.error('Error details:', JSON.stringify(err, null, 2))
+      let errorMessage = 'Failed to create auction'
+      if (err instanceof Error) {
+        errorMessage = err.message
+      } else if (typeof err === 'object' && err !== null) {
+        errorMessage = JSON.stringify(err)
+      }
+      setError(errorMessage)
       setIsSubmitting(false)
     }
   }

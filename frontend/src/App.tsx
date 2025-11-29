@@ -3,6 +3,8 @@ import { useEffect } from 'react'
 import { useMsal } from '@azure/msal-react'
 import { useAuthStore } from './hooks/useAuthStore'
 import { signalRService } from './services/signalr'
+import { apiClient } from './services/api'
+import { tokenRequest } from './auth/authConfig'
 
 // Layout
 import Header from './components/Header'
@@ -23,8 +25,28 @@ import { AuthCallback } from './auth/AuthCallback'
 import { ProtectedRoute } from './auth/ProtectedRoute'
 
 function App() {
-  const { accounts } = useMsal()
+  const { instance, accounts } = useMsal()
   const { setUser, clearUser } = useAuthStore()
+
+  // Configure API client with token provider
+  useEffect(() => {
+    apiClient.setTokenProvider(async () => {
+      if (accounts.length === 0) {
+        return null
+      }
+
+      try {
+        const response = await instance.acquireTokenSilent({
+          ...tokenRequest,
+          account: accounts[0],
+        })
+        return response.accessToken
+      } catch (error) {
+        console.error('Failed to acquire token:', error)
+        return null
+      }
+    })
+  }, [instance, accounts])
 
   useEffect(() => {
     if (accounts.length > 0) {
@@ -34,7 +56,7 @@ function App() {
         email: account.username,
         name: account.name || account.username,
       })
-      
+
       // Connect to SignalR for real-time updates
       signalRService.connect()
     } else {
