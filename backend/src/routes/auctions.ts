@@ -56,10 +56,12 @@ router.get(
       )
 
       const auctionsResult = await dbQuery(
-        `SELECT 
-          a.*,
-          c.id as category_id, c.name as category_name, c.slug as category_slug,
-          u.id as seller_id, u.display_name as seller_name
+        `SELECT
+          a.id, a.seller_id, a.category_id, a.title, a.description, a.condition,
+          a.starting_price, a.reserve_price, a.current_bid, a.bid_count,
+          a.start_time, a.end_time, a.status, a.shipping_info, a.created_at, a.updated_at,
+          c.name as category_name, c.slug as category_slug,
+          u.display_name as seller_name
          FROM auctions a
          LEFT JOIN categories c ON a.category_id = c.id
          LEFT JOIN users u ON a.seller_id = u.id
@@ -82,10 +84,10 @@ router.get(
             sellerId: auction.seller_id,
             seller: auction.seller_name ? { id: auction.seller_id, name: auction.seller_name } : null,
             categoryId: auction.category_id,
-            category: auction.category_name ? { 
-              id: auction.category_id, 
-              name: auction.category_name, 
-              slug: auction.category_slug 
+            category: auction.category_name ? {
+              id: auction.category_id,
+              name: auction.category_name,
+              slug: auction.category_slug
             } : null,
             title: auction.title,
             description: auction.description,
@@ -137,10 +139,12 @@ router.get(
       const { id } = req.params
 
       const result = await dbQuery(
-        `SELECT 
-          a.*,
-          c.id as category_id, c.name as category_name, c.slug as category_slug,
-          u.id as seller_id, u.display_name as seller_name, u.email as seller_email
+        `SELECT
+          a.id, a.seller_id, a.category_id, a.title, a.description, a.condition,
+          a.starting_price, a.reserve_price, a.current_bid, a.bid_count,
+          a.start_time, a.end_time, a.status, a.shipping_info, a.created_at, a.updated_at,
+          c.name as category_name, c.slug as category_slug,
+          u.display_name as seller_name, u.email as seller_email
          FROM auctions a
          LEFT JOIN categories c ON a.category_id = c.id
          LEFT JOIN users u ON a.seller_id = u.id
