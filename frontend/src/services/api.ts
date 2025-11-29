@@ -245,22 +245,6 @@ class ApiClient {
     })
   }
 
-  // Notifications
-  async getNotifications(): Promise<Notification[]> {
-    return this.request('/users/me/notifications')
-  }
-
-  async markNotificationRead(id: string): Promise<void> {
-    return this.request(`/users/me/notifications/${id}/read`, {
-      method: 'POST',
-    })
-  }
-
-  async markAllNotificationsRead(): Promise<void> {
-    return this.request('/users/me/notifications/read-all', {
-      method: 'POST',
-    })
-  }
 
   // Organizations
   async getOrganizations(params?: {
@@ -722,6 +706,49 @@ class ApiClient {
   }> {
     return this.request(`/platform-fees/event/${eventId}/complete`, {
       method: 'POST',
+    })
+  }
+
+  // =====================================================
+  // Notifications
+  // =====================================================
+
+  async getNotifications(options?: {
+    limit?: number
+    offset?: number
+    unreadOnly?: boolean
+  }): Promise<{
+    notifications: Notification[]
+    total: number
+    unreadCount: number
+  }> {
+    const params = new URLSearchParams()
+    if (options?.limit) params.append('limit', String(options.limit))
+    if (options?.offset) params.append('offset', String(options.offset))
+    if (options?.unreadOnly) params.append('unreadOnly', 'true')
+    const query = params.toString() ? `?${params.toString()}` : ''
+    return this.request(`/notifications${query}`)
+  }
+
+  async getUnreadNotificationCount(): Promise<{ unreadCount: number }> {
+    return this.request('/notifications/unread-count')
+  }
+
+  async markNotificationAsRead(notificationId: string): Promise<{ success: boolean }> {
+    return this.request(`/notifications/${notificationId}/read`, {
+      method: 'POST',
+    })
+  }
+
+  async markAllNotificationsAsRead(): Promise<{ success: boolean; markedRead: number }> {
+    return this.request('/notifications/read-all', {
+      method: 'POST',
+    })
+  }
+
+  async deleteNotification(notificationId: string): Promise<{ success: boolean }> {
+    return this.request(`/notifications/${notificationId}`, {
+      method: 'DELETE',
     })
   }
 }

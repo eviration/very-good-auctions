@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../auth/useAuth'
 import { useState } from 'react'
+import NotificationBell from './NotificationBell'
 
 export default function Header() {
   const { isAuthenticated, user, login, logout, isLoading } = useAuth()
@@ -75,7 +76,8 @@ export default function Header() {
             {isLoading ? (
               <div className="w-8 h-8 border-2 border-sage border-t-transparent rounded-full animate-spin" />
             ) : isAuthenticated && user ? (
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
+                <NotificationBell />
                 <Link
                   to="/profile"
                   className="flex items-center gap-2 px-3 py-2 bg-cream rounded-full border border-gray-200 hover:border-sage transition-colors"

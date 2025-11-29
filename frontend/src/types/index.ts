@@ -133,21 +133,25 @@ export interface CreatePaymentIntentResponse {
 // Notification types
 export interface Notification {
   id: string
-  userId: string
   type: NotificationType
   title: string
   message: string
-  data?: Record<string, unknown>
-  isRead: boolean
+  eventId: string | null
+  itemId: string | null
+  readAt: string | null
   createdAt: string
 }
 
-export type NotificationType = 
+export type NotificationType =
+  | 'item_approved'
+  | 'item_rejected'
+  | 'resubmit_requested'
+  | 'event_live'
   | 'outbid'
   | 'auction_won'
-  | 'auction_ending'
-  | 'payment_received'
-  | 'bid_placed'
+  | 'auction_lost'
+  | 'item_removed'
+  | 'bid_cancelled'
 
 // API response types
 export interface PaginatedResponse<T> {

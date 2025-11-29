@@ -1,6 +1,7 @@
 import Stripe from 'stripe'
 import { query as dbQuery } from '../config/database.js'
 import { v4 as uuidv4 } from 'uuid'
+import { notifyAuctionWon, notifyAuctionLost } from './notifications.js'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
   apiVersion: '2023-10-16',
@@ -189,6 +190,34 @@ export async function processEventCompletion(
        AND id NOT IN (SELECT item_id FROM event_item_bids UNION SELECT item_id FROM event_item_silent_bids)`,
     { eventId }
   )
+
+  // Send notifications to winners
+  for (const bid of winningBids) {
+    await notifyAuctionWon(bid.winnerId, bid.itemTitle, bid.winningAmount, eventId, bid.itemId)
+  }
+
+  // Send notifications to losers (bidders who didn't win)
+  // Get all bidders who bid on items but didn't win
+  const losersResult = await dbQuery(
+    `SELECT DISTINCT b.bidder_id, ei.title as item_title, ei.id as item_id
+     FROM (
+       SELECT item_id, bidder_id FROM event_item_bids WHERE item_id IN (
+         SELECT id FROM event_items WHERE event_id = @eventId AND status = 'won'
+       )
+       UNION
+       SELECT item_id, bidder_id FROM event_item_silent_bids WHERE item_id IN (
+         SELECT id FROM event_items WHERE event_id = @eventId AND status = 'won'
+       )
+     ) b
+     INNER JOIN event_items ei ON b.item_id = ei.id
+     WHERE b.bidder_id NOT IN (SELECT winner_id FROM event_items WHERE event_id = @eventId AND status = 'won' AND winner_id IS NOT NULL)
+       OR b.item_id NOT IN (SELECT id FROM event_items WHERE event_id = @eventId AND status = 'won' AND winner_id = b.bidder_id)`,
+    { eventId }
+  )
+
+  for (const loser of losersResult.recordset) {
+    await notifyAuctionLost(loser.bidder_id, loser.item_title, eventId, loser.item_id)
+  }
 
   return {
     eventId,

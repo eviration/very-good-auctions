@@ -5,6 +5,14 @@ import { authenticate, optionalAuth } from '../middleware/auth.js'
 import { query as dbQuery } from '../config/database.js'
 import { badRequest, notFound, forbidden } from '../middleware/errorHandler.js'
 import { uploadToBlob, deleteBlob } from '../services/storage.js'
+import {
+  notifyItemApproved,
+  notifyItemRejected,
+  notifyResubmitRequested,
+  notifyItemRemoved,
+  notifyBidCancelled,
+  notifyAllBiddersOnItem,
+} from '../services/notifications.js'
 import { v4 as uuidv4 } from 'uuid'
 
 const router = Router()
@@ -606,11 +614,6 @@ router.delete(
         throw forbidden('Only event admins can remove items')
       }
 
-      // If item has bids, we need to notify bidders
-      if (item.bid_count > 0) {
-        // TODO: Send notifications to all bidders that their bids have been cancelled
-      }
-
       // Update item status to removed
       await dbQuery(
         `UPDATE event_items SET
@@ -631,6 +634,17 @@ router.delete(
          WHERE id = @eventId`,
         { eventId: item.event_id }
       )
+
+      // Notify submitter that their item was removed
+      const removalReason = reason || 'No reason provided'
+      await notifyItemRemoved(item.submitted_by, item.title, removalReason, item.event_id, id)
+
+      // Notify all bidders that their bids have been cancelled
+      if (item.bid_count > 0) {
+        await notifyAllBiddersOnItem(id, (bidderId) =>
+          notifyBidCancelled(bidderId, item.title, item.event_id, id)
+        )
+      }
 
       res.json({ message: 'Item removed successfully' })
     } catch (error) {
@@ -704,7 +718,13 @@ router.post(
         { eventId: item.event_id }
       )
 
-      // TODO: Send notification to submitter
+      // Send notification to submitter
+      const eventResult = await dbQuery(
+        'SELECT name FROM auction_events WHERE id = @eventId',
+        { eventId: item.event_id }
+      )
+      const eventName = eventResult.recordset[0]?.name || 'the event'
+      await notifyItemApproved(item.submitted_by, item.title, eventName, item.event_id, id)
 
       res.json({ message: 'Item approved successfully' })
     } catch (error) {
@@ -770,7 +790,19 @@ router.post(
         }
       )
 
-      // TODO: Send notification to submitter
+      // Send notification to submitter
+      const eventResult = await dbQuery(
+        'SELECT name FROM auction_events WHERE id = @eventId',
+        { eventId: item.event_id }
+      )
+      const eventName = eventResult.recordset[0]?.name || 'the event'
+      const notificationReason = reason || 'No reason provided'
+
+      if (allowResubmit) {
+        await notifyResubmitRequested(item.submitted_by, item.title, eventName, notificationReason, item.event_id, id)
+      } else {
+        await notifyItemRejected(item.submitted_by, item.title, eventName, notificationReason, item.event_id, id)
+      }
 
       res.json({ message: allowResubmit ? 'Resubmission requested' : 'Item rejected' })
     } catch (error) {

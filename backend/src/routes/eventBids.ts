@@ -3,6 +3,7 @@ import { body, param, validationResult } from 'express-validator'
 import { authenticate, optionalAuth } from '../middleware/auth.js'
 import { query as dbQuery } from '../config/database.js'
 import { badRequest, notFound } from '../middleware/errorHandler.js'
+import { notifyOutbid } from '../services/notifications.js'
 
 const router = Router()
 
@@ -108,7 +109,13 @@ router.post(
         throw badRequest(`Minimum bid is $${minBid.toFixed(2)}`)
       }
 
-      // Start transaction
+      // Get previous high bidder before marking their bid as not winning
+      const previousBidResult = await dbQuery(
+        `SELECT bidder_id FROM event_item_bids WHERE item_id = @itemId AND is_winning = 1`,
+        { itemId: id }
+      )
+      const previousBidderId = previousBidResult.recordset[0]?.bidder_id
+
       // Mark previous winning bid as not winning
       await dbQuery(
         `UPDATE event_item_bids SET is_winning = 0 WHERE item_id = @itemId AND is_winning = 1`,
@@ -144,7 +151,11 @@ router.post(
         { eventId: item.event_id }
       )
 
-      // TODO: Notify previous high bidder that they've been outbid
+      // Notify previous high bidder that they've been outbid
+      if (previousBidderId && previousBidderId !== userId) {
+        await notifyOutbid(previousBidderId, item.title, amount, item.event_id, id)
+      }
+
       // TODO: Broadcast via SignalR for real-time updates
 
       // Calculate next minimum bid
