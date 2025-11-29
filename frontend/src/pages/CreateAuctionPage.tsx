@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { apiClient } from '../services/api'
-import type { Category, AuctionCondition } from '../types'
+import type { Category, AuctionCondition, Organization } from '../types'
 
 export default function CreateAuctionPage() {
   const navigate = useNavigate()
@@ -11,6 +11,14 @@ export default function CreateAuctionPage() {
   const [error, setError] = useState<string | null>(null)
   const [categories, setCategories] = useState<Category[]>([])
 
+  // Organization state
+  const [myOrganizations, setMyOrganizations] = useState<Organization[]>([])
+  const [organizationId, setOrganizationId] = useState<string>('')
+  const [showCreateOrg, setShowCreateOrg] = useState(false)
+  const [newOrgName, setNewOrgName] = useState('')
+  const [newOrgEmail, setNewOrgEmail] = useState('')
+  const [creatingOrg, setCreatingOrg] = useState(false)
+
   // Form fields
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
@@ -19,6 +27,13 @@ export default function CreateAuctionPage() {
   const [categoryId, setCategoryId] = useState('')
   const [condition, setCondition] = useState<AuctionCondition>('good')
   const [shippingInfo, setShippingInfo] = useState('')
+
+  // Fetch user's organizations
+  useEffect(() => {
+    apiClient.getMyOrganizations()
+      .then(orgs => setMyOrganizations(orgs))
+      .catch(() => setMyOrganizations([]))
+  }, [])
 
   useEffect(() => {
     // Try to fetch categories from API, fall back to defaults
@@ -79,6 +94,33 @@ export default function CreateAuctionPage() {
     setImagePreviews(newPreviews)
   }
 
+  const handleCreateOrganization = async () => {
+    if (!newOrgName.trim() || !newOrgEmail.trim()) {
+      setError('Organization name and email are required')
+      return
+    }
+
+    setCreatingOrg(true)
+    setError(null)
+
+    try {
+      const org = await apiClient.createOrganization({
+        name: newOrgName,
+        contactEmail: newOrgEmail,
+        orgType: 'nonprofit',
+      })
+      setMyOrganizations([...myOrganizations, org])
+      setOrganizationId(org.id.toString())
+      setShowCreateOrg(false)
+      setNewOrgName('')
+      setNewOrgEmail('')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create organization')
+    } finally {
+      setCreatingOrg(false)
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
@@ -100,6 +142,7 @@ export default function CreateAuctionPage() {
         condition,
         durationDays: parseInt(duration),
         shippingInfo: shippingInfo || undefined,
+        organizationId: organizationId ? parseInt(organizationId) : undefined,
       }
 
       console.log('Creating auction with payload:', auctionPayload)
@@ -163,6 +206,83 @@ export default function CreateAuctionPage() {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Organization Selection (Optional) */}
+        <div className="bg-sage/5 border border-sage/20 rounded-xl p-4">
+          <label className="block text-sm font-medium text-charcoal mb-2">
+            Fundraiser Organization (Optional)
+          </label>
+          <p className="text-sm text-gray-500 mb-3">
+            Link this auction to an organization to run it as a fundraiser
+          </p>
+
+          {!showCreateOrg ? (
+            <div className="space-y-3">
+              <select
+                value={organizationId}
+                onChange={(e) => setOrganizationId(e.target.value)}
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-sage focus:ring-0 bg-white"
+              >
+                <option value="">Personal auction (no organization)</option>
+                {myOrganizations.map((org) => (
+                  <option key={org.id} value={org.id}>{org.name}</option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={() => setShowCreateOrg(true)}
+                className="text-sage text-sm font-medium hover:text-sage-dark"
+              >
+                + Create a new organization
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-3 bg-white p-4 rounded-lg border border-gray-200">
+              <h4 className="font-medium text-charcoal">Create New Organization</h4>
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">Organization Name</label>
+                <input
+                  type="text"
+                  value={newOrgName}
+                  onChange={(e) => setNewOrgName(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:border-sage focus:ring-0"
+                  placeholder="e.g., Springfield Animal Shelter"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">Contact Email</label>
+                <input
+                  type="email"
+                  value={newOrgEmail}
+                  onChange={(e) => setNewOrgEmail(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:border-sage focus:ring-0"
+                  placeholder="contact@organization.org"
+                />
+              </div>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={handleCreateOrganization}
+                  disabled={creatingOrg}
+                  className="px-4 py-2 bg-sage text-white rounded-lg hover:bg-sage-dark disabled:opacity-50"
+                >
+                  {creatingOrg ? 'Creating...' : 'Create'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowCreateOrg(false)
+                    setNewOrgName('')
+                    setNewOrgEmail('')
+                  }}
+                  className="px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
         <div>
           <label className="block text-sm font-medium text-charcoal mb-2">
             Title <span className="text-red-500">*</span>
