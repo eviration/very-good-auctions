@@ -1,3 +1,6 @@
+/* Nunito Font Import - Bubbly, friendly claymorphism font */
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -9,42 +12,98 @@ html {
 }
 
 body {
-  font-family: 'Source Sans 3', system-ui, sans-serif;
+  font-family: 'Nunito', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  @apply bg-clay-bg;
 }
 
 /* Accessibility focus states */
 :focus-visible {
-  @apply outline-none ring-2 ring-sage ring-offset-2;
+  @apply outline-none ring-2 ring-clay-mint ring-offset-2 ring-offset-clay-bg;
 }
 
 /* Skip link */
 .skip-link {
-  @apply absolute -top-full left-1/2 -translate-x-1/2 bg-sage text-white 
-         px-4 py-2 rounded-lg font-semibold z-[10000] transition-all;
+  @apply absolute -top-full left-1/2 -translate-x-1/2 bg-clay-mint text-charcoal
+         px-4 py-2 rounded-clay font-bold z-[10000] transition-all shadow-clay;
 }
 
 .skip-link:focus {
   @apply top-4;
 }
 
-/* Custom scrollbar */
+/* Custom scrollbar - Clay style */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 12px;
+  height: 12px;
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-gray-100;
+  @apply bg-clay-bg rounded-full;
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-gray-300 rounded-full;
+  @apply bg-clay-mint rounded-full;
+  box-shadow: inset 2px 2px 4px rgba(255, 255, 255, 0.5), inset -2px -2px 4px rgba(0, 0, 0, 0.1);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-gray-400;
+  @apply bg-clay-peach;
+}
+
+/* Claymorphism Component Classes */
+@layer components {
+  .clay-card {
+    @apply bg-clay-surface rounded-clay-lg shadow-clay transition-all duration-300;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+  }
+
+  .clay-card:hover {
+    @apply shadow-clay-lg;
+    transform: translateY(-4px);
+  }
+
+  .clay-button {
+    @apply bg-clay-mint text-charcoal font-bold px-6 py-3 rounded-clay-pill shadow-clay-sm
+           transition-all duration-200 active:shadow-clay-pressed active:scale-[0.98];
+    border: 2px solid rgba(255, 255, 255, 0.6);
+  }
+
+  .clay-button:hover {
+    @apply shadow-clay;
+    transform: translateY(-2px);
+  }
+
+  .clay-button-coral {
+    @apply bg-clay-coral;
+  }
+
+  .clay-button-lavender {
+    @apply bg-clay-lavender;
+  }
+
+  .clay-button-peach {
+    @apply bg-clay-peach;
+  }
+
+  .clay-input {
+    @apply bg-clay-surface rounded-clay px-6 py-4 text-charcoal
+           shadow-clay-pressed transition-all duration-200
+           focus:shadow-clay focus:bg-white;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+  }
+
+  .clay-badge {
+    @apply inline-flex items-center gap-1.5 px-4 py-2 rounded-clay-pill font-bold text-sm
+           shadow-clay-sm;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+  }
+
+  .clay-section {
+    @apply bg-clay-surface rounded-clay-xl shadow-clay p-8;
+    border: 3px solid rgba(255, 255, 255, 0.6);
+  }
 }
 
 /* Utility classes */
@@ -60,3 +119,12 @@ body {
 .animation-delay-300 { animation-delay: 300ms; }
 .animation-delay-400 { animation-delay: 400ms; }
 .animation-delay-500 { animation-delay: 500ms; }
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

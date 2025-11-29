@@ -22,11 +22,10 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
   return (
     <Link
       to={`/auctions/${auction.id}`}
-      className="group bg-warm-white rounded-2xl overflow-hidden shadow-sm border border-gray-200 
-                 hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
+      className="group clay-card block overflow-hidden"
     >
-      {/* Image */}
-      <div className="relative aspect-[4/3] overflow-hidden">
+      {/* Image Container */}
+      <div className="relative aspect-[4/3] overflow-hidden rounded-t-clay-lg">
         {primaryImage ? (
           <img
             src={primaryImage.blobUrl}
@@ -34,59 +33,61 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
         ) : (
-          <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-            <svg className="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
+          <div className="w-full h-full bg-gradient-to-br from-clay-mint/40 via-clay-peach/30 to-clay-lavender/40 flex items-center justify-center">
+            <div className="w-16 h-16 bg-clay-surface rounded-full flex items-center justify-center shadow-clay-sm">
+              <svg className="w-8 h-8 text-charcoal-light" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </div>
           </div>
         )}
 
-        {/* Time Badge */}
+        {/* Time Badge - Clay Style */}
         <div
-          className={`absolute top-3 right-3 px-3 py-1.5 rounded-full text-sm font-semibold 
-                      flex items-center gap-1.5 backdrop-blur-sm ${
-                        countdown.isExpired
-                          ? 'bg-gray-800/90 text-white'
-                          : countdown.isUrgent
-                          ? 'bg-terracotta text-white'
-                          : 'bg-charcoal/80 text-white'
-                      }`}
+          className={`absolute top-4 right-4 clay-badge ${
+            countdown.isExpired
+              ? 'bg-charcoal text-white'
+              : countdown.isUrgent
+              ? 'bg-clay-coral text-charcoal'
+              : 'bg-clay-butter text-charcoal'
+          }`}
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          {countdown.formatted}
+          <span className="font-bold">{countdown.formatted}</span>
         </div>
 
-        {/* Category Badge */}
+        {/* Category Badge - Clay Style */}
         {auction.category && (
-          <div className="absolute bottom-3 left-3 px-3 py-1 bg-sage text-white text-sm font-medium rounded-full">
+          <div className="absolute bottom-4 left-4 clay-badge bg-clay-mint text-charcoal">
             {auction.category.name}
           </div>
         )}
       </div>
 
       {/* Content */}
-      <div className="p-5">
-        <h3 className="font-display text-xl font-semibold text-charcoal mb-2 line-clamp-1 group-hover:text-sage transition-colors">
+      <div className="p-6">
+        <h3 className="font-display text-xl font-bold text-charcoal mb-2 line-clamp-1 group-hover:text-clay-coral transition-colors">
           {auction.title}
         </h3>
 
-        <p className="text-gray-600 text-sm line-clamp-2 mb-4 leading-relaxed">
+        <p className="text-charcoal-light text-sm line-clamp-2 mb-5 leading-relaxed font-medium">
           {auction.description}
         </p>
 
-        <div className="flex items-end justify-between pt-3 border-t border-gray-100">
+        {/* Price Section - Clay Divider */}
+        <div className="flex items-end justify-between pt-4 border-t-2 border-clay-mint/30">
           <div>
-            <p className="text-xs text-gray-500 mb-0.5">Current Bid</p>
-            <p className="font-display text-2xl font-bold text-sage-dark">
+            <p className="text-xs text-charcoal-light mb-1 font-semibold uppercase tracking-wide">Current Bid</p>
+            <p className="font-display text-2xl font-black text-charcoal">
               {formatCurrency(auction.currentBid || auction.startingPrice)}
             </p>
           </div>
-          <div className="text-right">
-            <p className="text-sm text-charcoal font-medium">
+          <div className="clay-badge bg-clay-lavender">
+            <span className="font-bold text-charcoal">
               {auction.bidCount} bid{auction.bidCount !== 1 ? 's' : ''}
-            </p>
+            </span>
           </div>
         </div>
       </div>
