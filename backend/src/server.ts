@@ -8,6 +8,8 @@ import { userRoutes } from './routes/users.js'
 import { paymentRoutes } from './routes/payments.js'
 import { categoryRoutes } from './routes/categories.js'
 import { webhookRoutes } from './routes/webhooks.js'
+import { organizationRoutes } from './routes/organizations.js'
+import { invitationRoutes } from './routes/invitations.js'
 import { errorHandler } from './middleware/errorHandler.js'
 import { requestLogger } from './middleware/requestLogger.js'
 import { initializeDatabase } from './config/database.js'
@@ -47,6 +49,8 @@ app.use('/api/users', userRoutes)
 app.use('/api/payments', paymentRoutes)
 app.use('/api/categories', categoryRoutes)
 app.use('/api/webhooks', webhookRoutes)
+app.use('/api/organizations', organizationRoutes)
+app.use('/api/invitations', invitationRoutes)
 
 // Error handling
 app.use(errorHandler)

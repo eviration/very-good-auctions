@@ -19,6 +19,11 @@ import MyAuctionsPage from './pages/MyAuctionsPage'
 import ProfilePage from './pages/ProfilePage'
 import HowItWorksPage from './pages/HowItWorksPage'
 import NotFoundPage from './pages/NotFoundPage'
+import OrganizationsPage from './pages/OrganizationsPage'
+import CreateOrganizationPage from './pages/CreateOrganizationPage'
+import OrganizationDetailPage from './pages/OrganizationDetailPage'
+import OrganizationDashboardPage from './pages/OrganizationDashboardPage'
+import InvitationAcceptPage from './pages/InvitationAcceptPage'
 
 // Auth
 import { AuthCallback } from './auth/AuthCallback'
@@ -82,6 +87,9 @@ function App() {
           <Route path="/auctions/:id" element={<AuctionDetailPage />} />
           <Route path="/how-it-works" element={<HowItWorksPage />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
+          <Route path="/organizations" element={<OrganizationsPage />} />
+          <Route path="/organizations/:slug" element={<OrganizationDetailPage />} />
+          <Route path="/invitations/:token" element={<InvitationAcceptPage />} />
           
           {/* Protected routes */}
           <Route path="/auctions/create" element={
@@ -104,7 +112,17 @@ function App() {
               <ProfilePage />
             </ProtectedRoute>
           } />
-          
+          <Route path="/organizations/new" element={
+            <ProtectedRoute>
+              <CreateOrganizationPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/organizations/:slug/manage" element={
+            <ProtectedRoute>
+              <OrganizationDashboardPage />
+            </ProtectedRoute>
+          } />
+
           {/* 404 */}
           <Route path="*" element={<NotFoundPage />} />
         </Routes>

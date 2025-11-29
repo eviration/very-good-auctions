@@ -11,6 +11,7 @@ export default function Header() {
 
   const navLinks = [
     { path: '/', label: 'Browse Auctions' },
+    { path: '/organizations', label: 'Organizations' },
     { path: '/how-it-works', label: 'How It Works' },
     ...(isAuthenticated
       ? [

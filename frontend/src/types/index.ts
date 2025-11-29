@@ -181,3 +181,97 @@ export interface AuctionEndedEvent {
   winnerName?: string
   finalBid: number
 }
+
+// Organization types
+export interface Organization {
+  id: string
+  name: string
+  slug: string
+  description?: string
+  logoUrl?: string
+  websiteUrl?: string
+  orgType: OrganizationType
+  status: OrganizationStatus
+  isFeatured: boolean
+  memberCount?: number
+  contactEmail?: string
+  contactPhone?: string
+  taxId?: string
+  address?: Address
+  stripeOnboardingComplete?: boolean
+  stripeChargesEnabled?: boolean
+  stripePayoutsEnabled?: boolean
+  membership?: OrganizationMembership
+  createdAt: string
+}
+
+export type OrganizationType =
+  | 'nonprofit'
+  | 'school'
+  | 'religious'
+  | 'club'
+  | 'company'
+  | 'other'
+
+export type OrganizationStatus =
+  | 'pending'
+  | 'unverified'
+  | 'verified'
+  | 'suspended'
+
+export interface OrganizationMembership {
+  role: OrganizationRole
+  canCreateAuctions: boolean
+  canManageMembers: boolean
+  canViewFinancials: boolean
+}
+
+export type OrganizationRole = 'owner' | 'admin' | 'member'
+
+export interface OrganizationMember {
+  id: string
+  userId: string
+  email: string
+  displayName: string
+  role: OrganizationRole
+  canCreateAuctions: boolean
+  canManageMembers: boolean
+  canViewFinancials: boolean
+  joinedAt: string
+}
+
+export interface OrganizationInvitation {
+  id: string
+  email: string
+  role: OrganizationRole
+  token?: string
+  organization?: {
+    name: string
+    slug: string
+    logoUrl?: string
+  }
+  inviterName?: string
+  status: 'pending' | 'accepted' | 'declined' | 'expired'
+  expiresAt: string
+  createdAt: string
+}
+
+export interface CreateOrganizationRequest {
+  name: string
+  description?: string
+  orgType: OrganizationType
+  contactEmail: string
+  contactPhone?: string
+  websiteUrl?: string
+  taxId?: string
+  address?: Address
+}
+
+export interface UpdateOrganizationRequest {
+  name?: string
+  description?: string
+  contactEmail?: string
+  contactPhone?: string
+  websiteUrl?: string
+  address?: Address
+}

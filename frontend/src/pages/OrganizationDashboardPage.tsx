@@ -1,0 +1,516 @@
+import { useState, useEffect } from 'react'
+import { useParams, Link, useNavigate } from 'react-router-dom'
+import { apiClient } from '../services/api'
+import type { Organization, OrganizationMember, OrganizationInvitation, UpdateOrganizationRequest } from '../types'
+
+export default function OrganizationDashboardPage() {
+  const { slug } = useParams<{ slug: string }>()
+  const navigate = useNavigate()
+
+  const [organization, setOrganization] = useState<Organization | null>(null)
+  const [members, setMembers] = useState<OrganizationMember[]>([])
+  const [invitations, setInvitations] = useState<OrganizationInvitation[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const [activeTab, setActiveTab] = useState<'overview' | 'members' | 'settings'>('overview')
+  const [showInviteModal, setShowInviteModal] = useState(false)
+  const [inviteEmail, setInviteEmail] = useState('')
+  const [inviteRole, setInviteRole] = useState<'admin' | 'member'>('member')
+  const [inviting, setInviting] = useState(false)
+
+  const [editMode, setEditMode] = useState(false)
+  const [editData, setEditData] = useState<UpdateOrganizationRequest>({})
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!slug) return
+
+      try {
+        setLoading(true)
+        const org = await apiClient.getOrganization(slug)
+
+        // Check if user is a member
+        if (!org.membership) {
+          navigate(`/organizations/${slug}`)
+          return
+        }
+
+        setOrganization(org)
+
+        // Fetch members if user can view them
+        if (org.membership.canManageMembers || org.membership.role === 'owner') {
+          const [membersData, invitationsData] = await Promise.all([
+            apiClient.getOrganizationMembers(org.id),
+            apiClient.getOrganizationInvitations(org.id),
+          ])
+          setMembers(membersData)
+          setInvitations(invitationsData)
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load organization')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [slug, navigate])
+
+  const handleInvite = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!organization) return
+
+    setInviting(true)
+    try {
+      await apiClient.sendOrganizationInvitation(organization.id, {
+        email: inviteEmail,
+        role: inviteRole,
+      })
+      // Refresh invitations
+      const invitationsData = await apiClient.getOrganizationInvitations(organization.id)
+      setInvitations(invitationsData)
+      setShowInviteModal(false)
+      setInviteEmail('')
+      setInviteRole('member')
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to send invitation')
+    } finally {
+      setInviting(false)
+    }
+  }
+
+  const handleCancelInvitation = async (invitationId: string) => {
+    if (!organization) return
+    if (!confirm('Cancel this invitation?')) return
+
+    try {
+      await apiClient.cancelOrganizationInvitation(organization.id, invitationId)
+      setInvitations((prev) => prev.filter((i) => i.id !== invitationId))
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to cancel invitation')
+    }
+  }
+
+  const handleRemoveMember = async (userId: string) => {
+    if (!organization) return
+    if (!confirm('Remove this member from the organization?')) return
+
+    try {
+      await apiClient.removeOrganizationMember(organization.id, userId)
+      setMembers((prev) => prev.filter((m) => m.userId !== userId))
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to remove member')
+    }
+  }
+
+  const handleSaveSettings = async () => {
+    if (!organization) return
+
+    setSaving(true)
+    try {
+      await apiClient.updateOrganization(organization.id, editData)
+      // Refresh org data
+      const org = await apiClient.getOrganization(slug!)
+      setOrganization(org)
+      setEditMode(false)
+      setEditData({})
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to save changes')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const canManageMembers = organization?.membership?.canManageMembers || organization?.membership?.role === 'owner'
+  const isOwner = organization?.membership?.role === 'owner'
+  const isAdmin = organization?.membership?.role === 'admin' || isOwner
+
+  if (loading) {
+    return (
+      <div className="max-w-6xl mx-auto px-4 py-8">
+        <div className="flex justify-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-forest"></div>
+        </div>
+      </div>
+    )
+  }
+
+  if (error || !organization) {
+    return (
+      <div className="max-w-6xl mx-auto px-4 py-8">
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          {error || 'Organization not found'}
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="max-w-6xl mx-auto px-4 py-8">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <Link to={`/organizations/${slug}`} className="text-forest hover:underline">
+            &larr; Back to Public Page
+          </Link>
+          <h1 className="text-2xl font-bold text-charcoal mt-2">{organization.name}</h1>
+          <p className="text-gray-500">
+            {organization.membership?.role === 'owner' ? 'Owner' :
+             organization.membership?.role === 'admin' ? 'Admin' : 'Member'}
+          </p>
+        </div>
+      </div>
+
+      {/* Status Banner */}
+      {organization.status === 'pending' && (
+        <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-lg mb-6">
+          <strong>Pending Verification:</strong> Complete Stripe Connect setup to verify your organization
+          and start accepting payments.
+        </div>
+      )}
+
+      {/* Tabs */}
+      <div className="border-b border-sage/20 mb-6">
+        <nav className="flex gap-8">
+          {['overview', 'members', 'settings'].map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab as typeof activeTab)}
+              className={`pb-4 text-sm font-medium capitalize border-b-2 transition-colors ${
+                activeTab === tab
+                  ? 'border-forest text-forest'
+                  : 'border-transparent text-gray-500 hover:text-charcoal'
+              }`}
+            >
+              {tab}
+            </button>
+          ))}
+        </nav>
+      </div>
+
+      {/* Overview Tab */}
+      {activeTab === 'overview' && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-white rounded-lg shadow-sm border border-sage/20 p-6">
+              <div className="text-3xl font-bold text-forest">0</div>
+              <div className="text-gray-500 text-sm">Active Events</div>
+            </div>
+            <div className="bg-white rounded-lg shadow-sm border border-sage/20 p-6">
+              <div className="text-3xl font-bold text-forest">$0</div>
+              <div className="text-gray-500 text-sm">Total Raised</div>
+            </div>
+            <div className="bg-white rounded-lg shadow-sm border border-sage/20 p-6">
+              <div className="text-3xl font-bold text-forest">{members.length}</div>
+              <div className="text-gray-500 text-sm">Team Members</div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow-sm border border-sage/20 p-6">
+            <h2 className="text-lg font-semibold text-charcoal mb-4">Quick Actions</h2>
+            <div className="flex flex-wrap gap-4">
+              <button
+                disabled
+                className="bg-forest/20 text-forest px-4 py-2 rounded-lg cursor-not-allowed"
+              >
+                Create Event (Coming Soon)
+              </button>
+              {canManageMembers && (
+                <button
+                  onClick={() => setShowInviteModal(true)}
+                  className="bg-forest text-white px-4 py-2 rounded-lg hover:bg-forest/90"
+                >
+                  Invite Member
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Members Tab */}
+      {activeTab === 'members' && (
+        <div className="space-y-6">
+          {canManageMembers && (
+            <div className="flex justify-end">
+              <button
+                onClick={() => setShowInviteModal(true)}
+                className="bg-forest text-white px-4 py-2 rounded-lg hover:bg-forest/90"
+              >
+                Invite Member
+              </button>
+            </div>
+          )}
+
+          {/* Members List */}
+          <div className="bg-white rounded-lg shadow-sm border border-sage/20 overflow-hidden">
+            <table className="w-full">
+              <thead className="bg-sage/10">
+                <tr>
+                  <th className="text-left px-6 py-3 text-sm font-medium text-charcoal">Member</th>
+                  <th className="text-left px-6 py-3 text-sm font-medium text-charcoal">Role</th>
+                  <th className="text-left px-6 py-3 text-sm font-medium text-charcoal">Joined</th>
+                  {canManageMembers && (
+                    <th className="text-right px-6 py-3 text-sm font-medium text-charcoal">Actions</th>
+                  )}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-sage/10">
+                {members.map((member) => (
+                  <tr key={member.id}>
+                    <td className="px-6 py-4">
+                      <div className="font-medium text-charcoal">{member.displayName}</div>
+                      <div className="text-sm text-gray-500">{member.email}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`text-sm px-2 py-1 rounded-full ${
+                        member.role === 'owner' ? 'bg-amber-100 text-amber-800' :
+                        member.role === 'admin' ? 'bg-blue-100 text-blue-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {member.role.charAt(0).toUpperCase() + member.role.slice(1)}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-500">
+                      {new Date(member.joinedAt).toLocaleDateString()}
+                    </td>
+                    {canManageMembers && (
+                      <td className="px-6 py-4 text-right">
+                        {member.role !== 'owner' && (
+                          <button
+                            onClick={() => handleRemoveMember(member.userId)}
+                            className="text-red-600 hover:underline text-sm"
+                          >
+                            Remove
+                          </button>
+                        )}
+                      </td>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pending Invitations */}
+          {canManageMembers && invitations.length > 0 && (
+            <div className="bg-white rounded-lg shadow-sm border border-sage/20 p-6">
+              <h3 className="font-semibold text-charcoal mb-4">Pending Invitations</h3>
+              <div className="space-y-3">
+                {invitations.map((invitation) => (
+                  <div key={invitation.id} className="flex items-center justify-between py-2 border-b border-sage/10 last:border-0">
+                    <div>
+                      <div className="font-medium text-charcoal">{invitation.email}</div>
+                      <div className="text-sm text-gray-500">
+                        Invited as {invitation.role} &bull; Expires {new Date(invitation.expiresAt).toLocaleDateString()}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleCancelInvitation(invitation.id)}
+                      className="text-red-600 hover:underline text-sm"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Settings Tab */}
+      {activeTab === 'settings' && isAdmin && (
+        <div className="bg-white rounded-lg shadow-sm border border-sage/20 p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-lg font-semibold text-charcoal">Organization Settings</h2>
+            {!editMode ? (
+              <button
+                onClick={() => {
+                  setEditMode(true)
+                  setEditData({
+                    name: organization.name,
+                    description: organization.description,
+                    contactEmail: organization.contactEmail,
+                    contactPhone: organization.contactPhone,
+                    websiteUrl: organization.websiteUrl,
+                  })
+                }}
+                className="text-forest hover:underline"
+              >
+                Edit
+              </button>
+            ) : (
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    setEditMode(false)
+                    setEditData({})
+                  }}
+                  className="px-4 py-2 border border-sage/30 rounded-lg hover:bg-sage/10"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveSettings}
+                  disabled={saving}
+                  className="bg-forest text-white px-4 py-2 rounded-lg hover:bg-forest/90 disabled:opacity-50"
+                >
+                  {saving ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            )}
+          </div>
+
+          {editMode ? (
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-charcoal mb-1">Name</label>
+                <input
+                  type="text"
+                  value={editData.name || ''}
+                  onChange={(e) => setEditData((prev) => ({ ...prev, name: e.target.value }))}
+                  className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-forest/50"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-charcoal mb-1">Description</label>
+                <textarea
+                  rows={4}
+                  value={editData.description || ''}
+                  onChange={(e) => setEditData((prev) => ({ ...prev, description: e.target.value }))}
+                  className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-forest/50"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-charcoal mb-1">Contact Email</label>
+                <input
+                  type="email"
+                  value={editData.contactEmail || ''}
+                  onChange={(e) => setEditData((prev) => ({ ...prev, contactEmail: e.target.value }))}
+                  className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-forest/50"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-charcoal mb-1">Phone</label>
+                <input
+                  type="tel"
+                  value={editData.contactPhone || ''}
+                  onChange={(e) => setEditData((prev) => ({ ...prev, contactPhone: e.target.value }))}
+                  className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-forest/50"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-charcoal mb-1">Website</label>
+                <input
+                  type="url"
+                  value={editData.websiteUrl || ''}
+                  onChange={(e) => setEditData((prev) => ({ ...prev, websiteUrl: e.target.value }))}
+                  className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-forest/50"
+                />
+              </div>
+            </div>
+          ) : (
+            <dl className="space-y-4">
+              <div>
+                <dt className="text-sm text-gray-500">Name</dt>
+                <dd className="font-medium text-charcoal">{organization.name}</dd>
+              </div>
+              <div>
+                <dt className="text-sm text-gray-500">Description</dt>
+                <dd className="text-charcoal">{organization.description || '-'}</dd>
+              </div>
+              <div>
+                <dt className="text-sm text-gray-500">Contact Email</dt>
+                <dd className="text-charcoal">{organization.contactEmail || '-'}</dd>
+              </div>
+              <div>
+                <dt className="text-sm text-gray-500">Phone</dt>
+                <dd className="text-charcoal">{organization.contactPhone || '-'}</dd>
+              </div>
+              <div>
+                <dt className="text-sm text-gray-500">Website</dt>
+                <dd className="text-charcoal">{organization.websiteUrl || '-'}</dd>
+              </div>
+            </dl>
+          )}
+
+          {isOwner && (
+            <div className="mt-8 pt-6 border-t border-red-200">
+              <h3 className="text-lg font-semibold text-red-600 mb-2">Danger Zone</h3>
+              <p className="text-sm text-gray-500 mb-4">
+                Deleting this organization will remove all members and cannot be undone.
+              </p>
+              <button
+                onClick={async () => {
+                  if (!confirm(`Are you sure you want to delete "${organization.name}"? This cannot be undone.`)) return
+                  try {
+                    await apiClient.deleteOrganization(organization.id)
+                    navigate('/organizations')
+                  } catch (err) {
+                    alert(err instanceof Error ? err.message : 'Failed to delete organization')
+                  }
+                }}
+                className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700"
+              >
+                Delete Organization
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Invite Modal */}
+      {showInviteModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-4">
+            <h2 className="text-lg font-semibold text-charcoal mb-4">Invite Member</h2>
+            <form onSubmit={handleInvite}>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-charcoal mb-1">Email</label>
+                  <input
+                    type="email"
+                    required
+                    value={inviteEmail}
+                    onChange={(e) => setInviteEmail(e.target.value)}
+                    className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-forest/50"
+                    placeholder="email@example.com"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-charcoal mb-1">Role</label>
+                  <select
+                    value={inviteRole}
+                    onChange={(e) => setInviteRole(e.target.value as 'admin' | 'member')}
+                    className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-forest/50"
+                  >
+                    <option value="member">Member</option>
+                    {isOwner && <option value="admin">Admin</option>}
+                  </select>
+                </div>
+              </div>
+              <div className="flex justify-end gap-4 mt-6">
+                <button
+                  type="button"
+                  onClick={() => setShowInviteModal(false)}
+                  className="px-4 py-2 border border-sage/30 rounded-lg hover:bg-sage/10"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={inviting}
+                  className="bg-forest text-white px-4 py-2 rounded-lg hover:bg-forest/90 disabled:opacity-50"
+                >
+                  {inviting ? 'Sending...' : 'Send Invitation'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}

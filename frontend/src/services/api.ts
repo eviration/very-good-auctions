@@ -8,6 +8,13 @@ import type {
   CreatePaymentIntentRequest,
   CreatePaymentIntentResponse,
   Notification,
+  Organization,
+  OrganizationMember,
+  OrganizationInvitation,
+  CreateOrganizationRequest,
+  UpdateOrganizationRequest,
+  OrganizationRole,
+  OrganizationType,
 } from '../types'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
@@ -242,6 +249,138 @@ class ApiClient {
     return this.request('/users/me/notifications/read-all', {
       method: 'POST',
     })
+  }
+
+  // Organizations
+  async getOrganizations(params?: {
+    page?: number
+    pageSize?: number
+    search?: string
+    orgType?: OrganizationType
+  }): Promise<PaginatedResponse<Organization>> {
+    const searchParams = new URLSearchParams()
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined) {
+          searchParams.set(key, String(value))
+        }
+      })
+    }
+    const query = searchParams.toString()
+    return this.request(`/organizations${query ? `?${query}` : ''}`)
+  }
+
+  async getOrganization(slug: string): Promise<Organization> {
+    return this.request(`/organizations/${slug}`)
+  }
+
+  async createOrganization(data: CreateOrganizationRequest): Promise<Organization> {
+    return this.request('/organizations', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async updateOrganization(id: string, data: UpdateOrganizationRequest): Promise<void> {
+    return this.request(`/organizations/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async deleteOrganization(id: string): Promise<void> {
+    return this.request(`/organizations/${id}`, {
+      method: 'DELETE',
+    })
+  }
+
+  async getMyOrganizations(): Promise<Organization[]> {
+    return this.request('/organizations/my/list')
+  }
+
+  // Organization Members
+  async getOrganizationMembers(orgId: string): Promise<OrganizationMember[]> {
+    return this.request(`/organizations/${orgId}/members`)
+  }
+
+  async addOrganizationMember(
+    orgId: string,
+    data: {
+      userId: string
+      role: OrganizationRole
+      canCreateAuctions?: boolean
+      canManageMembers?: boolean
+      canViewFinancials?: boolean
+    }
+  ): Promise<void> {
+    return this.request(`/organizations/${orgId}/members`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async updateOrganizationMember(
+    orgId: string,
+    memberId: string,
+    data: {
+      role?: OrganizationRole
+      canCreateAuctions?: boolean
+      canManageMembers?: boolean
+      canViewFinancials?: boolean
+    }
+  ): Promise<void> {
+    return this.request(`/organizations/${orgId}/members/${memberId}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async removeOrganizationMember(orgId: string, userId: string): Promise<void> {
+    return this.request(`/organizations/${orgId}/members/${userId}`, {
+      method: 'DELETE',
+    })
+  }
+
+  // Organization Invitations
+  async sendOrganizationInvitation(
+    orgId: string,
+    data: { email: string; role: OrganizationRole }
+  ): Promise<{ token: string }> {
+    return this.request(`/organizations/${orgId}/invitations`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async getOrganizationInvitations(orgId: string): Promise<OrganizationInvitation[]> {
+    return this.request(`/organizations/${orgId}/invitations`)
+  }
+
+  async cancelOrganizationInvitation(orgId: string, invitationId: string): Promise<void> {
+    return this.request(`/organizations/${orgId}/invitations/${invitationId}`, {
+      method: 'DELETE',
+    })
+  }
+
+  // Public invitation endpoints
+  async getInvitation(token: string): Promise<OrganizationInvitation> {
+    return this.request(`/invitations/${token}`)
+  }
+
+  async acceptInvitation(token: string): Promise<{ organization: { id: string; name: string } }> {
+    return this.request(`/invitations/${token}/accept`, {
+      method: 'POST',
+    })
+  }
+
+  async declineInvitation(token: string): Promise<void> {
+    return this.request(`/invitations/${token}/decline`, {
+      method: 'POST',
+    })
+  }
+
+  async getMyPendingInvitations(): Promise<OrganizationInvitation[]> {
+    return this.request('/invitations/my/pending')
   }
 }
 
