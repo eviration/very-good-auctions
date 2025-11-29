@@ -1,11 +1,20 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { apiClient } from '../services/api'
 
 export default function CreateAuctionPage() {
   const navigate = useNavigate()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [selectedImages, setSelectedImages] = useState<File[]>([])
   const [imagePreviews, setImagePreviews] = useState<string[]>([])
+  const [error, setError] = useState<string | null>(null)
+
+  // Form fields
+  const [title, setTitle] = useState('')
+  const [description, setDescription] = useState('')
+  const [startingPrice, setStartingPrice] = useState('')
+  const [duration, setDuration] = useState('7')
+  const [category, setCategory] = useState('')
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
@@ -30,10 +39,38 @@ export default function CreateAuctionPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
-    // TODO: Implement auction creation
-    setTimeout(() => {
-      navigate('/my-auctions')
-    }, 1000)
+    setError(null)
+
+    try {
+      // Calculate end time based on duration
+      const endTime = new Date()
+      endTime.setDate(endTime.getDate() + parseInt(duration))
+
+      // Create the auction
+      const auction = await apiClient.createAuction({
+        title,
+        description,
+        startingPrice: parseFloat(startingPrice),
+        currentBid: parseFloat(startingPrice),
+        endTime: endTime.toISOString(),
+        categoryId: category || undefined,
+        status: 'active',
+      })
+
+      // Upload images if any
+      if (selectedImages.length > 0) {
+        await Promise.all(
+          selectedImages.map(file => apiClient.uploadAuctionImage(auction.id, file))
+        )
+      }
+
+      // Navigate to the created auction
+      navigate(`/auctions/${auction.id}`)
+    } catch (err) {
+      console.error('Failed to create auction:', err)
+      setError(err instanceof Error ? err.message : 'Failed to create auction')
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -42,12 +79,20 @@ export default function CreateAuctionPage() {
         Create New Auction
       </h1>
 
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600">
+          {error}
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
           <label className="block text-sm font-medium text-charcoal mb-2">Title</label>
           <input
             type="text"
             required
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
             className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-sage focus:ring-0"
             placeholder="What are you selling?"
           />
@@ -58,6 +103,8 @@ export default function CreateAuctionPage() {
           <textarea
             required
             rows={4}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
             className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-sage focus:ring-0"
             placeholder="Describe your item in detail..."
           />
@@ -72,6 +119,9 @@ export default function CreateAuctionPage() {
                 type="number"
                 required
                 min="1"
+                step="0.01"
+                value={startingPrice}
+                onChange={(e) => setStartingPrice(e.target.value)}
                 className="w-full pl-8 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-sage focus:ring-0"
                 placeholder="0"
               />
@@ -79,10 +129,14 @@ export default function CreateAuctionPage() {
           </div>
           <div>
             <label className="block text-sm font-medium text-charcoal mb-2">Duration</label>
-            <select className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-sage focus:ring-0">
+            <select
+              value={duration}
+              onChange={(e) => setDuration(e.target.value)}
+              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-sage focus:ring-0"
+            >
               <option value="3">3 days</option>
               <option value="5">5 days</option>
-              <option value="7" selected>7 days</option>
+              <option value="7">7 days</option>
               <option value="10">10 days</option>
             </select>
           </div>
