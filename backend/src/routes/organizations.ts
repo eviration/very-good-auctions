@@ -82,16 +82,19 @@ router.post(
       // Generate unique slug
       let slug = generateSlug(name)
       let slugSuffix = 0
-      while (true) {
+      let slugExists = true
+      while (slugExists) {
+        const candidateSlug = slugSuffix > 0 ? `${slug}-${slugSuffix}` : slug
         const existing = await dbQuery(
           'SELECT id FROM organizations WHERE slug = @slug',
-          { slug: slugSuffix > 0 ? `${slug}-${slugSuffix}` : slug }
+          { slug: candidateSlug }
         )
         if (existing.recordset.length === 0) {
-          if (slugSuffix > 0) slug = `${slug}-${slugSuffix}`
-          break
+          slug = candidateSlug
+          slugExists = false
+        } else {
+          slugSuffix++
         }
-        slugSuffix++
       }
 
       // Create organization
