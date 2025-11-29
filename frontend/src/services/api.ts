@@ -142,7 +142,15 @@ class ApiClient {
     )
 
     if (!response.ok) {
-      throw new Error('Image upload failed')
+      let errorMessage = `Image upload failed (${response.status})`
+      try {
+        const errorData = await response.json()
+        errorMessage = errorData.error || errorData.details || errorMessage
+        console.error('Image upload error details:', errorData)
+      } catch {
+        // Ignore JSON parse errors
+      }
+      throw new Error(errorMessage)
     }
 
     return response.json()

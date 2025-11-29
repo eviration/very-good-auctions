@@ -307,18 +307,23 @@ router.post(
         { id }
       )
 
-      console.log('Auction lookup result:', auction.recordset)
+      console.log('Auction lookup result:', JSON.stringify(auction.recordset))
 
       if (auction.recordset.length === 0) {
+        console.log('Auction not found:', id)
         throw notFound('Auction not found')
       }
 
-      if (auction.recordset[0].seller_id !== userId) {
-        console.log('Ownership mismatch:', { sellerId: auction.recordset[0].seller_id, userId })
+      const sellerId = auction.recordset[0].seller_id
+      console.log('Ownership check:', { sellerId, userId, match: sellerId === userId })
+
+      if (sellerId !== userId) {
+        console.log('Ownership mismatch:', { sellerId, userId })
         throw badRequest('You can only upload images to your own auctions')
       }
 
       if (!req.file) {
+        console.log('No file in request')
         throw badRequest('No image provided')
       }
 
@@ -338,10 +343,13 @@ router.post(
         { imageId, auctionId: id, blobUrl }
       )
 
+      console.log('Image record inserted:', imageId)
       res.status(201).json({ id: imageId, url: blobUrl })
-    } catch (error) {
-      console.error('Image upload error:', error)
-      next(error)
+    } catch (error: any) {
+      console.error('Image upload error:', error?.message || error)
+      console.error('Error stack:', error?.stack)
+      // Return more detailed error message
+      res.status(500).json({ error: error?.message || 'Image upload failed', details: String(error) })
     }
   }
 )
