@@ -66,10 +66,16 @@ export async function authenticate(
           audience: clientId,
           // Entra External ID issuer format
           issuer: `https://${tenantName}.ciamlogin.com/${tenantId}/v2.0`,
+          // Allow ID tokens (aud = clientId) and access tokens
+          algorithms: ['RS256'],
         },
         (err, decoded) => {
-          if (err) reject(err)
-          else resolve(decoded as jwt.JwtPayload)
+          if (err) {
+            console.error('Token verification error:', err)
+            reject(err)
+          } else {
+            resolve(decoded as jwt.JwtPayload)
+          }
         }
       )
     })
