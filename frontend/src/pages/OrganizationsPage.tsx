@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useMsal } from '@azure/msal-react'
 import { apiClient } from '../services/api'
+import { loginRequest } from '../auth/authConfig'
 import type { Organization, OrganizationType } from '../types'
 
 const ORG_TYPE_LABELS: Record<OrganizationType, string> = {
@@ -14,7 +15,8 @@ const ORG_TYPE_LABELS: Record<OrganizationType, string> = {
 }
 
 export default function OrganizationsPage() {
-  const { accounts } = useMsal()
+  const { instance, accounts } = useMsal()
+  const navigate = useNavigate()
   const isAuthenticated = accounts.length > 0
 
   const [organizations, setOrganizations] = useState<Organization[]>([])
@@ -24,6 +26,14 @@ export default function OrganizationsPage() {
   const [orgType, setOrgType] = useState<OrganizationType | ''>('')
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
+
+  const handleCreateOrg = () => {
+    if (isAuthenticated) {
+      navigate('/organizations/new')
+    } else {
+      instance.loginRedirect(loginRequest)
+    }
+  }
 
   useEffect(() => {
     const fetchOrganizations = async () => {
@@ -61,14 +71,12 @@ export default function OrganizationsPage() {
             Browse verified organizations running fundraiser auctions
           </p>
         </div>
-        {isAuthenticated && (
-          <Link
-            to="/organizations/new"
-            className="bg-forest text-white px-6 py-2 rounded-lg hover:bg-forest/90 transition-colors"
-          >
-            Create Organization
-          </Link>
-        )}
+        <button
+          onClick={handleCreateOrg}
+          className="bg-forest text-white px-6 py-2 rounded-lg hover:bg-forest/90 transition-colors"
+        >
+          Create Organization
+        </button>
       </div>
 
       {/* Filters */}
@@ -121,14 +129,12 @@ export default function OrganizationsPage() {
       ) : organizations.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-gray-500">No organizations found</p>
-          {isAuthenticated && (
-            <Link
-              to="/organizations/new"
-              className="mt-4 inline-block text-forest hover:underline"
-            >
-              Create the first organization
-            </Link>
-          )}
+          <button
+            onClick={handleCreateOrg}
+            className="mt-4 inline-block text-forest hover:underline"
+          >
+            Create the first organization
+          </button>
         </div>
       ) : (
         <>
