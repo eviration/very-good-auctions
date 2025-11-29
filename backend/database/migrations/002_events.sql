@@ -394,7 +394,7 @@ IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE name = 'fk_notifications_eve
 
 IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE name = 'fk_notifications_item')
     ALTER TABLE user_notifications ADD CONSTRAINT fk_notifications_item
-        FOREIGN KEY (item_id) REFERENCES event_items(id) ON DELETE SET NULL;
+        FOREIGN KEY (item_id) REFERENCES event_items(id) ON DELETE NO ACTION;
 
 GO
 
