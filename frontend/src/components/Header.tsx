@@ -93,12 +93,20 @@ export default function Header() {
                 </button>
               </div>
             ) : (
-              <button
-                onClick={() => login()}
-                className="px-6 py-3 bg-sage text-white font-semibold rounded-xl hover:bg-sage-dark transition-colors shadow-md"
-              >
-                Sign In
-              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => login()}
+                  className="px-4 py-2 text-sage font-medium border-2 border-sage rounded-xl hover:bg-sage hover:text-white transition-colors"
+                >
+                  Sign In
+                </button>
+                <button
+                  onClick={() => login()}
+                  className="px-6 py-3 bg-sage text-white font-semibold rounded-xl hover:bg-sage-dark transition-colors shadow-md"
+                >
+                  Sign Up
+                </button>
+              </div>
             )}
 
             {/* Mobile menu button */}
@@ -133,6 +141,28 @@ export default function Header() {
                 {link.label}
               </Link>
             ))}
+            {!isAuthenticated && (
+              <div className="mt-4 space-y-3 pt-4 border-t border-gray-200">
+                <button
+                  onClick={() => {
+                    login()
+                    setMobileMenuOpen(false)
+                  }}
+                  className="w-full px-4 py-3 text-sage font-medium border-2 border-sage rounded-xl hover:bg-sage hover:text-white transition-colors"
+                >
+                  Sign In
+                </button>
+                <button
+                  onClick={() => {
+                    login()
+                    setMobileMenuOpen(false)
+                  }}
+                  className="w-full px-4 py-3 bg-sage text-white font-semibold rounded-xl hover:bg-sage-dark transition-colors shadow-md"
+                >
+                  Sign Up
+                </button>
+              </div>
+            )}
           </nav>
         )}
       </div>
