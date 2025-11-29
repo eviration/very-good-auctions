@@ -75,7 +75,7 @@ export default function InvitationAcceptPage() {
     return (
       <div className="max-w-lg mx-auto px-4 py-12">
         <div className="flex justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-forest"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sage"></div>
         </div>
       </div>
     )
@@ -94,7 +94,7 @@ export default function InvitationAcceptPage() {
           <p className="text-gray-500 mb-6">
             This invitation may have expired or already been used.
           </p>
-          <Link to="/organizations" className="text-forest hover:underline">
+          <Link to="/organizations" className="text-sage hover:underline">
             Browse Organizations
           </Link>
         </div>
@@ -120,7 +120,7 @@ export default function InvitationAcceptPage() {
             />
           ) : (
             <div className="w-20 h-20 rounded-lg bg-sage/20 flex items-center justify-center mx-auto mb-4">
-              <span className="text-3xl font-bold text-forest">
+              <span className="text-3xl font-bold text-sage">
                 {invitation.organization?.name.charAt(0)}
               </span>
             </div>
@@ -187,7 +187,7 @@ export default function InvitationAcceptPage() {
                 </p>
                 <button
                   onClick={handleLogin}
-                  className="w-full bg-forest text-white px-6 py-3 rounded-lg hover:bg-forest/90 transition-colors"
+                  className="w-full bg-sage text-white px-6 py-3 rounded-lg hover:bg-sage/90 transition-colors"
                 >
                   Sign In
                 </button>
@@ -197,7 +197,7 @@ export default function InvitationAcceptPage() {
                 <button
                   onClick={handleAccept}
                   disabled={accepting || declining}
-                  className="w-full bg-forest text-white px-6 py-3 rounded-lg hover:bg-forest/90 transition-colors disabled:opacity-50"
+                  className="w-full bg-sage text-white px-6 py-3 rounded-lg hover:bg-sage/90 transition-colors disabled:opacity-50"
                 >
                   {accepting ? 'Accepting...' : 'Accept Invitation'}
                 </button>
@@ -217,7 +217,7 @@ export default function InvitationAcceptPage() {
         <div className="mt-6 pt-6 border-t border-sage/20 text-center">
           <Link
             to={`/organizations/${invitation.organization?.slug}`}
-            className="text-forest hover:underline"
+            className="text-sage hover:underline"
           >
             View Organization
           </Link>

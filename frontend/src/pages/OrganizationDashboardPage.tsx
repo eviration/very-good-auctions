@@ -131,7 +131,7 @@ export default function OrganizationDashboardPage() {
     return (
       <div className="max-w-6xl mx-auto px-4 py-8">
         <div className="flex justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-forest"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sage"></div>
         </div>
       </div>
     )
@@ -151,7 +151,7 @@ export default function OrganizationDashboardPage() {
     <div className="max-w-6xl mx-auto px-4 py-8">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <Link to={`/organizations/${slug}`} className="text-forest hover:underline">
+          <Link to={`/organizations/${slug}`} className="text-sage hover:underline">
             &larr; Back to Public Page
           </Link>
           <h1 className="text-2xl font-bold text-charcoal mt-2">{organization.name}</h1>
@@ -179,7 +179,7 @@ export default function OrganizationDashboardPage() {
               onClick={() => setActiveTab(tab as typeof activeTab)}
               className={`pb-4 text-sm font-medium capitalize border-b-2 transition-colors ${
                 activeTab === tab
-                  ? 'border-forest text-forest'
+                  ? 'border-sage text-sage'
                   : 'border-transparent text-gray-500 hover:text-charcoal'
               }`}
             >
@@ -194,15 +194,15 @@ export default function OrganizationDashboardPage() {
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-white rounded-lg shadow-sm border border-sage/20 p-6">
-              <div className="text-3xl font-bold text-forest">0</div>
+              <div className="text-3xl font-bold text-sage">0</div>
               <div className="text-gray-500 text-sm">Active Events</div>
             </div>
             <div className="bg-white rounded-lg shadow-sm border border-sage/20 p-6">
-              <div className="text-3xl font-bold text-forest">$0</div>
+              <div className="text-3xl font-bold text-sage">$0</div>
               <div className="text-gray-500 text-sm">Total Raised</div>
             </div>
             <div className="bg-white rounded-lg shadow-sm border border-sage/20 p-6">
-              <div className="text-3xl font-bold text-forest">{members.length}</div>
+              <div className="text-3xl font-bold text-sage">{members.length}</div>
               <div className="text-gray-500 text-sm">Team Members</div>
             </div>
           </div>
@@ -212,14 +212,14 @@ export default function OrganizationDashboardPage() {
             <div className="flex flex-wrap gap-4">
               <button
                 disabled
-                className="bg-forest/20 text-forest px-4 py-2 rounded-lg cursor-not-allowed"
+                className="bg-sage/20 text-sage px-4 py-2 rounded-lg cursor-not-allowed"
               >
                 Create Event (Coming Soon)
               </button>
               {canManageMembers && (
                 <button
                   onClick={() => setShowInviteModal(true)}
-                  className="bg-forest text-white px-4 py-2 rounded-lg hover:bg-forest/90"
+                  className="bg-sage text-white px-4 py-2 rounded-lg hover:bg-sage/90"
                 >
                   Invite Member
                 </button>
@@ -236,7 +236,7 @@ export default function OrganizationDashboardPage() {
             <div className="flex justify-end">
               <button
                 onClick={() => setShowInviteModal(true)}
-                className="bg-forest text-white px-4 py-2 rounded-lg hover:bg-forest/90"
+                className="bg-sage text-white px-4 py-2 rounded-lg hover:bg-sage/90"
               >
                 Invite Member
               </button>
@@ -337,7 +337,7 @@ export default function OrganizationDashboardPage() {
                     websiteUrl: organization.websiteUrl,
                   })
                 }}
-                className="text-forest hover:underline"
+                className="text-sage hover:underline"
               >
                 Edit
               </button>
@@ -355,7 +355,7 @@ export default function OrganizationDashboardPage() {
                 <button
                   onClick={handleSaveSettings}
                   disabled={saving}
-                  className="bg-forest text-white px-4 py-2 rounded-lg hover:bg-forest/90 disabled:opacity-50"
+                  className="bg-sage text-white px-4 py-2 rounded-lg hover:bg-sage/90 disabled:opacity-50"
                 >
                   {saving ? 'Saving...' : 'Save Changes'}
                 </button>
@@ -371,7 +371,7 @@ export default function OrganizationDashboardPage() {
                   type="text"
                   value={editData.name || ''}
                   onChange={(e) => setEditData((prev) => ({ ...prev, name: e.target.value }))}
-                  className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-forest/50"
+                  className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-sage/50"
                 />
               </div>
               <div>
@@ -380,7 +380,7 @@ export default function OrganizationDashboardPage() {
                   rows={4}
                   value={editData.description || ''}
                   onChange={(e) => setEditData((prev) => ({ ...prev, description: e.target.value }))}
-                  className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-forest/50"
+                  className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-sage/50"
                 />
               </div>
               <div>
@@ -389,7 +389,7 @@ export default function OrganizationDashboardPage() {
                   type="email"
                   value={editData.contactEmail || ''}
                   onChange={(e) => setEditData((prev) => ({ ...prev, contactEmail: e.target.value }))}
-                  className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-forest/50"
+                  className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-sage/50"
                 />
               </div>
               <div>
@@ -398,7 +398,7 @@ export default function OrganizationDashboardPage() {
                   type="tel"
                   value={editData.contactPhone || ''}
                   onChange={(e) => setEditData((prev) => ({ ...prev, contactPhone: e.target.value }))}
-                  className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-forest/50"
+                  className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-sage/50"
                 />
               </div>
               <div>
@@ -407,7 +407,7 @@ export default function OrganizationDashboardPage() {
                   type="url"
                   value={editData.websiteUrl || ''}
                   onChange={(e) => setEditData((prev) => ({ ...prev, websiteUrl: e.target.value }))}
-                  className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-forest/50"
+                  className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-sage/50"
                 />
               </div>
             </div>
@@ -475,7 +475,7 @@ export default function OrganizationDashboardPage() {
                     required
                     value={inviteEmail}
                     onChange={(e) => setInviteEmail(e.target.value)}
-                    className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-forest/50"
+                    className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-sage/50"
                     placeholder="email@example.com"
                   />
                 </div>
@@ -484,7 +484,7 @@ export default function OrganizationDashboardPage() {
                   <select
                     value={inviteRole}
                     onChange={(e) => setInviteRole(e.target.value as 'admin' | 'member')}
-                    className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-forest/50"
+                    className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-sage/50"
                   >
                     <option value="member">Member</option>
                     {isOwner && <option value="admin">Admin</option>}
@@ -502,7 +502,7 @@ export default function OrganizationDashboardPage() {
                 <button
                   type="submit"
                   disabled={inviting}
-                  className="bg-forest text-white px-4 py-2 rounded-lg hover:bg-forest/90 disabled:opacity-50"
+                  className="bg-sage text-white px-4 py-2 rounded-lg hover:bg-sage/90 disabled:opacity-50"
                 >
                   {inviting ? 'Sending...' : 'Send Invitation'}
                 </button>

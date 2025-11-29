@@ -73,7 +73,7 @@ export default function OrganizationsPage() {
         </div>
         <button
           onClick={handleCreateOrg}
-          className="bg-forest text-white px-6 py-2 rounded-lg hover:bg-forest/90 transition-colors"
+          className="bg-sage text-white px-6 py-2 rounded-lg hover:bg-sage/90 transition-colors"
         >
           Create Organization
         </button>
@@ -88,7 +88,7 @@ export default function OrganizationsPage() {
               placeholder="Search organizations..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-forest/50"
+              className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-sage/50"
             />
           </div>
           <div>
@@ -98,7 +98,7 @@ export default function OrganizationsPage() {
                 setOrgType(e.target.value as OrganizationType | '')
                 setPage(1)
               }}
-              className="px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-forest/50"
+              className="px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-sage/50"
             >
               <option value="">All Types</option>
               {Object.entries(ORG_TYPE_LABELS).map(([value, label]) => (
@@ -110,7 +110,7 @@ export default function OrganizationsPage() {
           </div>
           <button
             type="submit"
-            className="bg-forest text-white px-6 py-2 rounded-lg hover:bg-forest/90 transition-colors"
+            className="bg-sage text-white px-6 py-2 rounded-lg hover:bg-sage/90 transition-colors"
           >
             Search
           </button>
@@ -120,7 +120,7 @@ export default function OrganizationsPage() {
       {/* Results */}
       {loading ? (
         <div className="flex justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-forest"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sage"></div>
         </div>
       ) : error ? (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
@@ -131,7 +131,7 @@ export default function OrganizationsPage() {
           <p className="text-gray-500">No organizations found</p>
           <button
             onClick={handleCreateOrg}
-            className="mt-4 inline-block text-forest hover:underline"
+            className="mt-4 inline-block text-sage hover:underline"
           >
             Create the first organization
           </button>
@@ -154,7 +154,7 @@ export default function OrganizationsPage() {
                     />
                   ) : (
                     <div className="w-16 h-16 rounded-lg bg-sage/20 flex items-center justify-center">
-                      <span className="text-2xl font-bold text-forest">
+                      <span className="text-2xl font-bold text-sage">
                         {org.name.charAt(0)}
                       </span>
                     </div>
@@ -165,7 +165,7 @@ export default function OrganizationsPage() {
                         {org.name}
                       </h3>
                       {org.status === 'verified' && (
-                        <span className="text-forest" title="Verified">
+                        <span className="text-sage" title="Verified">
                           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                           </svg>

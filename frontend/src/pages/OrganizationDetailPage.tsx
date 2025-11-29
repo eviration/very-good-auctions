@@ -40,7 +40,7 @@ export default function OrganizationDetailPage() {
     return (
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="flex justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-forest"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sage"></div>
         </div>
       </div>
     )
@@ -52,7 +52,7 @@ export default function OrganizationDetailPage() {
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
           {error || 'Organization not found'}
         </div>
-        <Link to="/organizations" className="mt-4 inline-block text-forest hover:underline">
+        <Link to="/organizations" className="mt-4 inline-block text-sage hover:underline">
           &larr; Back to Organizations
         </Link>
       </div>
@@ -61,7 +61,7 @@ export default function OrganizationDetailPage() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
-      <Link to="/organizations" className="text-forest hover:underline">
+      <Link to="/organizations" className="text-sage hover:underline">
         &larr; Back to Organizations
       </Link>
 
@@ -76,7 +76,7 @@ export default function OrganizationDetailPage() {
             />
           ) : (
             <div className="w-24 h-24 rounded-lg bg-sage/20 flex items-center justify-center">
-              <span className="text-4xl font-bold text-forest">
+              <span className="text-4xl font-bold text-sage">
                 {organization.name.charAt(0)}
               </span>
             </div>
@@ -86,7 +86,7 @@ export default function OrganizationDetailPage() {
             <div className="flex items-center gap-3">
               <h1 className="text-2xl font-bold text-charcoal">{organization.name}</h1>
               {organization.status === 'verified' && (
-                <span className="text-forest flex items-center gap-1" title="Verified Organization">
+                <span className="text-sage flex items-center gap-1" title="Verified Organization">
                   <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
@@ -110,7 +110,7 @@ export default function OrganizationDetailPage() {
               <div className="mt-4">
                 <Link
                   to={`/organizations/${slug}/manage`}
-                  className="inline-block bg-forest text-white px-4 py-2 rounded-lg hover:bg-forest/90 transition-colors"
+                  className="inline-block bg-sage text-white px-4 py-2 rounded-lg hover:bg-sage/90 transition-colors"
                 >
                   Manage Organization
                 </Link>
@@ -132,7 +132,7 @@ export default function OrganizationDetailPage() {
               href={organization.websiteUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2 text-forest hover:underline"
+              className="flex items-center gap-2 text-sage hover:underline"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />

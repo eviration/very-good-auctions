@@ -52,7 +52,7 @@ export default function CreateOrganizationPage() {
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
       <div className="mb-8">
-        <Link to="/organizations" className="text-forest hover:underline">
+        <Link to="/organizations" className="text-sage hover:underline">
           &larr; Back to Organizations
         </Link>
         <h1 className="text-3xl font-bold text-charcoal mt-4">Create Organization</h1>
@@ -82,7 +82,7 @@ export default function CreateOrganizationPage() {
                 required
                 value={formData.name}
                 onChange={(e) => updateField('name', e.target.value)}
-                className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-forest/50"
+                className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-sage/50"
                 placeholder="e.g., Springfield Animal Shelter"
               />
             </div>
@@ -95,7 +95,7 @@ export default function CreateOrganizationPage() {
                 rows={4}
                 value={formData.description || ''}
                 onChange={(e) => updateField('description', e.target.value)}
-                className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-forest/50"
+                className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-sage/50"
                 placeholder="Tell people about your organization and mission..."
               />
             </div>
@@ -110,7 +110,7 @@ export default function CreateOrganizationPage() {
                     key={option.value}
                     className={`relative flex items-start p-4 border rounded-lg cursor-pointer transition-colors ${
                       formData.orgType === option.value
-                        ? 'border-forest bg-forest/5'
+                        ? 'border-sage bg-sage/5'
                         : 'border-sage/30 hover:border-sage'
                     }`}
                   >
@@ -127,7 +127,7 @@ export default function CreateOrganizationPage() {
                       <p className="text-sm text-gray-500">{option.description}</p>
                     </div>
                     {formData.orgType === option.value && (
-                      <span className="absolute top-2 right-2 text-forest">
+                      <span className="absolute top-2 right-2 text-sage">
                         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                         </svg>
@@ -154,7 +154,7 @@ export default function CreateOrganizationPage() {
                 required
                 value={formData.contactEmail}
                 onChange={(e) => updateField('contactEmail', e.target.value)}
-                className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-forest/50"
+                className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-sage/50"
                 placeholder="contact@yourorg.org"
               />
             </div>
@@ -167,7 +167,7 @@ export default function CreateOrganizationPage() {
                 type="tel"
                 value={formData.contactPhone || ''}
                 onChange={(e) => updateField('contactPhone', e.target.value)}
-                className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-forest/50"
+                className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-sage/50"
                 placeholder="(555) 123-4567"
               />
             </div>
@@ -180,7 +180,7 @@ export default function CreateOrganizationPage() {
                 type="url"
                 value={formData.websiteUrl || ''}
                 onChange={(e) => updateField('websiteUrl', e.target.value)}
-                className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-forest/50"
+                className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-sage/50"
                 placeholder="https://yourorg.org"
               />
             </div>
@@ -202,7 +202,7 @@ export default function CreateOrganizationPage() {
               type="text"
               value={formData.taxId || ''}
               onChange={(e) => updateField('taxId', e.target.value)}
-              className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-forest/50"
+              className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-sage/50"
               placeholder="XX-XXXXXXX"
             />
           </div>
@@ -219,7 +219,7 @@ export default function CreateOrganizationPage() {
           <button
             type="submit"
             disabled={loading}
-            className="bg-forest text-white px-8 py-3 rounded-lg hover:bg-forest/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+            className="bg-sage text-white px-8 py-3 rounded-lg hover:bg-sage/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
           >
             {loading ? 'Creating...' : 'Create Organization'}
           </button>
