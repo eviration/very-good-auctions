@@ -200,6 +200,22 @@ router.get(
   }
 )
 
+// Helper to ensure user exists in database
+async function ensureUserExists(user: { id: string; email: string; name?: string }) {
+  const result = await dbQuery(
+    'SELECT id FROM users WHERE id = @userId',
+    { userId: user.id }
+  )
+
+  if (result.recordset.length === 0) {
+    await dbQuery(
+      `INSERT INTO users (id, email, display_name, created_at, updated_at)
+       VALUES (@userId, @email, @name, GETUTCDATE(), GETUTCDATE())`,
+      { userId: user.id, email: user.email, name: user.name || user.email }
+    )
+  }
+}
+
 // Create auction
 router.post(
   '/',
@@ -222,16 +238,19 @@ router.post(
       }
 
       const userId = req.user!.id
-      const { 
-        title, 
-        description, 
-        categoryId, 
-        startingPrice, 
-        reservePrice, 
-        condition, 
+      const {
+        title,
+        description,
+        categoryId,
+        startingPrice,
+        reservePrice,
+        condition,
         durationDays,
-        shippingInfo 
+        shippingInfo
       } = req.body
+
+      // Ensure user exists in database before creating auction
+      await ensureUserExists(req.user!)
 
       const id = uuidv4()
       const startTime = new Date()
