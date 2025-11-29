@@ -107,19 +107,34 @@ export default function CreateAuctionPage() {
       console.log('Auction created successfully:', auction)
 
       // Upload images if any (don't fail the whole operation if images fail)
+      let imageUploadError: string | null = null
       if (selectedImages.length > 0) {
         try {
-          await Promise.all(
-            selectedImages.map(file => apiClient.uploadAuctionImage(auction.id, file))
+          console.log(`Uploading ${selectedImages.length} images to auction ${auction.id}`)
+          const results = await Promise.all(
+            selectedImages.map(async (file, index) => {
+              console.log(`Uploading image ${index + 1}: ${file.name} (${file.size} bytes)`)
+              try {
+                const result = await apiClient.uploadAuctionImage(auction.id, file)
+                console.log(`Image ${index + 1} uploaded successfully:`, result)
+                return result
+              } catch (err) {
+                console.error(`Image ${index + 1} failed:`, err)
+                throw err
+              }
+            })
           )
-          console.log('Images uploaded successfully')
+          console.log('All images uploaded successfully:', results)
         } catch (imgError) {
           console.error('Image upload failed (auction still created):', imgError)
-          // Continue anyway - auction was created successfully
+          imageUploadError = imgError instanceof Error ? imgError.message : 'Image upload failed'
         }
       }
 
-      // Navigate to the created auction
+      // Navigate to the created auction (with warning if images failed)
+      if (imageUploadError) {
+        alert(`Auction created but image upload failed: ${imageUploadError}\n\nYou can try uploading images again from the auction page.`)
+      }
       navigate(`/auctions/${auction.id}`)
     } catch (err) {
       console.error('Failed to create auction:', err)
