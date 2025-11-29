@@ -20,6 +20,12 @@ param sqlAdminPassword string
 @description('Microsoft Entra External ID tenant name')
 param entraTenantName string
 
+@description('Microsoft Entra External ID tenant ID')
+param entraTenantId string
+
+@description('Microsoft Entra External ID client ID')
+param entraClientId string
+
 @description('Stripe secret key')
 @secure()
 param stripeSecretKey string
@@ -264,7 +270,11 @@ resource appService 'Microsoft.Web/sites@2023-01-01' = {
         }
         {
           name: 'AZURE_STORAGE_CONNECTION_STRING'
-          value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};AccountKey=${storageAccount.listKeys().keys[0].value}'
+          value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};AccountKey=${storageAccount.listKeys().keys[0].value};EndpointSuffix=${az.environment().suffixes.storage}'
+        }
+        {
+          name: 'AZURE_STORAGE_CONTAINER'
+          value: 'auction-images'
         }
         {
           name: 'AZURE_SIGNALR_CONNECTION_STRING'
@@ -273,6 +283,14 @@ resource appService 'Microsoft.Web/sites@2023-01-01' = {
         {
           name: 'ENTRA_TENANT_NAME'
           value: entraTenantName
+        }
+        {
+          name: 'ENTRA_TENANT_ID'
+          value: entraTenantId
+        }
+        {
+          name: 'ENTRA_CLIENT_ID'
+          value: entraClientId
         }
         {
           name: 'KEY_VAULT_URI'

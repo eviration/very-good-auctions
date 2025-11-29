@@ -1,6 +1,5 @@
 name: Deploy Frontend
 
-
 on:
   push:
     branches: [main]
@@ -12,16 +11,29 @@ on:
     branches: [main]
     paths:
       - 'frontend/**'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - prod
 
 env:
   NODE_VERSION: '20.x'
 
 jobs:
   build_and_deploy:
-    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && github.event.action != 'closed')
     runs-on: ubuntu-latest
     name: Build and Deploy
-    
+
+    # Use GitHub Environments for secrets/variables per environment
+    environment: ${{ github.event.inputs.environment || 'dev' }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -62,7 +74,7 @@ jobs:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
     runs-on: ubuntu-latest
     name: Close PR Environment
-    
+
     steps:
       - name: Close Pull Request
         uses: Azure/static-web-apps-deploy@v1

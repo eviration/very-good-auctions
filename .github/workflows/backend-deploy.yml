@@ -11,10 +11,19 @@ on:
     paths:
       - 'backend/**'
   workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - prod
 
 env:
   NODE_VERSION: '20.x'
-  AZURE_WEBAPP_NAME: app-vgauctions-api-dev
+  BASE_NAME: 'vgauctions'
 
 jobs:
   test:
@@ -44,8 +53,12 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     needs: test
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
     name: Build and Deploy
+
+    # Determine environment - use input for manual trigger, default to dev for push
+    env:
+      DEPLOY_ENV: ${{ github.event.inputs.environment || 'dev' }}
 
     steps:
       - name: Checkout
@@ -79,10 +92,21 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
+      - name: Set environment-specific variables
+        id: env-config
+        run: |
+          if [ "${{ env.DEPLOY_ENV }}" == "prod" ]; then
+            echo "WEBAPP_NAME=app-${{ env.BASE_NAME }}-api-prod" >> $GITHUB_OUTPUT
+            echo "RESOURCE_GROUP=rg-${{ env.BASE_NAME }}-prod" >> $GITHUB_OUTPUT
+          else
+            echo "WEBAPP_NAME=app-${{ env.BASE_NAME }}-api-dev" >> $GITHUB_OUTPUT
+            echo "RESOURCE_GROUP=rg-${{ env.BASE_NAME }}-dev" >> $GITHUB_OUTPUT
+          fi
+
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v2
         with:
-          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          app-name: ${{ steps.env-config.outputs.WEBAPP_NAME }}
           package: deploy
 
       - name: Logout from Azure

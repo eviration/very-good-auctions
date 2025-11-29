@@ -24,6 +24,12 @@ param sqlAdminPassword string
 @description('Microsoft Entra External ID tenant name')
 param entraTenantName string
 
+@description('Microsoft Entra External ID tenant ID')
+param entraTenantId string
+
+@description('Microsoft Entra External ID client ID')
+param entraClientId string
+
 @description('Stripe secret key')
 @secure()
 param stripeSecretKey string
@@ -54,6 +60,8 @@ module resources 'modules/resources.bicep' = {
     sqlAdminLogin: sqlAdminLogin
     sqlAdminPassword: sqlAdminPassword
     entraTenantName: entraTenantName
+    entraTenantId: entraTenantId
+    entraClientId: entraClientId
     stripeSecretKey: stripeSecretKey
     tags: tags
   }

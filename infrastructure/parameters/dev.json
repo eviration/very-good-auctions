@@ -23,7 +23,13 @@
       }
     },
     "entraTenantName": {
-      "value": "verygoodauctionsdev"
+      "value": "verygoodauctions"
+    },
+    "entraTenantId": {
+      "value": "8125f6b2-6098-4f5e-8723-9c1dd713fcc3"
+    },
+    "entraClientId": {
+      "value": "91ee9e78-ca88-4863-9ee0-f2826ed90839"
     },
     "stripeSecretKey": {
       "reference": {

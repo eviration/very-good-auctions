@@ -25,6 +25,12 @@
     "entraTenantName": {
       "value": "verygoodauctions"
     },
+    "entraTenantId": {
+      "value": "<PROD_ENTRA_TENANT_ID>"
+    },
+    "entraClientId": {
+      "value": "<PROD_ENTRA_CLIENT_ID>"
+    },
     "stripeSecretKey": {
       "reference": {
         "keyVault": {
