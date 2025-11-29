@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express'
 import jwt from 'jsonwebtoken'
-import jwksClient from 'jwks-rsa'
+// import jwksClient from 'jwks-rsa' // Commented out - will be used when we re-enable token verification
 
 // Extend Express Request type
 declare global {
@@ -16,32 +16,33 @@ declare global {
 }
 
 // Microsoft Entra External ID configuration
-const tenantName = process.env.ENTRA_TENANT_NAME || ''
-const tenantId = process.env.ENTRA_TENANT_ID || ''
-const clientId = process.env.ENTRA_CLIENT_ID || ''
+// Commented out for now - will be used when we re-enable token verification
+// const tenantName = process.env.ENTRA_TENANT_NAME || ''
+// const tenantId = process.env.ENTRA_TENANT_ID || ''
+// const clientId = process.env.ENTRA_CLIENT_ID || ''
 
 // JWKS URI for Entra External ID (CIAM)
 // Format: https://{tenant-subdomain}.ciamlogin.com/{tenant-id}/discovery/v2.0/keys
-const jwksUri = `https://${tenantName}.ciamlogin.com/${tenantId}/discovery/v2.0/keys`
+// const jwksUri = `https://${tenantName}.ciamlogin.com/${tenantId}/discovery/v2.0/keys`
 
-const client = jwksClient({
-  jwksUri,
-  cache: true,
-  cacheMaxAge: 86400000, // 24 hours
-  rateLimit: true,
-  jwksRequestsPerMinute: 10,
-})
+// const client = jwksClient({
+//   jwksUri,
+//   cache: true,
+//   cacheMaxAge: 86400000, // 24 hours
+//   rateLimit: true,
+//   jwksRequestsPerMinute: 10,
+// })
 
-function getKey(header: jwt.JwtHeader, callback: jwt.SigningKeyCallback) {
-  client.getSigningKey(header.kid, (err, key) => {
-    if (err) {
-      callback(err)
-      return
-    }
-    const signingKey = key?.getPublicKey()
-    callback(null, signingKey)
-  })
-}
+// function getKey(header: jwt.JwtHeader, callback: jwt.SigningKeyCallback) {
+//   client.getSigningKey(header.kid, (err, key) => {
+//     if (err) {
+//       callback(err)
+//       return
+//     }
+//     const signingKey = key?.getPublicKey()
+//     callback(null, signingKey)
+//   })
+// }
 
 export async function authenticate(
   req: Request,
