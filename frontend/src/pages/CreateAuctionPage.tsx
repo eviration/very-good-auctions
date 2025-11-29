@@ -53,7 +53,7 @@ export default function CreateAuctionPage() {
         startingPrice: parseFloat(startingPrice),
         currentBid: parseFloat(startingPrice),
         endTime: endTime.toISOString(),
-        categoryId: category || undefined,
+        categoryId: category ? parseInt(category) : undefined,
         status: 'active',
       })
 
