@@ -121,28 +121,54 @@ router.get(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const userId = req.user!.id
+      // Normalize userId for comparison (GUID case insensitivity)
+      const normalizedUserId = String(userId).toLowerCase()
 
       const result = await dbQuery(
-        `SELECT a.*, c.name as category_name, c.slug as category_slug
+        `SELECT a.id, a.seller_id, a.category_id, a.title, a.description, a.condition,
+                a.starting_price, a.reserve_price, a.current_bid, a.bid_count,
+                a.start_time, a.end_time, a.status, a.shipping_info, a.created_at, a.updated_at,
+                c.name as category_name, c.slug as category_slug
          FROM auctions a
          LEFT JOIN categories c ON a.category_id = c.id
-         WHERE a.seller_id = @userId
+         WHERE LOWER(a.seller_id) = @userId
          ORDER BY a.created_at DESC`,
-        { userId }
+        { userId: normalizedUserId }
       )
 
-      const auctions = result.recordset.map((a: any) => ({
-        id: a.id,
-        title: a.title,
-        description: a.description,
-        category: a.category_name ? { name: a.category_name, slug: a.category_slug } : null,
-        currentBid: a.current_bid,
-        bidCount: a.bid_count,
-        startTime: a.start_time,
-        endTime: a.end_time,
-        status: a.status,
-        createdAt: a.created_at,
-      }))
+      // Get images for each auction
+      const auctions = await Promise.all(
+        result.recordset.map(async (a: any) => {
+          const imagesResult = await dbQuery(
+            'SELECT * FROM auction_images WHERE auction_id = @auctionId ORDER BY display_order',
+            { auctionId: a.id }
+          )
+
+          return {
+            id: a.id,
+            title: a.title,
+            description: a.description,
+            condition: a.condition,
+            category: a.category_name ? { id: a.category_id, name: a.category_name, slug: a.category_slug } : null,
+            startingPrice: a.starting_price,
+            currentBid: a.current_bid,
+            bidCount: a.bid_count,
+            startTime: a.start_time,
+            endTime: a.end_time,
+            status: a.status,
+            shippingInfo: a.shipping_info,
+            images: imagesResult.recordset.map((img: any) => ({
+              id: img.id,
+              auctionId: img.auction_id,
+              blobUrl: img.blob_url,
+              displayOrder: img.display_order,
+              isPrimary: img.is_primary,
+            })),
+            createdAt: a.created_at,
+            updatedAt: a.updated_at,
+          }
+        })
+      )
 
       res.json(auctions)
     } catch (error) {
