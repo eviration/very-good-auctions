@@ -320,9 +320,12 @@ router.post(
       }
 
       const sellerId = auction.recordset[0].seller_id
-      console.log('Ownership check:', { sellerId, userId, match: sellerId === userId })
+      // Normalize both IDs to lowercase for comparison (GUIDs can have different cases)
+      const normalizedSellerId = String(sellerId).toLowerCase()
+      const normalizedUserId = String(userId).toLowerCase()
+      console.log('Ownership check:', { sellerId, userId, normalizedSellerId, normalizedUserId, match: normalizedSellerId === normalizedUserId })
 
-      if (sellerId !== userId) {
+      if (normalizedSellerId !== normalizedUserId) {
         console.log('Ownership mismatch:', { sellerId, userId })
         res.status(400).json({ error: 'You can only upload images to your own auctions' })
         return
