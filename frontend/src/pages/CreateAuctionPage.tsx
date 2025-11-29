@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { apiClient } from '../services/api'
+import type { Auction } from '../types'
 
 export default function CreateAuctionPage() {
   const navigate = useNavigate()
@@ -47,15 +48,20 @@ export default function CreateAuctionPage() {
       endTime.setDate(endTime.getDate() + parseInt(duration))
 
       // Create the auction
-      const auction = await apiClient.createAuction({
+      const auctionData: Partial<Auction> = {
         title,
         description,
         startingPrice: parseFloat(startingPrice),
         currentBid: parseFloat(startingPrice),
         endTime: endTime.toISOString(),
-        categoryId: category ? parseInt(category) : undefined,
         status: 'active',
-      })
+      }
+
+      if (category) {
+        auctionData.categoryId = parseInt(category)
+      }
+
+      const auction = await apiClient.createAuction(auctionData)
 
       // Upload images if any
       if (selectedImages.length > 0) {
