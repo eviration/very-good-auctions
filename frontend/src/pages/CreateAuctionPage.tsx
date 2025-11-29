@@ -104,12 +104,19 @@ export default function CreateAuctionPage() {
 
       console.log('Creating auction with payload:', auctionPayload)
       const auction = await apiClient.createAuction(auctionPayload as any)
+      console.log('Auction created successfully:', auction)
 
-      // Upload images if any
+      // Upload images if any (don't fail the whole operation if images fail)
       if (selectedImages.length > 0) {
-        await Promise.all(
-          selectedImages.map(file => apiClient.uploadAuctionImage(auction.id, file))
-        )
+        try {
+          await Promise.all(
+            selectedImages.map(file => apiClient.uploadAuctionImage(auction.id, file))
+          )
+          console.log('Images uploaded successfully')
+        } catch (imgError) {
+          console.error('Image upload failed (auction still created):', imgError)
+          // Continue anyway - auction was created successfully
+        }
       }
 
       // Navigate to the created auction
