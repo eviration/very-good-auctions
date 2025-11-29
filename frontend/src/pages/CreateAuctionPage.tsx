@@ -21,7 +21,42 @@ export default function CreateAuctionPage() {
   const [shippingInfo, setShippingInfo] = useState('')
 
   useEffect(() => {
-    apiClient.getCategories().then(setCategories).catch(console.error)
+    // Try to fetch categories from API, fall back to defaults
+    apiClient.getCategories()
+      .then(cats => {
+        if (cats && cats.length > 0) {
+          setCategories(cats)
+        } else {
+          // Use default categories if none exist in database
+          setCategories([
+            { id: 1, name: 'Electronics', slug: 'electronics' },
+            { id: 2, name: 'Collectibles & Art', slug: 'collectibles-art' },
+            { id: 3, name: 'Home & Garden', slug: 'home-garden' },
+            { id: 4, name: 'Fashion & Accessories', slug: 'fashion-accessories' },
+            { id: 5, name: 'Sports & Outdoors', slug: 'sports-outdoors' },
+            { id: 6, name: 'Toys & Games', slug: 'toys-games' },
+            { id: 7, name: 'Books & Media', slug: 'books-media' },
+            { id: 8, name: 'Automotive', slug: 'automotive' },
+            { id: 9, name: 'Jewelry & Watches', slug: 'jewelry-watches' },
+            { id: 10, name: 'Antiques', slug: 'antiques' },
+          ])
+        }
+      })
+      .catch(() => {
+        // Use default categories on error
+        setCategories([
+          { id: 1, name: 'Electronics', slug: 'electronics' },
+          { id: 2, name: 'Collectibles & Art', slug: 'collectibles-art' },
+          { id: 3, name: 'Home & Garden', slug: 'home-garden' },
+          { id: 4, name: 'Fashion & Accessories', slug: 'fashion-accessories' },
+          { id: 5, name: 'Sports & Outdoors', slug: 'sports-outdoors' },
+          { id: 6, name: 'Toys & Games', slug: 'toys-games' },
+          { id: 7, name: 'Books & Media', slug: 'books-media' },
+          { id: 8, name: 'Automotive', slug: 'automotive' },
+          { id: 9, name: 'Jewelry & Watches', slug: 'jewelry-watches' },
+          { id: 10, name: 'Antiques', slug: 'antiques' },
+        ])
+      })
   }, [])
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -97,7 +132,9 @@ export default function CreateAuctionPage() {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
-          <label className="block text-sm font-medium text-charcoal mb-2">Title</label>
+          <label className="block text-sm font-medium text-charcoal mb-2">
+            Title <span className="text-red-500">*</span>
+          </label>
           <input
             type="text"
             required
@@ -109,7 +146,9 @@ export default function CreateAuctionPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-charcoal mb-2">Description</label>
+          <label className="block text-sm font-medium text-charcoal mb-2">
+            Description <span className="text-red-500">*</span>
+          </label>
           <textarea
             required
             rows={4}
@@ -122,7 +161,9 @@ export default function CreateAuctionPage() {
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-charcoal mb-2">Category</label>
+            <label className="block text-sm font-medium text-charcoal mb-2">
+              Category <span className="text-red-500">*</span>
+            </label>
             <select
               required
               value={categoryId}
@@ -136,7 +177,9 @@ export default function CreateAuctionPage() {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-charcoal mb-2">Condition</label>
+            <label className="block text-sm font-medium text-charcoal mb-2">
+              Condition <span className="text-red-500">*</span>
+            </label>
             <select
               value={condition}
               onChange={(e) => setCondition(e.target.value as AuctionCondition)}
@@ -155,7 +198,9 @@ export default function CreateAuctionPage() {
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-charcoal mb-2">Starting Price</label>
+            <label className="block text-sm font-medium text-charcoal mb-2">
+              Starting Price <span className="text-red-500">*</span>
+            </label>
             <div className="relative">
               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">$</span>
               <input
@@ -171,7 +216,9 @@ export default function CreateAuctionPage() {
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-charcoal mb-2">Duration</label>
+            <label className="block text-sm font-medium text-charcoal mb-2">
+              Duration <span className="text-red-500">*</span>
+            </label>
             <select
               value={duration}
               onChange={(e) => setDuration(e.target.value)}
