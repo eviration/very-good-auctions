@@ -12,10 +12,6 @@ import Footer from './components/Footer'
 
 // Pages
 import HomePage from './pages/HomePage'
-import AuctionDetailPage from './pages/AuctionDetailPage'
-import CreateAuctionPage from './pages/CreateAuctionPage'
-import MyBidsPage from './pages/MyBidsPage'
-import MyAuctionsPage from './pages/MyAuctionsPage'
 import ProfilePage from './pages/ProfilePage'
 import HowItWorksPage from './pages/HowItWorksPage'
 import NotFoundPage from './pages/NotFoundPage'
@@ -93,28 +89,12 @@ function App() {
         <Routes>
           {/* Public routes */}
           <Route path="/" element={<HomePage />} />
-          <Route path="/auctions/:id" element={<AuctionDetailPage />} />
           <Route path="/how-it-works" element={<HowItWorksPage />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="/organizations/:slug" element={<OrganizationDetailPage />} />
           <Route path="/invitations/:token" element={<InvitationAcceptPage />} />
-          
+
           {/* Protected routes */}
-          <Route path="/auctions/create" element={
-            <ProtectedRoute>
-              <CreateAuctionPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/my-bids" element={
-            <ProtectedRoute>
-              <MyBidsPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/my-auctions" element={
-            <ProtectedRoute>
-              <MyAuctionsPage />
-            </ProtectedRoute>
-          } />
           <Route path="/profile" element={
             <ProtectedRoute>
               <ProfilePage />

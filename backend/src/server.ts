@@ -2,8 +2,6 @@ import express from 'express'
 import cors from 'cors'
 import helmet from 'helmet'
 import dotenv from 'dotenv'
-import { auctionRoutes } from './routes/auctions.js'
-import { bidRoutes } from './routes/bids.js'
 import { userRoutes } from './routes/users.js'
 import { paymentRoutes } from './routes/payments.js'
 import { categoryRoutes } from './routes/categories.js'
@@ -48,8 +46,6 @@ app.get('/health', (req, res) => {
 })
 
 // API Routes
-app.use('/api/auctions', auctionRoutes)
-app.use('/api/auctions', bidRoutes)
 app.use('/api/users', userRoutes)
 app.use('/api/payments', paymentRoutes)
 app.use('/api/categories', categoryRoutes)

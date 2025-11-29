@@ -1,42 +1,50 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { apiClient } from '../services/api'
-import AuctionCard from '../components/AuctionCard'
-import type { Auction, Category } from '../types'
+import EventCard from '../components/EventCard'
+import type { AuctionEvent } from '../types'
+import { useAuth } from '../auth/useAuth'
+
+type EventFilter = 'all' | 'live' | 'upcoming' | 'ended'
 
 export default function HomePage() {
-  const [auctions, setAuctions] = useState<Auction[]>([])
-  const [categories, setCategories] = useState<Category[]>([])
-  const [selectedCategory, setSelectedCategory] = useState<string>('all')
+  const { isAuthenticated } = useAuth()
+  const [events, setEvents] = useState<AuctionEvent[]>([])
+  const [filter, setFilter] = useState<EventFilter>('all')
   const [searchQuery, setSearchQuery] = useState('')
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchEvents = async () => {
       try {
-        const [auctionsRes, categoriesRes] = await Promise.all([
-          apiClient.getAuctions({ status: 'active' }),
-          apiClient.getCategories(),
-        ])
-        setAuctions(auctionsRes.data)
-        setCategories(categoriesRes)
+        // Map filter to status for API
+        let status: string | undefined
+        if (filter === 'live') status = 'active'
+        else if (filter === 'upcoming') status = 'scheduled'
+        else if (filter === 'ended') status = 'ended'
+
+        const result = await apiClient.getEvents({
+          status: status as 'active' | 'scheduled' | 'ended' | undefined,
+          pageSize: 50,
+        })
+        setEvents(result.data)
       } catch (error) {
-        console.error('Failed to fetch data:', error)
+        console.error('Failed to fetch events:', error)
       } finally {
         setIsLoading(false)
       }
     }
 
-    fetchData()
-  }, [])
+    fetchEvents()
+  }, [filter])
 
-  const filteredAuctions = auctions.filter((auction) => {
-    const matchesCategory =
-      selectedCategory === 'all' || auction.category?.slug === selectedCategory
-    const matchesSearch =
-      !searchQuery ||
-      auction.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      auction.description.toLowerCase().includes(searchQuery.toLowerCase())
-    return matchesCategory && matchesSearch
+  const filteredEvents = events.filter((event) => {
+    if (!searchQuery) return true
+    const query = searchQuery.toLowerCase()
+    return (
+      event.name.toLowerCase().includes(query) ||
+      (event.description?.toLowerCase().includes(query) ?? false)
+    )
   })
 
   return (
@@ -58,8 +66,7 @@ export default function HomePage() {
               </span>
             </h1>
             <p className="text-xl text-charcoal-light mb-10 font-medium max-w-xl mx-auto">
-              A playful and trusted way to find unique items from collectors around
-              the world.
+              Browse auction events, find unique items, and bid on treasures from collectors around the world.
             </p>
 
             {/* Search - Clay Input */}
@@ -83,47 +90,53 @@ export default function HomePage() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search for treasures..."
+                placeholder="Search auction events..."
                 className="clay-input w-full pl-16 pr-6 py-5 text-lg font-medium placeholder:text-charcoal-light/50"
               />
             </div>
+
+            {/* CTA for creating events */}
+            {isAuthenticated && (
+              <div className="mt-8">
+                <Link
+                  to="/events/create"
+                  className="clay-button bg-sage text-white font-bold inline-flex items-center gap-2 hover:bg-sage-dark transition-colors"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  Create Auction Event
+                </Link>
+              </div>
+            )}
           </div>
         </section>
 
-        {/* Categories - Clay Pill Buttons */}
+        {/* Filter Tabs - Clay Pill Buttons */}
         <section className="mb-12">
           <div className="flex flex-wrap justify-center gap-4">
-            <button
-              onClick={() => setSelectedCategory('all')}
-              className={`clay-button font-bold text-base transition-all duration-200 ${
-                selectedCategory === 'all'
-                  ? 'bg-clay-mint shadow-clay scale-105'
-                  : 'bg-clay-surface hover:bg-clay-butter'
-              }`}
-            >
-              All Treasures
-            </button>
-            {categories.map((category, index) => {
-              const colors = ['bg-clay-peach', 'bg-clay-lavender', 'bg-clay-butter', 'bg-clay-sky', 'bg-clay-coral']
-              const colorClass = colors[index % colors.length]
-              return (
-                <button
-                  key={category.id}
-                  onClick={() => setSelectedCategory(category.slug)}
-                  className={`clay-button font-bold text-base transition-all duration-200 ${
-                    selectedCategory === category.slug
-                      ? `${colorClass} shadow-clay scale-105`
-                      : 'bg-clay-surface hover:bg-clay-butter'
-                  }`}
-                >
-                  {category.name}
-                </button>
-              )
-            })}
+            {[
+              { value: 'all', label: 'All Events', color: 'bg-clay-mint' },
+              { value: 'live', label: 'Live Now', color: 'bg-green-100' },
+              { value: 'upcoming', label: 'Coming Soon', color: 'bg-clay-butter' },
+              { value: 'ended', label: 'Past Events', color: 'bg-gray-200' },
+            ].map((tab) => (
+              <button
+                key={tab.value}
+                onClick={() => setFilter(tab.value as EventFilter)}
+                className={`clay-button font-bold text-base transition-all duration-200 ${
+                  filter === tab.value
+                    ? `${tab.color} shadow-clay scale-105`
+                    : 'bg-clay-surface hover:bg-clay-butter'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
           </div>
         </section>
 
-        {/* Auctions Grid */}
+        {/* Events Grid */}
         <section>
           <div className="flex items-center justify-between mb-8">
             <div className="clay-badge bg-clay-butter">
@@ -131,12 +144,10 @@ export default function HomePage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
               </svg>
               <span className="font-black text-charcoal">
-                {selectedCategory === 'all'
-                  ? 'All Auctions'
-                  : categories.find((c) => c.slug === selectedCategory)?.name}
+                {filter === 'all' ? 'All Events' : filter === 'live' ? 'Live Events' : filter === 'upcoming' ? 'Upcoming Events' : 'Past Events'}
               </span>
               <span className="text-charcoal-light">
-                ({filteredAuctions.length})
+                ({filteredEvents.length})
               </span>
             </div>
           </div>
@@ -152,15 +163,15 @@ export default function HomePage() {
                 </div>
               ))}
             </div>
-          ) : filteredAuctions.length > 0 ? (
+          ) : filteredEvents.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              {filteredAuctions.map((auction, index) => (
+              {filteredEvents.map((event, index) => (
                 <div
-                  key={auction.id}
+                  key={event.id}
                   className="animate-slide-up opacity-0"
                   style={{ animationDelay: `${index * 100}ms`, animationFillMode: 'forwards' }}
                 >
-                  <AuctionCard auction={auction} />
+                  <EventCard event={event} />
                 </div>
               ))}
             </div>
@@ -181,8 +192,21 @@ export default function HomePage() {
                   />
                 </svg>
               </div>
-              <p className="text-2xl font-bold text-charcoal mb-2">No treasures found</p>
-              <p className="text-charcoal-light font-medium">Try adjusting your search or filters</p>
+              <p className="text-2xl font-bold text-charcoal mb-2">No events found</p>
+              <p className="text-charcoal-light font-medium mb-6">
+                {searchQuery ? 'Try adjusting your search' : 'Check back soon for new auction events!'}
+              </p>
+              {isAuthenticated && (
+                <Link
+                  to="/events/create"
+                  className="clay-button bg-sage text-white font-bold inline-flex items-center gap-2"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  Create Your First Event
+                </Link>
+              )}
             </div>
           )}
         </section>

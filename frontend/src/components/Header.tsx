@@ -11,14 +11,12 @@ export default function Header() {
   const isActive = (path: string) => location.pathname === path
 
   const navLinks = [
-    { path: '/', label: 'Browse Auctions' },
+    { path: '/', label: 'Browse Events' },
     { path: '/how-it-works', label: 'How It Works' },
     ...(isAuthenticated
       ? [
           { path: '/my-events', label: 'My Events' },
           { path: '/my-wins', label: 'My Wins' },
-          { path: '/my-bids', label: 'My Bids' },
-          { path: '/my-auctions', label: 'My Auctions' },
         ]
       : []),
   ]
