@@ -2,6 +2,7 @@ import { Router, Request, Response, NextFunction } from 'express'
 import Stripe from 'stripe'
 import { query as dbQuery } from '../config/database.js'
 import { v4 as uuidv4 } from 'uuid'
+import { handleWinnerPaymentWebhook } from '../services/platformFees.js'
 
 const router = Router()
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
@@ -33,10 +34,18 @@ router.post(
       switch (event.type) {
         case 'payment_intent.succeeded': {
           const paymentIntent = event.data.object as Stripe.PaymentIntent
-          
+
+          // Check if this is an auction win payment (event-based)
+          if (paymentIntent.metadata?.type === 'auction_win') {
+            await handleWinnerPaymentWebhook(paymentIntent)
+            console.log('Auction win payment succeeded:', paymentIntent.id)
+            break
+          }
+
+          // Legacy auction payment handling
           await dbQuery(
-            `UPDATE payments 
-             SET status = 'succeeded', 
+            `UPDATE payments
+             SET status = 'succeeded',
                  stripe_charge_id = @chargeId,
                  updated_at = GETUTCDATE()
              WHERE stripe_payment_intent_id = @paymentIntentId`,
@@ -62,7 +71,7 @@ router.post(
               auction_id: string
               auction_title: string
             }
-            
+
             // Notify seller
             await dbQuery(
               `INSERT INTO notifications (id, user_id, type, title, message, data, is_read, created_at)

@@ -32,6 +32,7 @@ import EventDetailPage from './pages/EventDetailPage'
 import EventItemPage from './pages/EventItemPage'
 import SubmitItemPage from './pages/SubmitItemPage'
 import SubmitItemSuccessPage from './pages/SubmitItemSuccessPage'
+import MyWinsPage from './pages/MyWinsPage'
 
 // Auth
 import { AuthCallback } from './auth/AuthCallback'
@@ -148,6 +149,11 @@ function App() {
           <Route path="/events/:slug/manage" element={
             <ProtectedRoute>
               <EventDashboardPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/my-wins" element={
+            <ProtectedRoute>
+              <MyWinsPage />
             </ProtectedRoute>
           } />
 

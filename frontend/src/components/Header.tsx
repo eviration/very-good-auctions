@@ -15,6 +15,7 @@ export default function Header() {
     ...(isAuthenticated
       ? [
           { path: '/my-events', label: 'My Events' },
+          { path: '/my-wins', label: 'My Wins' },
           { path: '/my-bids', label: 'My Bids' },
           { path: '/my-auctions', label: 'My Auctions' },
         ]

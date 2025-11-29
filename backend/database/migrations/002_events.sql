@@ -20,7 +20,8 @@ CREATE TABLE platform_fees (
         'event_small',
         'event_medium',
         'event_large',
-        'event_unlimited'
+        'event_unlimited',
+        'item_sale'
     )),
 
     amount DECIMAL(10,2) NOT NULL,

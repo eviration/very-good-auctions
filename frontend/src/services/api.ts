@@ -649,6 +649,81 @@ class ApiClient {
   async getMyEventSubmissions(eventId: string): Promise<EventItem[]> {
     return this.request(`/events/${eventId}/my/submissions`)
   }
+
+  // Platform Fees
+  async getPlatformFeePricing(): Promise<{
+    tiers: Record<string, { maxItems: number | null }>
+    platformFeePercent: number
+    minimumFee: number
+    description: string
+  }> {
+    return this.request('/platform-fees/pricing')
+  }
+
+  async calculatePlatformFee(amount: number): Promise<{
+    amount: number
+    platformFee: number
+    total: number
+  }> {
+    return this.request(`/platform-fees/calculate?amount=${amount}`)
+  }
+
+  async getMyWins(): Promise<{
+    id: string
+    title: string
+    winningAmount: number
+    platformFee: number
+    total: number
+    status: string
+    eventName: string
+    eventSlug: string
+    eventEndedAt: string
+    imageUrl?: string
+    paymentPending: boolean
+  }[]> {
+    return this.request('/platform-fees/my-wins')
+  }
+
+  async createWinnerPayment(itemId: string): Promise<{
+    clientSecret: string
+    paymentIntentId: string
+    breakdown: {
+      winningBid: number
+      platformFee: number
+      total: number
+    }
+  }> {
+    return this.request(`/platform-fees/items/${itemId}/pay`, {
+      method: 'POST',
+    })
+  }
+
+  async getEventFeeSummary(eventId: string): Promise<{
+    totalRaised: number
+    totalPlatformFees: number
+    pendingPayments: number
+    completedPayments: number
+    items: {
+      id: string
+      title: string
+      winningBid: number | null
+      platformFee: number | null
+      paymentStatus: 'pending' | 'paid' | null
+    }[]
+  }> {
+    return this.request(`/platform-fees/event/${eventId}/summary`)
+  }
+
+  async completeEvent(eventId: string): Promise<{
+    success: boolean
+    message: string
+    totalRaised: number
+    totalPlatformFees: number
+  }> {
+    return this.request(`/platform-fees/event/${eventId}/complete`, {
+      method: 'POST',
+    })
+  }
 }
 
 export const apiClient = new ApiClient()
