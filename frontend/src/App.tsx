@@ -40,7 +40,9 @@ function App() {
           ...tokenRequest,
           account: accounts[0],
         })
-        return response.accessToken
+        // Use idToken for Entra External ID (CIAM)
+        // The backend validates this token and extracts user identity
+        return response.idToken
       } catch (error) {
         console.error('Failed to acquire token:', error)
         return null

@@ -49,19 +49,14 @@ export const msalConfig: Configuration = {
   },
 }
 
-// Scopes for API access
-// These are configured in your Entra External ID app registration
-export const apiScopes = {
-  read: [`api://${clientId}/Read`],
-  write: [`api://${clientId}/Write`],
-}
-
 // Login request configuration
 export const loginRequest = {
   scopes: ['openid', 'profile', 'email', 'offline_access'],
 }
 
 // Token request for API calls
+// For Entra External ID (CIAM), we use the same scopes as login
+// The ID token contains the user identity which the backend validates
 export const tokenRequest = {
-  scopes: [...apiScopes.read, ...apiScopes.write],
+  scopes: ['openid', 'profile', 'email'],
 }
