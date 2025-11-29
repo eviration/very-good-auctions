@@ -209,17 +209,17 @@ export default function CreateOrganizationPage() {
         </div>
 
         {/* Submit */}
-        <div className="flex justify-end gap-4">
+        <div className="flex justify-end gap-4 pt-4 pb-8">
           <Link
             to="/organizations"
-            className="px-6 py-2 border border-sage/30 rounded-lg hover:bg-sage/10 transition-colors"
+            className="px-6 py-3 border border-sage/30 rounded-lg hover:bg-sage/10 transition-colors text-charcoal"
           >
             Cancel
           </Link>
           <button
             type="submit"
             disabled={loading}
-            className="bg-forest text-white px-6 py-2 rounded-lg hover:bg-forest/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-forest text-white px-8 py-3 rounded-lg hover:bg-forest/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
           >
             {loading ? 'Creating...' : 'Create Organization'}
           </button>
