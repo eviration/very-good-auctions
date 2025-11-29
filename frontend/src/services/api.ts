@@ -15,6 +15,17 @@ import type {
   UpdateOrganizationRequest,
   OrganizationRole,
   OrganizationType,
+  AuctionEvent,
+  CreateEventRequest,
+  UpdateEventRequest,
+  EventItem,
+  SubmitItemRequest,
+  UpdateItemRequest,
+  EventItemBid,
+  SilentBidStatus,
+  CurrentBidInfo,
+  PricingTiers,
+  EventStatus,
 } from '../types'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
@@ -381,6 +392,262 @@ class ApiClient {
 
   async getMyPendingInvitations(): Promise<OrganizationInvitation[]> {
     return this.request('/invitations/my/pending')
+  }
+
+  // Events
+  async getEvents(params?: {
+    page?: number
+    pageSize?: number
+    search?: string
+    status?: EventStatus
+    organizationId?: string
+  }): Promise<PaginatedResponse<AuctionEvent>> {
+    const searchParams = new URLSearchParams()
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined) {
+          searchParams.set(key, String(value))
+        }
+      })
+    }
+    const query = searchParams.toString()
+    return this.request(`/events${query ? `?${query}` : ''}`)
+  }
+
+  async getEvent(idOrSlug: string): Promise<AuctionEvent> {
+    return this.request(`/events/${idOrSlug}`)
+  }
+
+  async createEvent(data: CreateEventRequest): Promise<AuctionEvent> {
+    return this.request('/events', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async updateEvent(id: string, data: UpdateEventRequest): Promise<AuctionEvent> {
+    return this.request(`/events/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async deleteEvent(id: string): Promise<void> {
+    return this.request(`/events/${id}`, {
+      method: 'DELETE',
+    })
+  }
+
+  async publishEvent(id: string): Promise<AuctionEvent> {
+    return this.request(`/events/${id}/publish`, {
+      method: 'POST',
+    })
+  }
+
+  async getMyEvents(): Promise<AuctionEvent[]> {
+    return this.request('/events/my/list')
+  }
+
+  async getEventSubmissionLink(id: string): Promise<{ url: string; accessCode: string }> {
+    return this.request(`/events/${id}/submission-link`)
+  }
+
+  async verifyEventAccess(id: string, accessCode: string): Promise<{ valid: boolean; eventName?: string }> {
+    return this.request(`/events/${id}/verify-access`, {
+      method: 'POST',
+      body: JSON.stringify({ accessCode }),
+    })
+  }
+
+  async getPricingTiers(): Promise<PricingTiers> {
+    return this.request('/events/pricing/tiers')
+  }
+
+  // Event Items
+  async getEventItems(eventId: string, params?: {
+    status?: string
+    submissionStatus?: string
+  }): Promise<EventItem[]> {
+    const searchParams = new URLSearchParams()
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined) {
+          searchParams.set(key, String(value))
+        }
+      })
+    }
+    const query = searchParams.toString()
+    return this.request(`/events/${eventId}/items${query ? `?${query}` : ''}`)
+  }
+
+  async getEventItem(eventId: string, itemId: string): Promise<EventItem> {
+    return this.request(`/events/${eventId}/items/${itemId}`)
+  }
+
+  async submitEventItem(eventId: string, data: SubmitItemRequest): Promise<EventItem> {
+    return this.request(`/events/${eventId}/items`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async updateEventItem(eventId: string, itemId: string, data: UpdateItemRequest): Promise<EventItem> {
+    return this.request(`/events/${eventId}/items/${itemId}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async removeEventItem(eventId: string, itemId: string): Promise<void> {
+    return this.request(`/events/${eventId}/items/${itemId}`, {
+      method: 'DELETE',
+    })
+  }
+
+  async approveEventItem(eventId: string, itemId: string): Promise<EventItem> {
+    return this.request(`/events/${eventId}/items/${itemId}/approve`, {
+      method: 'POST',
+    })
+  }
+
+  async rejectEventItem(eventId: string, itemId: string, reason: string): Promise<EventItem> {
+    return this.request(`/events/${eventId}/items/${itemId}/reject`, {
+      method: 'POST',
+      body: JSON.stringify({ reason }),
+    })
+  }
+
+  async requestItemResubmit(
+    eventId: string,
+    itemId: string,
+    reason: string
+  ): Promise<EventItem> {
+    return this.request(`/events/${eventId}/items/${itemId}/request-resubmit`, {
+      method: 'POST',
+      body: JSON.stringify({ reason }),
+    })
+  }
+
+  async uploadEventItemImage(
+    eventId: string,
+    itemId: string,
+    file: File
+  ): Promise<{ url: string; id: string }> {
+    const formData = new FormData()
+    formData.append('image', file)
+
+    const token = this.getAccessToken ? await this.getAccessToken() : null
+    const headers: HeadersInit = {}
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
+
+    const response = await fetch(
+      `${API_BASE_URL}/events/${eventId}/items/${itemId}/images`,
+      {
+        method: 'POST',
+        headers,
+        body: formData,
+      }
+    )
+
+    if (!response.ok) {
+      let errorMessage = `Image upload failed (${response.status})`
+      try {
+        const errorData = await response.json()
+        errorMessage = errorData.error || errorData.details || errorMessage
+      } catch {
+        // Ignore JSON parse errors
+      }
+      throw new Error(errorMessage)
+    }
+
+    return response.json()
+  }
+
+  async deleteEventItemImage(eventId: string, itemId: string, imageId: string): Promise<void> {
+    return this.request(`/events/${eventId}/items/${itemId}/images/${imageId}`, {
+      method: 'DELETE',
+    })
+  }
+
+  async reorderEventItemImages(
+    eventId: string,
+    itemId: string,
+    imageIds: string[]
+  ): Promise<void> {
+    return this.request(`/events/${eventId}/items/${itemId}/images/reorder`, {
+      method: 'POST',
+      body: JSON.stringify({ imageIds }),
+    })
+  }
+
+  // Event Bids
+  async getEventItemBids(eventId: string, itemId: string): Promise<EventItemBid[]> {
+    return this.request(`/events/${eventId}/items/${itemId}/bids`)
+  }
+
+  async placeEventBid(
+    eventId: string,
+    itemId: string,
+    data: { amount: number; accessCode?: string }
+  ): Promise<EventItemBid> {
+    return this.request(`/events/${eventId}/items/${itemId}/bids`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async getCurrentBidInfo(eventId: string, itemId: string): Promise<CurrentBidInfo> {
+    return this.request(`/events/${eventId}/items/${itemId}/current-bid`)
+  }
+
+  // Silent Bids
+  async getSilentBidStatus(eventId: string, itemId: string): Promise<SilentBidStatus> {
+    return this.request(`/events/${eventId}/items/${itemId}/silent-bid`)
+  }
+
+  async placeSilentBid(
+    eventId: string,
+    itemId: string,
+    data: { amount: number; notifyOnOutbid?: boolean; accessCode?: string }
+  ): Promise<SilentBidStatus> {
+    return this.request(`/events/${eventId}/items/${itemId}/silent-bid`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async increaseSilentBid(
+    eventId: string,
+    itemId: string,
+    data: { increaseBy: number }
+  ): Promise<SilentBidStatus> {
+    return this.request(`/events/${eventId}/items/${itemId}/silent-bid/increase`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+  }
+
+  // Buy Now
+  async buyNow(
+    eventId: string,
+    itemId: string,
+    data: { accessCode?: string }
+  ): Promise<{ success: boolean; item: EventItem }> {
+    return this.request(`/events/${eventId}/items/${itemId}/buy-now`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+  }
+
+  // My Event Activity
+  async getMyEventBids(eventId: string): Promise<EventItemBid[]> {
+    return this.request(`/events/${eventId}/my/bids`)
+  }
+
+  async getMyEventSubmissions(eventId: string): Promise<EventItem[]> {
+    return this.request(`/events/${eventId}/my/submissions`)
   }
 }
 

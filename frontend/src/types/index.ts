@@ -275,3 +275,169 @@ export interface UpdateOrganizationRequest {
   websiteUrl?: string
   address?: Address
 }
+
+// Event types
+export interface AuctionEvent {
+  id: string
+  name: string
+  slug: string
+  description?: string
+  coverImageUrl?: string
+  organization?: {
+    id: string
+    name: string
+    slug: string
+  }
+  owner?: {
+    id: string
+    name: string
+  }
+  startTime: string
+  endTime: string
+  submissionDeadline?: string
+  auctionType: 'standard' | 'silent'
+  isMultiItem: boolean
+  incrementType: 'fixed' | 'percent'
+  incrementValue: number
+  buyNowEnabled: boolean
+  accessCode?: string
+  tier: EventTier
+  maxItems: number
+  status: EventStatus
+  itemCount: number
+  totalBids: number
+  totalRaised: number
+  isAdmin?: boolean
+  createdAt: string
+}
+
+export type EventTier = 'small' | 'medium' | 'large' | 'unlimited'
+
+export type EventStatus = 'draft' | 'scheduled' | 'active' | 'ended' | 'cancelled'
+
+export interface CreateEventRequest {
+  name: string
+  description?: string
+  organizationId?: string
+  startTime: string
+  endTime: string
+  submissionDeadline?: string
+  auctionType?: 'standard' | 'silent'
+  isMultiItem?: boolean
+  incrementType?: 'fixed' | 'percent'
+  incrementValue?: number
+  buyNowEnabled?: boolean
+  tier: EventTier
+}
+
+export interface UpdateEventRequest {
+  name?: string
+  description?: string
+  startTime?: string
+  endTime?: string
+  submissionDeadline?: string
+  incrementType?: 'fixed' | 'percent'
+  incrementValue?: number
+  buyNowEnabled?: boolean
+}
+
+// Event Item types
+export interface EventItem {
+  id: string
+  eventId: string
+  title: string
+  description?: string
+  condition?: string
+  startingPrice?: number
+  buyNowPrice?: number
+  currentBid?: number
+  bidCount: number
+  auctionType?: 'standard' | 'silent'
+  incrementType?: 'fixed' | 'percent'
+  incrementValue?: number
+  eventStatus?: EventStatus
+  submissionStatus: ItemSubmissionStatus
+  status: ItemStatus
+  submitter?: {
+    id: string
+    name: string
+    email?: string
+  }
+  submitterName?: string
+  rejectionReason?: string
+  allowResubmit?: boolean
+  images: EventItemImage[]
+  isAdmin?: boolean
+  isSubmitter?: boolean
+  createdAt: string
+}
+
+export type ItemSubmissionStatus = 'pending' | 'approved' | 'rejected' | 'resubmit_requested'
+
+export type ItemStatus = 'pending' | 'active' | 'sold' | 'won' | 'unsold' | 'removed'
+
+export interface EventItemImage {
+  id: string
+  blobUrl: string
+  displayOrder: number
+  isPrimary: boolean
+}
+
+export interface SubmitItemRequest {
+  title: string
+  description?: string
+  condition?: string
+  startingPrice?: number
+  buyNowPrice?: number
+  accessCode: string
+}
+
+export interface UpdateItemRequest {
+  title?: string
+  description?: string
+  condition?: string
+  startingPrice?: number
+  buyNowPrice?: number
+}
+
+// Event Bid types
+export interface EventItemBid {
+  id: string
+  itemId?: string
+  amount: number
+  bidderName?: string
+  isWinning: boolean
+  createdAt: string
+  nextMinBid?: number
+}
+
+export interface SilentBidStatus {
+  hasBid: boolean
+  id?: string
+  amount?: number
+  initialAmount?: number
+  increaseCount?: number
+  rank?: number
+  totalBidders?: number
+  notifyOnOutbid?: boolean
+  createdAt?: string
+  lastIncreasedAt?: string
+}
+
+export interface CurrentBidInfo {
+  currentBid: number | null
+  startingPrice: number
+  minBid: number
+  bidCount: number
+  incrementType: 'fixed' | 'percent'
+  incrementValue: number
+  buyNowPrice: number | null
+}
+
+// Pricing tiers
+export interface PricingTiers {
+  small: { fee: number; maxItems: number }
+  medium: { fee: number; maxItems: number }
+  large: { fee: number; maxItems: number }
+  unlimited: { fee: number; maxItems: number | null }
+}

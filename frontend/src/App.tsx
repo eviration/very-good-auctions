@@ -24,6 +24,15 @@ import OrganizationDetailPage from './pages/OrganizationDetailPage'
 import OrganizationDashboardPage from './pages/OrganizationDashboardPage'
 import InvitationAcceptPage from './pages/InvitationAcceptPage'
 
+// Event Pages
+import MyEventsPage from './pages/MyEventsPage'
+import CreateEventPage from './pages/CreateEventPage'
+import EventDashboardPage from './pages/EventDashboardPage'
+import EventDetailPage from './pages/EventDetailPage'
+import EventItemPage from './pages/EventItemPage'
+import SubmitItemPage from './pages/SubmitItemPage'
+import SubmitItemSuccessPage from './pages/SubmitItemSuccessPage'
+
 // Auth
 import { AuthCallback } from './auth/AuthCallback'
 import { ProtectedRoute } from './auth/ProtectedRoute'
@@ -118,6 +127,27 @@ function App() {
           <Route path="/organizations/:slug/manage" element={
             <ProtectedRoute>
               <OrganizationDashboardPage />
+            </ProtectedRoute>
+          } />
+
+          {/* Event routes */}
+          <Route path="/events/:slug" element={<EventDetailPage />} />
+          <Route path="/events/:slug/items/:itemId" element={<EventItemPage />} />
+          <Route path="/events/:slug/submit" element={<SubmitItemPage />} />
+          <Route path="/events/:slug/submit/success" element={<SubmitItemSuccessPage />} />
+          <Route path="/my-events" element={
+            <ProtectedRoute>
+              <MyEventsPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/events/create" element={
+            <ProtectedRoute>
+              <CreateEventPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/events/:slug/manage" element={
+            <ProtectedRoute>
+              <EventDashboardPage />
             </ProtectedRoute>
           } />
 

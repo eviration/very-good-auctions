@@ -10,6 +10,9 @@ import { categoryRoutes } from './routes/categories.js'
 import { webhookRoutes } from './routes/webhooks.js'
 import { organizationRoutes } from './routes/organizations.js'
 import { invitationRoutes } from './routes/invitations.js'
+import { eventRoutes } from './routes/events.js'
+import { eventItemRoutes } from './routes/eventItems.js'
+import { eventBidRoutes } from './routes/eventBids.js'
 import { errorHandler } from './middleware/errorHandler.js'
 import { requestLogger } from './middleware/requestLogger.js'
 import { initializeDatabase } from './config/database.js'
@@ -51,6 +54,9 @@ app.use('/api/categories', categoryRoutes)
 app.use('/api/webhooks', webhookRoutes)
 app.use('/api/organizations', organizationRoutes)
 app.use('/api/invitations', invitationRoutes)
+app.use('/api/events', eventRoutes)
+app.use('/api', eventItemRoutes)
+app.use('/api', eventBidRoutes)
 
 // Error handling
 app.use(errorHandler)

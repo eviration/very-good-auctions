@@ -74,13 +74,40 @@ export async function uploadImage(
 
 export async function deleteImage(blobUrl: string): Promise<void> {
   const container = getContainerClient()
-  
+
   // Extract blob name from URL
   const url = new URL(blobUrl)
   const blobName = url.pathname.split('/').slice(2).join('/')
-  
+
   const blockBlobClient = container.getBlockBlobClient(blobName)
   await blockBlobClient.deleteIfExists()
+}
+
+// Alias for backwards compatibility
+export const deleteBlob = deleteImage
+
+// Generic upload function for any blob
+export async function uploadToBlob(
+  buffer: Buffer,
+  blobName: string,
+  contentType: string
+): Promise<string> {
+  const container = getContainerClient()
+
+  // Ensure container exists
+  await container.createIfNotExists({
+    access: 'blob',
+  })
+
+  const blockBlobClient = container.getBlockBlobClient(blobName)
+
+  await blockBlobClient.uploadData(buffer, {
+    blobHTTPHeaders: {
+      blobContentType: contentType,
+    },
+  })
+
+  return blockBlobClient.url
 }
 
 export async function deleteAuctionImages(auctionId: string): Promise<void> {
