@@ -25,27 +25,6 @@ const upload = multer({
 
 const MAX_IMAGES_PER_ITEM = 20
 
-// Helper to check if user is org member with specific role
-async function checkOrgMembership(orgId: string, userId: string, requiredRoles?: string[]) {
-  const result = await dbQuery(
-    `SELECT role, can_create_auctions, can_manage_members, can_view_financials
-     FROM organization_members
-     WHERE organization_id = @orgId AND user_id = @userId`,
-    { orgId, userId }
-  )
-
-  if (result.recordset.length === 0) {
-    return null
-  }
-
-  const membership = result.recordset[0]
-  if (requiredRoles && !requiredRoles.includes(membership.role)) {
-    return null
-  }
-
-  return membership
-}
-
 // Helper to check event admin access
 async function checkEventAccess(eventId: string, userId: string) {
   const result = await dbQuery(

@@ -1,5 +1,5 @@
 import { Router, Request, Response, NextFunction } from 'express'
-import { body, param, validationResult } from 'express-validator'
+import { param, validationResult } from 'express-validator'
 import { authenticate } from '../middleware/auth.js'
 import { query as dbQuery } from '../config/database.js'
 import { badRequest, notFound, forbidden } from '../middleware/errorHandler.js'
