@@ -59,14 +59,15 @@ export default function HomePage() {
 
           <div className="relative z-10 max-w-3xl mx-auto">
             <h1 className="font-display text-5xl md:text-6xl font-black text-charcoal mb-6 leading-tight tracking-tight">
-              Discover Treasures,
+              A simple way to
               <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-clay-coral via-clay-peach to-clay-butter">
-                Bid with Joy
+                run an auction
               </span>
             </h1>
             <p className="text-xl text-charcoal-light mb-10 font-medium max-w-xl mx-auto">
-              Browse auction events, find unique items, and bid on treasures from collectors around the world.
+              Need to raise money for your school, church, or community group?
+              This is a straightforward tool to help you do that. No fancy features, just the basics done well.
             </p>
 
             {/* Search - Clay Input */}
