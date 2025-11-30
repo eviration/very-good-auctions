@@ -11,10 +11,14 @@ export default function NotificationBell() {
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   // Fetch unread count on mount and periodically
+  // Add a small delay on initial mount to allow token provider setup
   useEffect(() => {
-    fetchUnreadCount()
+    const initialFetch = setTimeout(fetchUnreadCount, 500)
     const interval = setInterval(fetchUnreadCount, 30000) // Poll every 30 seconds
-    return () => clearInterval(interval)
+    return () => {
+      clearTimeout(initialFetch)
+      clearInterval(interval)
+    }
   }, [])
 
   // Close dropdown when clicking outside
