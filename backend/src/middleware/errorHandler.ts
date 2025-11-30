@@ -13,47 +13,21 @@ export function errorHandler(
   res: Response,
   _next: NextFunction
 ): void {
-  // Enhanced error logging for SQL errors
-  const mssqlError = err as any
   console.error('Error:', {
     message: err.message,
-    code: err.code || mssqlError.code,
-    number: mssqlError.number,
-    state: mssqlError.state,
-    class: mssqlError.class,
-    serverName: mssqlError.serverName,
-    procName: mssqlError.procName,
-    lineNumber: mssqlError.lineNumber,
-    originalError: mssqlError.originalError?.message,
     stack: err.stack,
     path: req.path,
     method: req.method,
   })
 
   const statusCode = err.statusCode || 500
-  const code = err.code || mssqlError.code || 'INTERNAL_ERROR'
   const message = statusCode === 500 ? 'Internal server error' : err.message
-
-  // Include debug info for 500 errors in dev
-  const debugInfo = statusCode === 500 ? {
-    debug: {
-      message: err.message,
-      number: mssqlError.number,
-      state: mssqlError.state,
-      class: mssqlError.class,
-      serverName: mssqlError.serverName,
-      procName: mssqlError.procName,
-      lineNumber: mssqlError.lineNumber,
-      originalError: mssqlError.originalError?.message,
-    }
-  } : {}
 
   res.status(statusCode).json({
     error: {
-      code,
+      code: err.code || 'INTERNAL_ERROR',
       message,
       ...(err.details && { details: err.details }),
-      ...debugInfo,
     },
   })
 }

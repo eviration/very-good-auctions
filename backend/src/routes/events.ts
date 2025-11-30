@@ -294,50 +294,35 @@ router.get(
       const organizationId = req.query.organizationId as string
       const offset = (page - 1) * pageSize
 
-      let whereClause = "WHERE status IN ('scheduled', 'active', 'ended')"
+      // Use 'e.' prefix for column names to avoid ambiguity with JOINed tables
+      let whereClause = "WHERE e.status IN ('scheduled', 'active', 'ended')"
       const params: Record<string, any> = {}
 
       if (status) {
-        whereClause = "WHERE status = @status"
+        whereClause = "WHERE e.status = @status"
         params.status = status
       }
 
       if (auctionType) {
-        whereClause += " AND auction_type = @auctionType"
+        whereClause += " AND e.auction_type = @auctionType"
         params.auctionType = auctionType
       }
 
       if (organizationId) {
-        whereClause += " AND organization_id = @organizationId"
+        whereClause += " AND e.organization_id = @organizationId"
         params.organizationId = organizationId
       }
 
-      // Get total count
-      console.log('Events query whereClause:', whereClause)
-      console.log('Events query params:', JSON.stringify(params))
+      // Get total count (use 'e' alias to match whereClause)
       let countResult
       try {
         countResult = await dbQuery(
-          `SELECT COUNT(*) as total FROM auction_events ${whereClause}`,
+          `SELECT COUNT(*) as total FROM auction_events e ${whereClause}`,
           params
         )
-      } catch (err: any) {
+      } catch (err) {
         console.error('Count query failed:', err)
-        // Return detailed error for debugging
-        res.status(500).json({
-          error: {
-            code: err.code || 'UNKNOWN',
-            message: err.message,
-            number: err.number,
-            state: err.state,
-            class: err.class,
-            serverName: err.serverName,
-            procName: err.procName,
-            lineNumber: err.lineNumber,
-            originalError: err.originalError?.message,
-          }
-        })
-        return
+        throw err
       }
       const totalItems = countResult.recordset[0].total
 
