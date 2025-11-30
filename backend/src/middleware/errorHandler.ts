@@ -34,11 +34,26 @@ export function errorHandler(
   const code = err.code || mssqlError.code || 'INTERNAL_ERROR'
   const message = statusCode === 500 ? 'Internal server error' : err.message
 
+  // Include debug info for 500 errors in dev
+  const debugInfo = statusCode === 500 ? {
+    debug: {
+      message: err.message,
+      number: mssqlError.number,
+      state: mssqlError.state,
+      class: mssqlError.class,
+      serverName: mssqlError.serverName,
+      procName: mssqlError.procName,
+      lineNumber: mssqlError.lineNumber,
+      originalError: mssqlError.originalError?.message,
+    }
+  } : {}
+
   res.status(statusCode).json({
     error: {
       code,
       message,
       ...(err.details && { details: err.details }),
+      ...debugInfo,
     },
   })
 }
