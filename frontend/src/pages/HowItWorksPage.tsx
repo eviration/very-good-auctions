@@ -32,7 +32,7 @@ export default function HowItWorksPage() {
   const features = [
     {
       title: 'Simple by design',
-      description: 'I built this to be straightforward. If you can send an email, you can run an auction here.',
+      description: 'If you can send an email, you can run an auction here. No training required.',
     },
     {
       title: 'Predictable pricing',
@@ -53,11 +53,11 @@ export default function HowItWorksPage() {
             A straightforward way to run online auctions
           </h1>
           <p className="text-lg text-charcoal-light font-medium max-w-2xl mx-auto mb-6">
-            I built this because too many fundraising tools are either overly complicated
-            or way too expensive for what small organizations actually need.
+            Most fundraising tools are either overly complicated or way too expensive
+            for what small organizations actually need.
           </p>
           <p className="text-lg text-charcoal-light font-medium max-w-2xl mx-auto">
-            This does one thing well: it helps you run an online auction to raise money
+            This does one thing well: helps you run an online auction to raise money
             for your group. Nothing more, nothing less.
           </p>
         </div>
@@ -132,12 +132,12 @@ export default function HowItWorksPage() {
             About this project
           </h2>
           <p className="text-charcoal-light mb-4">
-            I'm a solo developer. This isn't a venture-backed startup trying to dominate the market.
-            I built this because I thought a simple, affordable auction tool should exist for
-            everyday organizations.
+            This isn't a venture-backed startup trying to dominate the market.
+            It's a simple, affordable auction tool that exists for everyday organizations
+            like schools, churches, and community groups.
           </p>
           <p className="text-charcoal-light">
-            If you run into any issues or have questions, feel free to reach out. I'm happy to help.
+            If you run into any issues or have questions, feel free to reach out.
           </p>
         </div>
 
