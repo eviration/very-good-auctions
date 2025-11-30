@@ -57,7 +57,7 @@ function PaymentForm({ itemId, onSuccess, onCancel }: {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {error && (
-        <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
+        <div className="p-4 bg-clay-coral/20 rounded-clay text-clay-coral font-bold text-sm">
           {error}
         </div>
       )}
@@ -69,14 +69,14 @@ function PaymentForm({ itemId, onSuccess, onCancel }: {
           type="button"
           onClick={onCancel}
           disabled={isProcessing}
-          className="flex-1 py-3 border border-sage rounded-xl font-semibold text-sage hover:bg-sage/10 disabled:opacity-50"
+          className="flex-1 clay-button bg-clay-surface disabled:opacity-50"
         >
           Cancel
         </button>
         <button
           type="submit"
           disabled={!stripe || isProcessing}
-          className="flex-1 py-3 bg-sage text-white font-semibold rounded-xl hover:bg-sage/90 disabled:opacity-50"
+          className="flex-1 clay-button bg-clay-mint disabled:opacity-50"
         >
           {isProcessing ? 'Processing...' : 'Pay Now'}
         </button>
@@ -160,233 +160,249 @@ export default function MyWinsPage() {
 
   if (loading) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="flex justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sage"></div>
+      <div className="min-h-screen bg-clay-bg">
+        <div className="max-w-4xl mx-auto px-4 py-12">
+          <div className="flex justify-center py-16">
+            <div className="w-16 h-16 rounded-clay bg-clay-mint shadow-clay-pressed flex items-center justify-center">
+              <div className="w-8 h-8 border-3 border-charcoal border-t-transparent rounded-full animate-spin" />
+            </div>
+          </div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      <h1 className="font-display text-3xl font-bold text-charcoal mb-8">My Wins</h1>
-
-      {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600">
-          {error}
+    <div className="min-h-screen bg-clay-bg">
+      <div className="max-w-4xl mx-auto px-4 py-12">
+        {/* Header */}
+        <div className="clay-section mb-8">
+          <h1 className="font-display text-4xl font-black text-charcoal mb-2">My Wins</h1>
+          <p className="text-charcoal-light font-medium">Items you've won at auction</p>
         </div>
-      )}
 
-      {wins.length === 0 ? (
-        <div className="text-center py-12 bg-white rounded-xl border border-sage/20">
-          <svg
-            className="w-16 h-16 text-gray-300 mx-auto mb-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={1.5}
-              d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
-            />
-          </svg>
-          <h2 className="text-xl font-semibold text-charcoal mb-2">No wins yet</h2>
-          <p className="text-gray-500 mb-6">
-            When you win auction items, they'll appear here for payment
-          </p>
-          <Link
-            to="/"
-            className="inline-block bg-sage text-white px-6 py-3 rounded-xl font-semibold hover:bg-sage/90"
-          >
-            Browse Auctions
-          </Link>
-        </div>
-      ) : (
-        <div className="space-y-8">
-          {/* Pending Payments */}
-          {pendingWins.length > 0 && (
-            <div>
-              <h2 className="text-lg font-semibold text-charcoal mb-4">
-                Pending Payments ({pendingWins.length})
-              </h2>
-              <div className="space-y-4">
-                {pendingWins.map((item) => (
-                  <div
-                    key={item.id}
-                    className="bg-white rounded-xl border border-sage/20 p-6"
-                  >
-                    <div className="flex items-start gap-4">
-                      {/* Image */}
-                      {item.imageUrl ? (
-                        <img
-                          src={item.imageUrl}
-                          alt={item.title}
-                          className="w-24 h-24 object-cover rounded-lg flex-shrink-0"
-                        />
-                      ) : (
-                        <div className="w-24 h-24 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <svg
-                            className="w-8 h-8 text-gray-300"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={1.5}
-                              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                            />
-                          </svg>
-                        </div>
-                      )}
+        {error && (
+          <div className="clay-section mb-8 bg-clay-coral/20 border-clay-coral/40">
+            <p className="text-clay-coral font-bold">{error}</p>
+          </div>
+        )}
 
-                      {/* Details */}
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-charcoal truncate">{item.title}</h3>
-                        <Link
-                          to={`/events/${item.eventSlug}`}
-                          className="text-sm text-sage hover:underline"
-                        >
-                          {item.eventName}
-                        </Link>
-                        <p className="text-sm text-gray-500 mt-1">
-                          Won on {formatDate(item.eventEndedAt)}
-                        </p>
-                      </div>
-
-                      {/* Price & Pay Button */}
-                      <div className="text-right flex-shrink-0">
-                        <div className="text-sm text-gray-500">Total due</div>
-                        <div className="text-2xl font-bold text-sage">${item.total.toFixed(2)}</div>
-                        <div className="text-xs text-gray-500">
-                          ${item.winningAmount.toFixed(2)} + ${item.platformFee.toFixed(2)} fee
-                        </div>
-                        {payingItemId !== item.id && (
-                          <button
-                            onClick={() => handlePayClick(item.id)}
-                            className="mt-3 px-6 py-2 bg-sage text-white font-semibold rounded-lg hover:bg-sage/90"
-                          >
-                            Pay Now
-                          </button>
+        {wins.length === 0 ? (
+          <div className="clay-section text-center py-16">
+            <div className="w-20 h-20 bg-clay-butter rounded-clay flex items-center justify-center mx-auto mb-6 shadow-clay">
+              <svg
+                className="w-10 h-10 text-charcoal"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
+                />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-black text-charcoal mb-2">No wins yet</h2>
+            <p className="text-charcoal-light font-medium mb-8">
+              When you win auction items, they'll appear here for payment
+            </p>
+            <Link
+              to="/"
+              className="clay-button bg-clay-mint font-bold inline-flex items-center gap-2"
+            >
+              Browse Auctions
+            </Link>
+          </div>
+        ) : (
+          <div className="space-y-8">
+            {/* Pending Payments */}
+            {pendingWins.length > 0 && (
+              <div>
+                <div className="clay-badge bg-clay-peach mb-4">
+                  <span className="font-black">Pending Payments</span>
+                  <span className="text-charcoal-light">({pendingWins.length})</span>
+                </div>
+                <div className="space-y-4">
+                  {pendingWins.map((item) => (
+                    <div
+                      key={item.id}
+                      className="clay-card p-6"
+                    >
+                      <div className="flex items-start gap-4">
+                        {/* Image */}
+                        {item.imageUrl ? (
+                          <img
+                            src={item.imageUrl}
+                            alt={item.title}
+                            className="w-24 h-24 object-cover rounded-clay shadow-clay-sm flex-shrink-0"
+                          />
+                        ) : (
+                          <div className="w-24 h-24 bg-clay-lavender/30 rounded-clay shadow-clay-sm flex items-center justify-center flex-shrink-0">
+                            <svg
+                              className="w-8 h-8 text-charcoal-light"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                              />
+                            </svg>
+                          </div>
                         )}
-                      </div>
-                    </div>
 
-                    {/* Payment Form */}
-                    {payingItemId === item.id && clientSecret && (
-                      <div className="mt-6 pt-6 border-t border-gray-200">
-                        <div className="mb-4">
-                          <h4 className="font-medium text-charcoal mb-2">Payment Breakdown</h4>
-                          <div className="bg-sage/10 rounded-lg p-4 space-y-2">
-                            <div className="flex justify-between">
-                              <span className="text-gray-600">Winning Bid</span>
-                              <span className="font-medium">${paymentBreakdown?.winningBid.toFixed(2)}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-gray-600">Platform Fee (5%)</span>
-                              <span className="font-medium">${paymentBreakdown?.platformFee.toFixed(2)}</span>
-                            </div>
-                            <div className="flex justify-between border-t border-sage/20 pt-2">
-                              <span className="font-semibold text-charcoal">Total</span>
-                              <span className="font-bold text-sage">${paymentBreakdown?.total.toFixed(2)}</span>
+                        {/* Details */}
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-bold text-charcoal truncate">{item.title}</h3>
+                          <Link
+                            to={`/events/${item.eventSlug}`}
+                            className="text-sm text-charcoal-light font-medium hover:text-charcoal"
+                          >
+                            {item.eventName}
+                          </Link>
+                          <p className="text-sm text-charcoal-light mt-1">
+                            Won on {formatDate(item.eventEndedAt)}
+                          </p>
+                        </div>
+
+                        {/* Price & Pay Button */}
+                        <div className="text-right flex-shrink-0">
+                          <div className="text-sm text-charcoal-light font-medium">Total due</div>
+                          <div className="text-2xl font-black text-charcoal">${item.total.toFixed(2)}</div>
+                          <div className="text-xs text-charcoal-light">
+                            ${item.winningAmount.toFixed(2)} + ${item.platformFee.toFixed(2)} fee
+                          </div>
+                          {payingItemId !== item.id && (
+                            <button
+                              onClick={() => handlePayClick(item.id)}
+                              className="mt-3 clay-button bg-clay-mint text-sm py-2"
+                            >
+                              Pay Now
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Payment Form */}
+                      {payingItemId === item.id && clientSecret && (
+                        <div className="mt-6 pt-6 border-t-2 border-white/60">
+                          <div className="mb-6">
+                            <h4 className="font-bold text-charcoal mb-3">Payment Breakdown</h4>
+                            <div className="bg-clay-mint/20 rounded-clay p-4 space-y-2">
+                              <div className="flex justify-between">
+                                <span className="text-charcoal-light font-medium">Winning Bid</span>
+                                <span className="font-bold text-charcoal">${paymentBreakdown?.winningBid.toFixed(2)}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-charcoal-light font-medium">Platform Fee (5%)</span>
+                                <span className="font-bold text-charcoal">${paymentBreakdown?.platformFee.toFixed(2)}</span>
+                              </div>
+                              <div className="flex justify-between border-t-2 border-white/60 pt-2">
+                                <span className="font-black text-charcoal">Total</span>
+                                <span className="font-black text-charcoal text-lg">${paymentBreakdown?.total.toFixed(2)}</span>
+                              </div>
                             </div>
                           </div>
-                        </div>
 
-                        <Elements
-                          stripe={stripePromise}
-                          options={{
-                            clientSecret,
-                            appearance: {
-                              theme: 'stripe',
-                              variables: {
-                                colorPrimary: '#7C9A6E',
+                          <Elements
+                            stripe={stripePromise}
+                            options={{
+                              clientSecret,
+                              appearance: {
+                                theme: 'flat',
+                                variables: {
+                                  colorPrimary: '#A8E6CF',
+                                  borderRadius: '16px',
+                                  fontFamily: 'Nunito, system-ui, sans-serif',
+                                },
                               },
-                            },
-                          }}
-                        >
-                          <PaymentForm
-                            itemId={item.id}
-                            onSuccess={handlePaymentSuccess}
-                            onCancel={handlePaymentCancel}
-                          />
-                        </Elements>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Paid Items */}
-          {paidWins.length > 0 && (
-            <div>
-              <h2 className="text-lg font-semibold text-charcoal mb-4">
-                Completed Purchases ({paidWins.length})
-              </h2>
-              <div className="space-y-4">
-                {paidWins.map((item) => (
-                  <div
-                    key={item.id}
-                    className="bg-white rounded-xl border border-sage/20 p-6 opacity-75"
-                  >
-                    <div className="flex items-start gap-4">
-                      {/* Image */}
-                      {item.imageUrl ? (
-                        <img
-                          src={item.imageUrl}
-                          alt={item.title}
-                          className="w-20 h-20 object-cover rounded-lg flex-shrink-0"
-                        />
-                      ) : (
-                        <div className="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <svg
-                            className="w-6 h-6 text-gray-300"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
+                            }}
                           >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={1.5}
-                              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                            <PaymentForm
+                              itemId={item.id}
+                              onSuccess={handlePaymentSuccess}
+                              onCancel={handlePaymentCancel}
                             />
-                          </svg>
+                          </Elements>
                         </div>
                       )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
-                      {/* Details */}
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-charcoal truncate">{item.title}</h3>
-                        <Link
-                          to={`/events/${item.eventSlug}`}
-                          className="text-sm text-sage hover:underline"
-                        >
-                          {item.eventName}
-                        </Link>
-                      </div>
+            {/* Paid Items */}
+            {paidWins.length > 0 && (
+              <div>
+                <div className="clay-badge bg-clay-mint mb-4">
+                  <span className="font-black">Completed Purchases</span>
+                  <span className="text-charcoal-light">({paidWins.length})</span>
+                </div>
+                <div className="space-y-4">
+                  {paidWins.map((item) => (
+                    <div
+                      key={item.id}
+                      className="clay-card p-6 opacity-80"
+                    >
+                      <div className="flex items-start gap-4">
+                        {/* Image */}
+                        {item.imageUrl ? (
+                          <img
+                            src={item.imageUrl}
+                            alt={item.title}
+                            className="w-20 h-20 object-cover rounded-clay shadow-clay-sm flex-shrink-0"
+                          />
+                        ) : (
+                          <div className="w-20 h-20 bg-clay-lavender/30 rounded-clay shadow-clay-sm flex items-center justify-center flex-shrink-0">
+                            <svg
+                              className="w-6 h-6 text-charcoal-light"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                              />
+                            </svg>
+                          </div>
+                        )}
 
-                      {/* Status */}
-                      <div className="text-right flex-shrink-0">
-                        <div className="text-lg font-bold text-charcoal">${item.total.toFixed(2)}</div>
-                        <span className="inline-block px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
-                          Paid
-                        </span>
+                        {/* Details */}
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-bold text-charcoal truncate">{item.title}</h3>
+                          <Link
+                            to={`/events/${item.eventSlug}`}
+                            className="text-sm text-charcoal-light font-medium hover:text-charcoal"
+                          >
+                            {item.eventName}
+                          </Link>
+                        </div>
+
+                        {/* Status */}
+                        <div className="text-right flex-shrink-0">
+                          <div className="text-lg font-black text-charcoal">${item.total.toFixed(2)}</div>
+                          <span className="clay-badge text-xs bg-clay-mint">
+                            Paid
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
-        </div>
-      )}
+            )}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

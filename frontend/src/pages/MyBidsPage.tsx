@@ -6,13 +6,6 @@ type EventBid = Awaited<ReturnType<typeof apiClient.getAllMyBids>>[number]
 
 type FilterType = 'all' | 'winning' | 'outbid' | 'active' | 'ended'
 
-const statusColors: Record<string, string> = {
-  active: 'bg-green-100 text-green-800',
-  ended: 'bg-gray-100 text-gray-800',
-  scheduled: 'bg-blue-100 text-blue-800',
-  draft: 'bg-yellow-100 text-yellow-800',
-}
-
 export default function MyBidsPage() {
   const [bids, setBids] = useState<EventBid[]>([])
   const [loading, setLoading] = useState(true)
@@ -78,202 +71,213 @@ export default function MyBidsPage() {
 
   if (loading) {
     return (
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        <div className="flex justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sage"></div>
+      <div className="min-h-screen bg-clay-bg">
+        <div className="max-w-6xl mx-auto px-4 py-12">
+          <div className="flex justify-center py-16">
+            <div className="w-16 h-16 rounded-clay bg-clay-mint shadow-clay-pressed flex items-center justify-center">
+              <div className="w-8 h-8 border-3 border-charcoal border-t-transparent rounded-full animate-spin" />
+            </div>
+          </div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="font-display text-3xl font-bold text-charcoal">My Bids</h1>
-          <p className="text-gray-500 mt-1">Track your bids across all auction events</p>
+    <div className="min-h-screen bg-clay-bg">
+      <div className="max-w-6xl mx-auto px-4 py-12">
+        {/* Header */}
+        <div className="clay-section mb-8">
+          <h1 className="font-display text-4xl font-black text-charcoal mb-2">My Bids</h1>
+          <p className="text-charcoal-light font-medium">Track your bids across all auction events</p>
         </div>
-      </div>
 
-      {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600">
-          {error}
+        {error && (
+          <div className="clay-section mb-8 bg-clay-coral/20 border-clay-coral/40">
+            <p className="text-clay-coral font-bold">{error}</p>
+          </div>
+        )}
+
+        {/* Summary Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <div className="clay-card p-5">
+            <p className="text-sm text-charcoal-light font-bold">Total Bids</p>
+            <p className="text-3xl font-black text-charcoal">{bids.length}</p>
+          </div>
+          <div className="clay-card p-5 bg-clay-mint/30">
+            <p className="text-sm text-charcoal-light font-bold">Winning</p>
+            <p className="text-3xl font-black text-charcoal">{winningCount}</p>
+          </div>
+          <div className="clay-card p-5 bg-clay-peach/30">
+            <p className="text-sm text-charcoal-light font-bold">Outbid</p>
+            <p className="text-3xl font-black text-charcoal">{outbidCount}</p>
+          </div>
+          <div className="clay-card p-5 bg-clay-lavender/30">
+            <p className="text-sm text-charcoal-light font-bold">Events</p>
+            <p className="text-3xl font-black text-charcoal">{Object.keys(bidsByEvent).length}</p>
+          </div>
         </div>
-      )}
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <div className="bg-white rounded-xl border border-sage/20 p-4">
-          <p className="text-sm text-gray-500">Total Bids</p>
-          <p className="text-2xl font-bold text-charcoal">{bids.length}</p>
-        </div>
-        <div className="bg-green-50 rounded-xl border border-green-200 p-4">
-          <p className="text-sm text-green-600">Winning</p>
-          <p className="text-2xl font-bold text-green-700">{winningCount}</p>
-        </div>
-        <div className="bg-amber-50 rounded-xl border border-amber-200 p-4">
-          <p className="text-sm text-amber-600">Outbid</p>
-          <p className="text-2xl font-bold text-amber-700">{outbidCount}</p>
-        </div>
-        <div className="bg-sage/10 rounded-xl border border-sage/20 p-4">
-          <p className="text-sm text-sage">Events</p>
-          <p className="text-2xl font-bold text-sage">{Object.keys(bidsByEvent).length}</p>
-        </div>
-      </div>
-
-      {/* Filters */}
-      <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-        {([
-          { value: 'all', label: 'All Bids' },
-          { value: 'winning', label: 'Winning' },
-          { value: 'outbid', label: 'Outbid' },
-          { value: 'active', label: 'Active Events' },
-          { value: 'ended', label: 'Ended Events' },
-        ] as const).map((tab) => (
-          <button
-            key={tab.value}
-            onClick={() => setFilter(tab.value)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
-              filter === tab.value
-                ? 'bg-sage text-white'
-                : 'bg-sage/10 text-charcoal hover:bg-sage/20'
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
-      {filteredBids.length === 0 ? (
-        <div className="text-center py-12 bg-white rounded-xl border border-sage/20">
-          <svg
-            className="w-16 h-16 text-gray-300 mx-auto mb-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={1.5}
-              d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
-            />
-          </svg>
-          <h2 className="text-xl font-semibold text-charcoal mb-2">
-            {filter === 'all' ? 'No bids yet' : `No ${filter} bids`}
-          </h2>
-          <p className="text-gray-500 mb-6">
-            {filter === 'all'
-              ? 'Start bidding on auction items to see your activity here'
-              : 'Try changing the filter to see other bids'}
-          </p>
-          <Link
-            to="/"
-            className="inline-block bg-sage text-white px-6 py-3 rounded-xl font-semibold hover:bg-sage/90"
-          >
-            Browse Events
-          </Link>
-        </div>
-      ) : (
-        <div className="space-y-8">
-          {Object.values(bidsByEvent).map(({ event, bids: eventBids }) => (
-            <div key={event.id} className="bg-white rounded-xl border border-sage/20 overflow-hidden">
-              {/* Event Header */}
-              <Link
-                to={`/events/${event.slug}`}
-                className="block p-4 bg-sage/5 border-b border-sage/10 hover:bg-sage/10 transition-colors"
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-semibold text-charcoal">{event.name}</h3>
-                    <p className="text-sm text-gray-500">
-                      {event.auctionType === 'silent' ? 'Silent Auction' : 'Live Auction'} - Ends {formatDate(event.endTime)}
-                    </p>
-                  </div>
-                  <span className={`text-xs px-2 py-1 rounded-full font-medium ${statusColors[event.status] || 'bg-gray-100'}`}>
-                    {event.status.charAt(0).toUpperCase() + event.status.slice(1)}
-                  </span>
-                </div>
-              </Link>
-
-              {/* Bids List */}
-              <div className="divide-y divide-gray-100">
-                {eventBids.map((bid) => (
-                  <Link
-                    key={bid.id}
-                    to={`/events/${event.slug}/items/${bid.item.id}`}
-                    className="flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors"
-                  >
-                    {/* Item Image */}
-                    {bid.item.imageUrl ? (
-                      <img
-                        src={bid.item.imageUrl}
-                        alt={bid.item.title}
-                        className="w-16 h-16 object-cover rounded-lg flex-shrink-0"
-                      />
-                    ) : (
-                      <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <svg
-                          className="w-6 h-6 text-gray-300"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={1.5}
-                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                          />
-                        </svg>
-                      </div>
-                    )}
-
-                    {/* Item Details */}
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-medium text-charcoal truncate">{bid.item.title}</h4>
-                      <p className="text-sm text-gray-500">
-                        Your bid: <span className="font-semibold">${bid.amount.toFixed(2)}</span>
-                        {bid.item.currentBid && (
-                          <span className="ml-2">
-                            Current: <span className="font-semibold">${bid.item.currentBid.toFixed(2)}</span>
-                          </span>
-                        )}
-                      </p>
-                      <p className="text-xs text-gray-400 mt-1">
-                        {formatDate(bid.createdAt)}
-                      </p>
-                    </div>
-
-                    {/* Status */}
-                    <div className="flex-shrink-0">
-                      {bid.isWinning ? (
-                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                          Winning
-                        </span>
-                      ) : event.status === 'active' ? (
-                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-sm font-medium">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                          </svg>
-                          Outbid
-                        </span>
-                      ) : (
-                        <span className="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-sm font-medium">
-                          Ended
-                        </span>
-                      )}
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </div>
+        {/* Filters */}
+        <div className="flex flex-wrap gap-3 mb-8">
+          {([
+            { value: 'all', label: 'All Bids', color: 'bg-clay-butter' },
+            { value: 'winning', label: 'Winning', color: 'bg-clay-mint' },
+            { value: 'outbid', label: 'Outbid', color: 'bg-clay-peach' },
+            { value: 'active', label: 'Active Events', color: 'bg-clay-sky' },
+            { value: 'ended', label: 'Ended Events', color: 'bg-clay-lavender' },
+          ] as const).map((tab) => (
+            <button
+              key={tab.value}
+              onClick={() => setFilter(tab.value)}
+              className={`clay-button text-sm transition-all ${
+                filter === tab.value
+                  ? `${tab.color} shadow-clay scale-105`
+                  : 'bg-clay-surface hover:bg-clay-butter'
+              }`}
+            >
+              {tab.label}
+            </button>
           ))}
         </div>
-      )}
+
+        {filteredBids.length === 0 ? (
+          <div className="clay-section text-center py-16">
+            <div className="w-20 h-20 bg-clay-peach rounded-clay flex items-center justify-center mx-auto mb-6 shadow-clay">
+              <svg
+                className="w-10 h-10 text-charcoal"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
+                />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-black text-charcoal mb-2">
+              {filter === 'all' ? 'No bids yet' : `No ${filter} bids`}
+            </h2>
+            <p className="text-charcoal-light font-medium mb-8">
+              {filter === 'all'
+                ? 'Start bidding on auction items to see your activity here'
+                : 'Try changing the filter to see other bids'}
+            </p>
+            <Link
+              to="/"
+              className="clay-button bg-clay-mint font-bold inline-flex items-center gap-2"
+            >
+              Browse Events
+            </Link>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {Object.values(bidsByEvent).map(({ event, bids: eventBids }) => (
+              <div key={event.id} className="clay-card overflow-hidden">
+                {/* Event Header */}
+                <Link
+                  to={`/events/${event.slug}`}
+                  className="block p-5 bg-clay-butter/30 border-b-2 border-white/60 hover:bg-clay-butter/50 transition-colors"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-black text-lg text-charcoal">{event.name}</h3>
+                      <p className="text-sm text-charcoal-light font-medium">
+                        {event.auctionType === 'silent' ? 'Silent Auction' : 'Live Auction'} - Ends {formatDate(event.endTime)}
+                      </p>
+                    </div>
+                    <span className={`clay-badge text-xs ${
+                      event.status === 'active' ? 'bg-clay-mint' :
+                      event.status === 'ended' ? 'bg-clay-lavender' :
+                      'bg-clay-sky'
+                    }`}>
+                      {event.status.charAt(0).toUpperCase() + event.status.slice(1)}
+                    </span>
+                  </div>
+                </Link>
+
+                {/* Bids List */}
+                <div className="divide-y-2 divide-white/40">
+                  {eventBids.map((bid) => (
+                    <Link
+                      key={bid.id}
+                      to={`/events/${event.slug}/items/${bid.item.id}`}
+                      className="flex items-center gap-4 p-5 hover:bg-clay-mint/10 transition-colors"
+                    >
+                      {/* Item Image */}
+                      {bid.item.imageUrl ? (
+                        <img
+                          src={bid.item.imageUrl}
+                          alt={bid.item.title}
+                          className="w-16 h-16 object-cover rounded-clay shadow-clay-sm flex-shrink-0"
+                        />
+                      ) : (
+                        <div className="w-16 h-16 bg-clay-lavender/30 rounded-clay shadow-clay-sm flex items-center justify-center flex-shrink-0">
+                          <svg
+                            className="w-6 h-6 text-charcoal-light"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                            />
+                          </svg>
+                        </div>
+                      )}
+
+                      {/* Item Details */}
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-bold text-charcoal truncate">{bid.item.title}</h4>
+                        <p className="text-sm text-charcoal-light font-medium">
+                          Your bid: <span className="font-black text-charcoal">${bid.amount.toFixed(2)}</span>
+                          {bid.item.currentBid && (
+                            <span className="ml-2">
+                              Current: <span className="font-black">${bid.item.currentBid.toFixed(2)}</span>
+                            </span>
+                          )}
+                        </p>
+                        <p className="text-xs text-charcoal-light mt-1">
+                          {formatDate(bid.createdAt)}
+                        </p>
+                      </div>
+
+                      {/* Status */}
+                      <div className="flex-shrink-0">
+                        {bid.isWinning ? (
+                          <span className="clay-badge bg-clay-mint text-charcoal">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                            </svg>
+                            Winning
+                          </span>
+                        ) : event.status === 'active' ? (
+                          <span className="clay-badge bg-clay-peach text-charcoal">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                            Outbid
+                          </span>
+                        ) : (
+                          <span className="clay-badge bg-clay-lavender text-charcoal">
+                            Ended
+                          </span>
+                        )}
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

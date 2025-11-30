@@ -45,14 +45,14 @@ export default function Header() {
   }, [location.pathname])
 
   return (
-    <header className="bg-warm-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+    <header className="bg-clay-surface border-b-2 border-white/60 sticky top-0 z-50 shadow-clay-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-sage flex items-center justify-center">
+          <Link to="/" className="flex items-center gap-3 group">
+            <div className="w-12 h-12 rounded-clay bg-clay-mint shadow-clay-sm flex items-center justify-center transition-all duration-200 group-hover:shadow-clay group-hover:-translate-y-0.5">
               <svg
-                className="w-7 h-7 text-white"
+                className="w-7 h-7 text-charcoal"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -60,31 +60,31 @@ export default function Header() {
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  strokeWidth={2}
+                  strokeWidth={2.5}
                   d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
             </div>
             <div>
-              <h1 className="font-display text-xl font-bold text-charcoal leading-tight">
+              <h1 className="font-display text-xl font-black text-charcoal leading-tight">
                 Very Good
               </h1>
-              <p className="text-xs text-gray-500 uppercase tracking-wider">
+              <p className="text-xs text-charcoal-light font-bold uppercase tracking-wider">
                 Auctions
               </p>
             </div>
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-8">
+          <nav className="hidden md:flex items-center gap-2">
             {navLinks.map((link) => (
               <Link
                 key={link.path}
                 to={link.path}
-                className={`text-lg font-medium transition-colors ${
+                className={`clay-button text-base transition-all ${
                   isActive(link.path)
-                    ? 'text-sage border-b-2 border-sage pb-1'
-                    : 'text-charcoal hover:text-sage'
+                    ? 'bg-clay-mint shadow-clay scale-105'
+                    : 'bg-clay-surface hover:bg-clay-butter'
                 }`}
               >
                 {link.label}
@@ -93,9 +93,11 @@ export default function Header() {
           </nav>
 
           {/* User Actions */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             {isLoading ? (
-              <div className="w-8 h-8 border-2 border-sage border-t-transparent rounded-full animate-spin" />
+              <div className="w-10 h-10 rounded-clay bg-clay-mint shadow-clay-pressed flex items-center justify-center">
+                <div className="w-5 h-5 border-2 border-charcoal border-t-transparent rounded-full animate-spin" />
+              </div>
             ) : isAuthenticated && user ? (
               <div className="flex items-center gap-3">
                 <NotificationBell />
@@ -104,68 +106,72 @@ export default function Header() {
                 <div className="relative" ref={accountMenuRef}>
                   <button
                     onClick={() => setAccountMenuOpen(!accountMenuOpen)}
-                    className="flex items-center gap-2 px-3 py-2 bg-cream rounded-full border border-gray-200 hover:border-sage transition-colors"
+                    className={`flex items-center gap-2 clay-button py-2 transition-all ${
+                      accountMenuOpen ? 'bg-clay-mint shadow-clay' : 'bg-clay-surface hover:bg-clay-butter'
+                    }`}
                   >
-                    <div className="w-8 h-8 rounded-full bg-sage flex items-center justify-center text-white font-semibold">
+                    <div className="w-8 h-8 rounded-clay-pill bg-clay-peach shadow-clay-sm flex items-center justify-center text-charcoal font-black text-sm">
                       {user.name.charAt(0).toUpperCase()}
                     </div>
-                    <span className="font-medium text-charcoal hidden sm:inline">
+                    <span className="font-bold text-charcoal hidden sm:inline">
                       {user.name}
                     </span>
                     <svg
-                      className={`w-4 h-4 text-gray-500 transition-transform ${accountMenuOpen ? 'rotate-180' : ''}`}
+                      className={`w-4 h-4 text-charcoal-light transition-transform ${accountMenuOpen ? 'rotate-180' : ''}`}
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
                     >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
                     </svg>
                   </button>
 
                   {/* Dropdown Menu */}
                   {accountMenuOpen && (
-                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50">
+                    <div className="absolute right-0 mt-3 w-64 clay-section p-3 z-50">
                       {/* Profile link */}
                       <Link
                         to="/profile"
-                        className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors border-b border-gray-100"
+                        className="flex items-center gap-3 p-3 rounded-clay hover:bg-clay-mint/30 transition-colors"
                       >
-                        <div className="w-10 h-10 rounded-full bg-sage flex items-center justify-center text-white font-semibold">
+                        <div className="w-12 h-12 rounded-clay bg-clay-peach shadow-clay-sm flex items-center justify-center text-charcoal font-black">
                           {user.name.charAt(0).toUpperCase()}
                         </div>
                         <div>
-                          <p className="font-medium text-charcoal">{user.name}</p>
-                          <p className="text-sm text-gray-500">View Profile</p>
+                          <p className="font-bold text-charcoal">{user.name}</p>
+                          <p className="text-sm text-charcoal-light font-medium">View Profile</p>
                         </div>
                       </Link>
+
+                      <div className="my-3 border-t-2 border-white/60" />
 
                       {/* Menu Items */}
                       {accountMenuItems.map((item) => (
                         <Link
                           key={item.path}
                           to={item.path}
-                          className={`block px-4 py-2.5 text-sm font-medium transition-colors ${
+                          className={`block px-4 py-3 rounded-clay font-bold text-sm transition-all ${
                             isActive(item.path)
-                              ? 'text-sage bg-sage/5'
-                              : 'text-charcoal hover:bg-gray-50 hover:text-sage'
+                              ? 'bg-clay-mint shadow-clay-sm text-charcoal'
+                              : 'text-charcoal hover:bg-clay-butter/50'
                           }`}
                         >
                           {item.label}
                         </Link>
                       ))}
 
+                      <div className="my-3 border-t-2 border-white/60" />
+
                       {/* Sign Out */}
-                      <div className="border-t border-gray-100 mt-2 pt-2">
-                        <button
-                          onClick={() => {
-                            setAccountMenuOpen(false)
-                            logout()
-                          }}
-                          className="w-full text-left px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
-                        >
-                          Sign Out
-                        </button>
-                      </div>
+                      <button
+                        onClick={() => {
+                          setAccountMenuOpen(false)
+                          logout()
+                        }}
+                        className="w-full text-left px-4 py-3 rounded-clay font-bold text-sm text-clay-coral hover:bg-clay-coral/10 transition-colors"
+                      >
+                        Sign Out
+                      </button>
                     </div>
                   )}
                 </div>
@@ -174,13 +180,13 @@ export default function Header() {
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => login()}
-                  className="px-4 py-2 text-sage font-medium border-2 border-sage rounded-xl hover:bg-sage hover:text-white transition-colors"
+                  className="clay-button bg-clay-surface hover:bg-clay-butter"
                 >
                   Sign In
                 </button>
                 <button
                   onClick={() => login()}
-                  className="px-6 py-3 bg-sage text-white font-semibold rounded-xl hover:bg-sage-dark transition-colors shadow-md"
+                  className="clay-button bg-clay-mint hover:bg-clay-peach"
                 >
                   Sign Up
                 </button>
@@ -190,14 +196,14 @@ export default function Header() {
             {/* Mobile menu button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 text-charcoal"
+              className="md:hidden clay-button p-3 bg-clay-surface"
               aria-label="Toggle menu"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-6 h-6 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 {mobileMenuOpen ? (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
                 ) : (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 6h16M4 12h16M4 18h16" />
                 )}
               </svg>
             </button>
@@ -206,55 +212,59 @@ export default function Header() {
 
         {/* Mobile Navigation */}
         {mobileMenuOpen && (
-          <nav className="md:hidden py-4 border-t border-gray-200">
-            {navLinks.map((link) => (
-              <Link
-                key={link.path}
-                to={link.path}
-                onClick={() => setMobileMenuOpen(false)}
-                className={`block py-3 text-lg font-medium ${
-                  isActive(link.path) ? 'text-sage' : 'text-charcoal'
-                }`}
-              >
-                {link.label}
-              </Link>
-            ))}
+          <nav className="md:hidden py-4 border-t-2 border-white/60">
+            <div className="space-y-2">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.path}
+                  to={link.path}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`block clay-button w-full text-left ${
+                    isActive(link.path) ? 'bg-clay-mint shadow-clay' : 'bg-clay-surface'
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </div>
 
             {isAuthenticated && (
-              <div className="mt-4 pt-4 border-t border-gray-200">
-                <p className="text-sm text-gray-500 uppercase tracking-wider mb-2">Account</p>
-                {accountMenuItems.map((item) => (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={`block py-2.5 text-base font-medium ${
-                      isActive(item.path) ? 'text-sage' : 'text-charcoal'
-                    }`}
+              <div className="mt-6 pt-4 border-t-2 border-white/60">
+                <p className="text-sm text-charcoal-light font-bold uppercase tracking-wider mb-3 px-2">Account</p>
+                <div className="space-y-2">
+                  {accountMenuItems.map((item) => (
+                    <Link
+                      key={item.path}
+                      to={item.path}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`block clay-button w-full text-left ${
+                        isActive(item.path) ? 'bg-clay-mint shadow-clay' : 'bg-clay-surface'
+                      }`}
+                    >
+                      {item.label}
+                    </Link>
+                  ))}
+                  <button
+                    onClick={() => {
+                      logout()
+                      setMobileMenuOpen(false)
+                    }}
+                    className="block w-full text-left clay-button bg-clay-coral/20 text-clay-coral hover:bg-clay-coral/30"
                   >
-                    {item.label}
-                  </Link>
-                ))}
-                <button
-                  onClick={() => {
-                    logout()
-                    setMobileMenuOpen(false)
-                  }}
-                  className="block w-full text-left py-2.5 text-base font-medium text-red-600 mt-2"
-                >
-                  Sign Out
-                </button>
+                    Sign Out
+                  </button>
+                </div>
               </div>
             )}
 
             {!isAuthenticated && (
-              <div className="mt-4 space-y-3 pt-4 border-t border-gray-200">
+              <div className="mt-6 space-y-3 pt-4 border-t-2 border-white/60">
                 <button
                   onClick={() => {
                     login()
                     setMobileMenuOpen(false)
                   }}
-                  className="w-full px-4 py-3 text-sage font-medium border-2 border-sage rounded-xl hover:bg-sage hover:text-white transition-colors"
+                  className="w-full clay-button bg-clay-surface"
                 >
                   Sign In
                 </button>
@@ -263,7 +273,7 @@ export default function Header() {
                     login()
                     setMobileMenuOpen(false)
                   }}
-                  className="w-full px-4 py-3 bg-sage text-white font-semibold rounded-xl hover:bg-sage-dark transition-colors shadow-md"
+                  className="w-full clay-button bg-clay-mint"
                 >
                   Sign Up
                 </button>

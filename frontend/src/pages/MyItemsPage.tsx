@@ -6,19 +6,19 @@ type SubmittedItem = Awaited<ReturnType<typeof apiClient.getMySubmittedItems>>[n
 
 type FilterType = 'all' | 'pending' | 'approved' | 'rejected' | 'resubmit'
 
-const submissionStatusConfig: Record<string, { label: string; className: string }> = {
-  pending: { label: 'Pending Review', className: 'bg-yellow-100 text-yellow-800' },
-  approved: { label: 'Approved', className: 'bg-green-100 text-green-800' },
-  rejected: { label: 'Rejected', className: 'bg-red-100 text-red-800' },
-  resubmit_requested: { label: 'Resubmit Requested', className: 'bg-orange-100 text-orange-800' },
+const submissionStatusConfig: Record<string, { label: string; color: string }> = {
+  pending: { label: 'Pending Review', color: 'bg-clay-butter' },
+  approved: { label: 'Approved', color: 'bg-clay-mint' },
+  rejected: { label: 'Rejected', color: 'bg-clay-coral' },
+  resubmit_requested: { label: 'Resubmit Requested', color: 'bg-clay-peach' },
 }
 
-const itemStatusConfig: Record<string, { label: string; className: string }> = {
-  pending: { label: 'Pending', className: 'bg-gray-100 text-gray-600' },
-  active: { label: 'Active', className: 'bg-blue-100 text-blue-800' },
-  sold: { label: 'Sold', className: 'bg-green-100 text-green-800' },
-  unsold: { label: 'Unsold', className: 'bg-gray-100 text-gray-600' },
-  removed: { label: 'Removed', className: 'bg-red-100 text-red-800' },
+const itemStatusConfig: Record<string, { label: string; color: string }> = {
+  pending: { label: 'Pending', color: 'bg-clay-lavender' },
+  active: { label: 'Active', color: 'bg-clay-sky' },
+  sold: { label: 'Sold', color: 'bg-clay-mint' },
+  unsold: { label: 'Unsold', color: 'bg-clay-lavender' },
+  removed: { label: 'Removed', color: 'bg-clay-coral' },
 }
 
 export default function MyItemsPage() {
@@ -85,236 +85,245 @@ export default function MyItemsPage() {
 
   if (loading) {
     return (
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        <div className="flex justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sage"></div>
+      <div className="min-h-screen bg-clay-bg">
+        <div className="max-w-6xl mx-auto px-4 py-12">
+          <div className="flex justify-center py-16">
+            <div className="w-16 h-16 rounded-clay bg-clay-mint shadow-clay-pressed flex items-center justify-center">
+              <div className="w-8 h-8 border-3 border-charcoal border-t-transparent rounded-full animate-spin" />
+            </div>
+          </div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="font-display text-3xl font-bold text-charcoal">My Items</h1>
-          <p className="text-gray-500 mt-1">Items you've submitted to auction events</p>
+    <div className="min-h-screen bg-clay-bg">
+      <div className="max-w-6xl mx-auto px-4 py-12">
+        {/* Header */}
+        <div className="clay-section mb-8">
+          <h1 className="font-display text-4xl font-black text-charcoal mb-2">My Items</h1>
+          <p className="text-charcoal-light font-medium">Items you've submitted to auction events</p>
         </div>
-      </div>
 
-      {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600">
-          {error}
-        </div>
-      )}
+        {error && (
+          <div className="clay-section mb-8 bg-clay-coral/20 border-clay-coral/40">
+            <p className="text-clay-coral font-bold">{error}</p>
+          </div>
+        )}
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <div className="bg-white rounded-xl border border-sage/20 p-4">
-          <p className="text-sm text-gray-500">Total Items</p>
-          <p className="text-2xl font-bold text-charcoal">{items.length}</p>
+        {/* Summary Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <div className="clay-card p-5">
+            <p className="text-sm text-charcoal-light font-bold">Total Items</p>
+            <p className="text-3xl font-black text-charcoal">{items.length}</p>
+          </div>
+          <div className="clay-card p-5 bg-clay-butter/30">
+            <p className="text-sm text-charcoal-light font-bold">Pending Review</p>
+            <p className="text-3xl font-black text-charcoal">{pendingCount}</p>
+          </div>
+          <div className="clay-card p-5 bg-clay-mint/30">
+            <p className="text-sm text-charcoal-light font-bold">Approved</p>
+            <p className="text-3xl font-black text-charcoal">{approvedCount}</p>
+          </div>
+          <div className="clay-card p-5 bg-clay-peach/30">
+            <p className="text-sm text-charcoal-light font-bold">Needs Action</p>
+            <p className="text-3xl font-black text-charcoal">{needsActionCount}</p>
+          </div>
         </div>
-        <div className="bg-yellow-50 rounded-xl border border-yellow-200 p-4">
-          <p className="text-sm text-yellow-600">Pending Review</p>
-          <p className="text-2xl font-bold text-yellow-700">{pendingCount}</p>
-        </div>
-        <div className="bg-green-50 rounded-xl border border-green-200 p-4">
-          <p className="text-sm text-green-600">Approved</p>
-          <p className="text-2xl font-bold text-green-700">{approvedCount}</p>
-        </div>
-        <div className="bg-orange-50 rounded-xl border border-orange-200 p-4">
-          <p className="text-sm text-orange-600">Needs Action</p>
-          <p className="text-2xl font-bold text-orange-700">{needsActionCount}</p>
-        </div>
-      </div>
 
-      {/* Filters */}
-      <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-        {([
-          { value: 'all', label: 'All Items' },
-          { value: 'pending', label: 'Pending' },
-          { value: 'approved', label: 'Approved' },
-          { value: 'rejected', label: 'Rejected' },
-          { value: 'resubmit', label: 'Needs Resubmit' },
-        ] as const).map((tab) => (
-          <button
-            key={tab.value}
-            onClick={() => setFilter(tab.value)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
-              filter === tab.value
-                ? 'bg-sage text-white'
-                : 'bg-sage/10 text-charcoal hover:bg-sage/20'
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
-      {filteredItems.length === 0 ? (
-        <div className="text-center py-12 bg-white rounded-xl border border-sage/20">
-          <svg
-            className="w-16 h-16 text-gray-300 mx-auto mb-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={1.5}
-              d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-            />
-          </svg>
-          <h2 className="text-xl font-semibold text-charcoal mb-2">
-            {filter === 'all' ? 'No items submitted' : `No ${filter} items`}
-          </h2>
-          <p className="text-gray-500 mb-6">
-            {filter === 'all'
-              ? 'Submit items to auction events to see them here'
-              : 'Try changing the filter to see other items'}
-          </p>
-          <Link
-            to="/"
-            className="inline-block bg-sage text-white px-6 py-3 rounded-xl font-semibold hover:bg-sage/90"
-          >
-            Browse Events
-          </Link>
+        {/* Filters */}
+        <div className="flex flex-wrap gap-3 mb-8">
+          {([
+            { value: 'all', label: 'All Items', color: 'bg-clay-butter' },
+            { value: 'pending', label: 'Pending', color: 'bg-clay-butter' },
+            { value: 'approved', label: 'Approved', color: 'bg-clay-mint' },
+            { value: 'rejected', label: 'Rejected', color: 'bg-clay-coral' },
+            { value: 'resubmit', label: 'Needs Resubmit', color: 'bg-clay-peach' },
+          ] as const).map((tab) => (
+            <button
+              key={tab.value}
+              onClick={() => setFilter(tab.value)}
+              className={`clay-button text-sm transition-all ${
+                filter === tab.value
+                  ? `${tab.color} shadow-clay scale-105`
+                  : 'bg-clay-surface hover:bg-clay-butter'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
-      ) : (
-        <div className="space-y-8">
-          {Object.values(itemsByEvent).map(({ event, items: eventItems }) => (
-            <div key={event.id} className="bg-white rounded-xl border border-sage/20 overflow-hidden">
-              {/* Event Header */}
-              <Link
-                to={`/events/${event.slug}`}
-                className="block p-4 bg-sage/5 border-b border-sage/10 hover:bg-sage/10 transition-colors"
+
+        {filteredItems.length === 0 ? (
+          <div className="clay-section text-center py-16">
+            <div className="w-20 h-20 bg-clay-lavender rounded-clay flex items-center justify-center mx-auto mb-6 shadow-clay">
+              <svg
+                className="w-10 h-10 text-charcoal"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-semibold text-charcoal">{event.name}</h3>
-                    <p className="text-sm text-gray-500">
-                      Ends {formatDate(event.endTime)}
-                    </p>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-black text-charcoal mb-2">
+              {filter === 'all' ? 'No items submitted' : `No ${filter} items`}
+            </h2>
+            <p className="text-charcoal-light font-medium mb-8">
+              {filter === 'all'
+                ? 'Submit items to auction events to see them here'
+                : 'Try changing the filter to see other items'}
+            </p>
+            <Link
+              to="/"
+              className="clay-button bg-clay-mint font-bold inline-flex items-center gap-2"
+            >
+              Browse Events
+            </Link>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {Object.values(itemsByEvent).map(({ event, items: eventItems }) => (
+              <div key={event.id} className="clay-card overflow-hidden">
+                {/* Event Header */}
+                <Link
+                  to={`/events/${event.slug}`}
+                  className="block p-5 bg-clay-butter/30 border-b-2 border-white/60 hover:bg-clay-butter/50 transition-colors"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-black text-lg text-charcoal">{event.name}</h3>
+                      <p className="text-sm text-charcoal-light font-medium">
+                        Ends {formatDate(event.endTime)}
+                      </p>
+                    </div>
+                    <span className={`clay-badge text-xs ${
+                      event.status === 'active' ? 'bg-clay-mint' :
+                      event.status === 'ended' ? 'bg-clay-lavender' :
+                      'bg-clay-sky'
+                    }`}>
+                      {event.status.charAt(0).toUpperCase() + event.status.slice(1)}
+                    </span>
                   </div>
-                  <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                    event.status === 'active' ? 'bg-green-100 text-green-800' :
-                    event.status === 'ended' ? 'bg-gray-100 text-gray-800' :
-                    'bg-blue-100 text-blue-800'
-                  }`}>
-                    {event.status.charAt(0).toUpperCase() + event.status.slice(1)}
-                  </span>
-                </div>
-              </Link>
+                </Link>
 
-              {/* Items List */}
-              <div className="divide-y divide-gray-100">
-                {eventItems.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex items-start gap-4 p-4"
-                  >
-                    {/* Item Image */}
-                    {item.imageUrl ? (
-                      <img
-                        src={item.imageUrl}
-                        alt={item.title}
-                        className="w-20 h-20 object-cover rounded-lg flex-shrink-0"
-                      />
-                    ) : (
-                      <div className="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <svg
-                          className="w-8 h-8 text-gray-300"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={1.5}
-                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                          />
-                        </svg>
-                      </div>
-                    )}
-
-                    {/* Item Details */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <h4 className="font-medium text-charcoal">{item.title}</h4>
-                          {item.description && (
-                            <p className="text-sm text-gray-500 line-clamp-2 mt-1">
-                              {item.description}
-                            </p>
-                          )}
-                        </div>
-                        <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                          <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                            submissionStatusConfig[item.submissionStatus]?.className || 'bg-gray-100'
-                          }`}>
-                            {submissionStatusConfig[item.submissionStatus]?.label || item.submissionStatus}
-                          </span>
-                          {item.submissionStatus === 'approved' && (
-                            <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                              itemStatusConfig[item.status]?.className || 'bg-gray-100'
-                            }`}>
-                              {itemStatusConfig[item.status]?.label || item.status}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="flex flex-wrap gap-4 mt-2 text-sm">
-                        {item.startingPrice && (
-                          <span className="text-gray-600">
-                            Starting: <span className="font-medium">${item.startingPrice.toFixed(2)}</span>
-                          </span>
-                        )}
-                        {item.currentBid && (
-                          <span className="text-sage">
-                            Current bid: <span className="font-medium">${item.currentBid.toFixed(2)}</span>
-                          </span>
-                        )}
-                        {item.bidCount > 0 && (
-                          <span className="text-gray-600">
-                            {item.bidCount} bid{item.bidCount !== 1 ? 's' : ''}
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Rejection/Resubmit Info */}
-                      {(item.submissionStatus === 'rejected' || item.submissionStatus === 'resubmit_requested') && item.rejectionReason && (
-                        <div className={`mt-3 p-3 rounded-lg text-sm ${
-                          item.submissionStatus === 'resubmit_requested' ? 'bg-orange-50 text-orange-800' : 'bg-red-50 text-red-700'
-                        }`}>
-                          <p className="font-medium mb-1">
-                            {item.submissionStatus === 'resubmit_requested' ? 'Please update:' : 'Rejection reason:'}
-                          </p>
-                          <p>{item.rejectionReason}</p>
-                          {item.allowResubmit && (
-                            <Link
-                              to={`/events/${event.slug}/items/${item.id}`}
-                              className="inline-block mt-2 text-sage font-medium hover:underline"
-                            >
-                              Edit and resubmit
-                            </Link>
-                          )}
+                {/* Items List */}
+                <div className="divide-y-2 divide-white/40">
+                  {eventItems.map((item) => (
+                    <div
+                      key={item.id}
+                      className="flex items-start gap-4 p-5"
+                    >
+                      {/* Item Image */}
+                      {item.imageUrl ? (
+                        <img
+                          src={item.imageUrl}
+                          alt={item.title}
+                          className="w-20 h-20 object-cover rounded-clay shadow-clay-sm flex-shrink-0"
+                        />
+                      ) : (
+                        <div className="w-20 h-20 bg-clay-lavender/30 rounded-clay shadow-clay-sm flex items-center justify-center flex-shrink-0">
+                          <svg
+                            className="w-8 h-8 text-charcoal-light"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                            />
+                          </svg>
                         </div>
                       )}
 
-                      <p className="text-xs text-gray-400 mt-2">
-                        Submitted {formatDate(item.createdAt)}
-                      </p>
+                      {/* Item Details */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <h4 className="font-bold text-charcoal">{item.title}</h4>
+                            {item.description && (
+                              <p className="text-sm text-charcoal-light font-medium line-clamp-2 mt-1">
+                                {item.description}
+                              </p>
+                            )}
+                          </div>
+                          <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                            <span className={`clay-badge text-xs ${
+                              submissionStatusConfig[item.submissionStatus]?.color || 'bg-clay-lavender'
+                            }`}>
+                              {submissionStatusConfig[item.submissionStatus]?.label || item.submissionStatus}
+                            </span>
+                            {item.submissionStatus === 'approved' && (
+                              <span className={`clay-badge text-xs ${
+                                itemStatusConfig[item.status]?.color || 'bg-clay-lavender'
+                              }`}>
+                                {itemStatusConfig[item.status]?.label || item.status}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="flex flex-wrap gap-4 mt-3 text-sm">
+                          {item.startingPrice && (
+                            <span className="text-charcoal-light font-medium">
+                              Starting: <span className="font-black text-charcoal">${item.startingPrice.toFixed(2)}</span>
+                            </span>
+                          )}
+                          {item.currentBid && (
+                            <span className="text-charcoal-light font-medium">
+                              Current bid: <span className="font-black text-charcoal">${item.currentBid.toFixed(2)}</span>
+                            </span>
+                          )}
+                          {item.bidCount > 0 && (
+                            <span className="text-charcoal-light font-medium">
+                              {item.bidCount} bid{item.bidCount !== 1 ? 's' : ''}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Rejection/Resubmit Info */}
+                        {(item.submissionStatus === 'rejected' || item.submissionStatus === 'resubmit_requested') && item.rejectionReason && (
+                          <div className={`mt-4 p-4 rounded-clay text-sm ${
+                            item.submissionStatus === 'resubmit_requested'
+                              ? 'bg-clay-peach/20'
+                              : 'bg-clay-coral/20'
+                          }`}>
+                            <p className="font-bold text-charcoal mb-1">
+                              {item.submissionStatus === 'resubmit_requested' ? 'Please update:' : 'Rejection reason:'}
+                            </p>
+                            <p className="text-charcoal-light">{item.rejectionReason}</p>
+                            {item.allowResubmit && (
+                              <Link
+                                to={`/events/${event.slug}/items/${item.id}`}
+                                className="inline-block mt-3 clay-button bg-clay-mint text-sm py-2"
+                              >
+                                Edit and resubmit
+                              </Link>
+                            )}
+                          </div>
+                        )}
+
+                        <p className="text-xs text-charcoal-light mt-3">
+                          Submitted {formatDate(item.createdAt)}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

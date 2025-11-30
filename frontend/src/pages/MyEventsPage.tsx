@@ -3,20 +3,12 @@ import { Link } from 'react-router-dom'
 import { apiClient } from '../services/api'
 import type { AuctionEvent, EventStatus } from '../types'
 
-const statusColors: Record<EventStatus, string> = {
-  draft: 'bg-gray-100 text-gray-800',
-  scheduled: 'bg-blue-100 text-blue-800',
-  active: 'bg-green-100 text-green-800',
-  ended: 'bg-amber-100 text-amber-800',
-  cancelled: 'bg-red-100 text-red-800',
-}
-
-const statusLabels: Record<EventStatus, string> = {
-  draft: 'Draft',
-  scheduled: 'Scheduled',
-  active: 'Live',
-  ended: 'Ended',
-  cancelled: 'Cancelled',
+const statusConfig: Record<EventStatus, { label: string; color: string }> = {
+  draft: { label: 'Draft', color: 'bg-clay-lavender' },
+  scheduled: { label: 'Scheduled', color: 'bg-clay-sky' },
+  active: { label: 'Live', color: 'bg-clay-mint' },
+  ended: { label: 'Ended', color: 'bg-clay-butter' },
+  cancelled: { label: 'Cancelled', color: 'bg-clay-coral' },
 }
 
 export default function MyEventsPage() {
@@ -57,151 +49,168 @@ export default function MyEventsPage() {
 
   if (loading) {
     return (
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        <div className="flex justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sage"></div>
+      <div className="min-h-screen bg-clay-bg">
+        <div className="max-w-6xl mx-auto px-4 py-12">
+          <div className="flex justify-center py-16">
+            <div className="w-16 h-16 rounded-clay bg-clay-mint shadow-clay-pressed flex items-center justify-center">
+              <div className="w-8 h-8 border-3 border-charcoal border-t-transparent rounded-full animate-spin" />
+            </div>
+          </div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="font-display text-3xl font-bold text-charcoal">My Events</h1>
-        <Link
-          to="/events/create"
-          className="bg-sage text-white px-6 py-3 rounded-xl font-semibold hover:bg-sage/90 transition-colors"
-        >
-          Create Event
-        </Link>
-      </div>
-
-      {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600">
-          {error}
-        </div>
-      )}
-
-      {/* Filters */}
-      <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-        {(['all', 'draft', 'scheduled', 'active', 'ended'] as const).map((status) => (
-          <button
-            key={status}
-            onClick={() => setFilter(status)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
-              filter === status
-                ? 'bg-sage text-white'
-                : 'bg-sage/10 text-charcoal hover:bg-sage/20'
-            }`}
+    <div className="min-h-screen bg-clay-bg">
+      <div className="max-w-6xl mx-auto px-4 py-12">
+        {/* Header */}
+        <div className="clay-section mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="font-display text-4xl font-black text-charcoal mb-2">My Events</h1>
+            <p className="text-charcoal-light font-medium">Manage your auction events</p>
+          </div>
+          <Link
+            to="/events/create"
+            className="clay-button bg-clay-mint font-bold inline-flex items-center gap-2 self-start"
           >
-            {status === 'all' ? 'All Events' : statusLabels[status]}
-            {status !== 'all' && (
-              <span className="ml-1 opacity-70">
-                ({events.filter(e => e.status === status).length})
-              </span>
-            )}
-          </button>
-        ))}
-      </div>
-
-      {filteredEvents.length === 0 ? (
-        <div className="text-center py-12 bg-white rounded-xl border border-sage/20">
-          <svg
-            className="w-16 h-16 text-gray-300 mx-auto mb-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={1.5}
-              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-            />
-          </svg>
-          <h2 className="text-xl font-semibold text-charcoal mb-2">
-            {filter === 'all' ? 'No events yet' : `No ${statusLabels[filter as EventStatus].toLowerCase()} events`}
-          </h2>
-          <p className="text-gray-500 mb-6">
-            {filter === 'all'
-              ? 'Create your first auction event to get started'
-              : 'Try changing the filter to see other events'}
-          </p>
-          {filter === 'all' && (
-            <Link
-              to="/events/create"
-              className="inline-block bg-sage text-white px-6 py-3 rounded-xl font-semibold hover:bg-sage/90"
-            >
-              Create Your First Event
-            </Link>
-          )}
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+            </svg>
+            Create Event
+          </Link>
         </div>
-      ) : (
-        <div className="grid gap-4">
-          {filteredEvents.map((event) => (
-            <Link
-              key={event.id}
-              to={`/events/${event.slug}/manage`}
-              className="block bg-white rounded-xl border border-sage/20 p-6 hover:shadow-lg transition-shadow"
+
+        {error && (
+          <div className="clay-section mb-8 bg-clay-coral/20 border-clay-coral/40">
+            <p className="text-clay-coral font-bold">{error}</p>
+          </div>
+        )}
+
+        {/* Filters */}
+        <div className="flex flex-wrap gap-3 mb-8">
+          {(['all', 'draft', 'scheduled', 'active', 'ended'] as const).map((status) => (
+            <button
+              key={status}
+              onClick={() => setFilter(status)}
+              className={`clay-button text-sm transition-all ${
+                filter === status
+                  ? `${status === 'all' ? 'bg-clay-butter' : statusConfig[status].color} shadow-clay scale-105`
+                  : 'bg-clay-surface hover:bg-clay-butter'
+              }`}
             >
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <h2 className="text-xl font-semibold text-charcoal">{event.name}</h2>
-                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${statusColors[event.status]}`}>
-                      {statusLabels[event.status]}
-                    </span>
-                    {event.auctionType === 'silent' && (
-                      <span className="text-xs px-2 py-1 rounded-full bg-purple-100 text-purple-800 font-medium">
-                        Silent Auction
-                      </span>
-                    )}
-                  </div>
-
-                  {event.organization && (
-                    <p className="text-sm text-gray-500 mb-2">
-                      {event.organization.name}
-                    </p>
-                  )}
-
-                  <div className="flex flex-wrap gap-4 text-sm text-gray-600">
-                    <span>
-                      {formatDate(event.startTime)} - {formatDate(event.endTime)}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                      </svg>
-                      {event.itemCount} / {event.maxItems} items
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-                      </svg>
-                      {event.totalBids} bids
-                    </span>
-                    {event.totalRaised > 0 && (
-                      <span className="text-sage font-semibold">
-                        ${event.totalRaised.toLocaleString()} raised
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                <svg
-                  className="w-5 h-5 text-gray-400 flex-shrink-0 mt-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </div>
-            </Link>
+              {status === 'all' ? 'All Events' : statusConfig[status].label}
+              {status !== 'all' && (
+                <span className="ml-1.5 opacity-70">
+                  ({events.filter(e => e.status === status).length})
+                </span>
+              )}
+            </button>
           ))}
         </div>
-      )}
+
+        {filteredEvents.length === 0 ? (
+          <div className="clay-section text-center py-16">
+            <div className="w-20 h-20 bg-clay-peach rounded-clay flex items-center justify-center mx-auto mb-6 shadow-clay">
+              <svg
+                className="w-10 h-10 text-charcoal"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-black text-charcoal mb-2">
+              {filter === 'all' ? 'No events yet' : `No ${statusConfig[filter as EventStatus].label.toLowerCase()} events`}
+            </h2>
+            <p className="text-charcoal-light font-medium mb-8">
+              {filter === 'all'
+                ? 'Create your first auction event to get started'
+                : 'Try changing the filter to see other events'}
+            </p>
+            {filter === 'all' && (
+              <Link
+                to="/events/create"
+                className="clay-button bg-clay-mint font-bold inline-flex items-center gap-2"
+              >
+                Create Your First Event
+              </Link>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {filteredEvents.map((event) => (
+              <Link
+                key={event.id}
+                to={`/events/${event.slug}/manage`}
+                className="block clay-card p-6"
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2 flex-wrap">
+                      <h2 className="text-xl font-black text-charcoal">{event.name}</h2>
+                      <span className={`clay-badge text-xs ${statusConfig[event.status].color}`}>
+                        {statusConfig[event.status].label}
+                      </span>
+                      {event.auctionType === 'silent' && (
+                        <span className="clay-badge text-xs bg-clay-lavender">
+                          Silent Auction
+                        </span>
+                      )}
+                    </div>
+
+                    {event.organization && (
+                      <p className="text-sm text-charcoal-light font-medium mb-3">
+                        {event.organization.name}
+                      </p>
+                    )}
+
+                    <div className="flex flex-wrap gap-4 text-sm text-charcoal-light">
+                      <span className="font-medium">
+                        {formatDate(event.startTime)} - {formatDate(event.endTime)}
+                      </span>
+                      <span className="flex items-center gap-1.5 font-bold">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                        </svg>
+                        {event.itemCount} / {event.maxItems} items
+                      </span>
+                      <span className="flex items-center gap-1.5 font-bold">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                        {event.totalBids} bids
+                      </span>
+                      {event.totalRaised > 0 && (
+                        <span className="font-black text-charcoal">
+                          ${event.totalRaised.toLocaleString()} raised
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="w-10 h-10 rounded-clay bg-clay-butter/50 flex items-center justify-center flex-shrink-0 ml-4">
+                    <svg
+                      className="w-5 h-5 text-charcoal"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
