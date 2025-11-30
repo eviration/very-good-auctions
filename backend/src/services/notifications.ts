@@ -35,6 +35,15 @@ export async function createNotification(params: CreateNotificationParams): Prom
   return result.recordset[0].id
 }
 
+// Get just the unread count (lightweight query for polling)
+export async function getUnreadCount(userId: string): Promise<number> {
+  const result = await dbQuery(
+    `SELECT COUNT(*) as count FROM user_notifications WHERE user_id = @userId AND read_at IS NULL`,
+    { userId }
+  )
+  return result.recordset[0].count
+}
+
 // Get user's notifications with pagination
 export async function getUserNotifications(
   userId: string,

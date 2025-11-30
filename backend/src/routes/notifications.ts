@@ -4,6 +4,7 @@ import { authenticate } from '../middleware/auth.js'
 import { badRequest, notFound } from '../middleware/errorHandler.js'
 import {
   getUserNotifications,
+  getUnreadCount,
   markAsRead,
   markAllAsRead,
   deleteNotification,
@@ -48,9 +49,9 @@ router.get(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const userId = req.user!.id
-      const result = await getUserNotifications(userId, { limit: 0 })
+      const result = await getUnreadCount(userId)
 
-      res.json({ unreadCount: result.unreadCount })
+      res.json({ unreadCount: result })
     } catch (error) {
       next(error)
     }
