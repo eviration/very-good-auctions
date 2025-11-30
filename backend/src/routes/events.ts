@@ -118,7 +118,7 @@ router.post(
   [
     body('name').isString().isLength({ min: 2, max: 255 }),
     body('description').optional().isString(),
-    body('organizationId').optional().isUUID(),
+    body('organizationId').optional({ values: 'falsy' }).isUUID(),
     body('startTime').isISO8601(),
     body('endTime').isISO8601(),
     body('submissionDeadline').optional().isISO8601(),
