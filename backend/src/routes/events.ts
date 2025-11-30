@@ -313,10 +313,18 @@ router.get(
       }
 
       // Get total count
-      const countResult = await dbQuery(
-        `SELECT COUNT(*) as total FROM auction_events ${whereClause}`,
-        params
-      )
+      console.log('Events query whereClause:', whereClause)
+      console.log('Events query params:', JSON.stringify(params))
+      let countResult
+      try {
+        countResult = await dbQuery(
+          `SELECT COUNT(*) as total FROM auction_events ${whereClause}`,
+          params
+        )
+      } catch (err) {
+        console.error('Count query failed:', err)
+        throw err
+      }
       const totalItems = countResult.recordset[0].total
 
       // Get events with pagination
