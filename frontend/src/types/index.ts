@@ -198,6 +198,8 @@ export interface Organization {
   status: OrganizationStatus
   isFeatured: boolean
   memberCount?: number
+  eventCount?: number
+  totalRaised?: number
   contactEmail?: string
   contactPhone?: string
   taxId?: string
@@ -206,6 +208,7 @@ export interface Organization {
   stripeChargesEnabled?: boolean
   stripePayoutsEnabled?: boolean
   membership?: OrganizationMembership
+  userRole?: OrganizationRole
   createdAt: string
 }
 

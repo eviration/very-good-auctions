@@ -29,6 +29,9 @@ import EventItemPage from './pages/EventItemPage'
 import SubmitItemPage from './pages/SubmitItemPage'
 import SubmitItemSuccessPage from './pages/SubmitItemSuccessPage'
 import MyWinsPage from './pages/MyWinsPage'
+import MyBidsPage from './pages/MyBidsPage'
+import MyItemsPage from './pages/MyItemsPage'
+import MyOrganizationsPage from './pages/MyOrganizationsPage'
 
 // Auth
 import { AuthCallback } from './auth/AuthCallback'
@@ -134,6 +137,21 @@ function App() {
           <Route path="/my-wins" element={
             <ProtectedRoute>
               <MyWinsPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/my-bids" element={
+            <ProtectedRoute>
+              <MyBidsPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/my-items" element={
+            <ProtectedRoute>
+              <MyItemsPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/my-organizations" element={
+            <ProtectedRoute>
+              <MyOrganizationsPage />
             </ProtectedRoute>
           } />
 

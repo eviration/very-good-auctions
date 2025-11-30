@@ -391,4 +391,134 @@ router.post(
   }
 )
 
+// Get user's event bids across all events
+router.get(
+  '/me/event-bids',
+  authenticate,
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const userId = req.user!.id
+
+      const result = await dbQuery(
+        `SELECT
+          b.id,
+          b.item_id,
+          b.amount,
+          b.is_winning,
+          b.created_at,
+          i.title as item_title,
+          i.current_bid as item_current_bid,
+          i.status as item_status,
+          i.submission_status,
+          e.id as event_id,
+          e.name as event_name,
+          e.slug as event_slug,
+          e.status as event_status,
+          e.end_time as event_end_time,
+          e.auction_type,
+          (SELECT TOP 1 blob_url FROM event_item_images WHERE item_id = i.id ORDER BY display_order ASC) as item_image
+         FROM event_item_bids b
+         INNER JOIN event_items i ON b.item_id = i.id
+         INNER JOIN auction_events e ON i.event_id = e.id
+         WHERE b.bidder_id = @userId
+         ORDER BY b.created_at DESC`,
+        { userId }
+      )
+
+      const bids = result.recordset.map((b: any) => ({
+        id: b.id,
+        amount: parseFloat(b.amount),
+        isWinning: b.is_winning,
+        createdAt: b.created_at,
+        item: {
+          id: b.item_id,
+          title: b.item_title,
+          currentBid: b.item_current_bid ? parseFloat(b.item_current_bid) : null,
+          status: b.item_status,
+          imageUrl: b.item_image,
+        },
+        event: {
+          id: b.event_id,
+          name: b.event_name,
+          slug: b.event_slug,
+          status: b.event_status,
+          endTime: b.event_end_time,
+          auctionType: b.auction_type,
+        },
+      }))
+
+      res.json(bids)
+    } catch (error) {
+      next(error)
+    }
+  }
+)
+
+// Get user's submitted items across all events
+router.get(
+  '/me/submitted-items',
+  authenticate,
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const userId = req.user!.id
+
+      const result = await dbQuery(
+        `SELECT
+          i.id,
+          i.title,
+          i.description,
+          i.condition,
+          i.starting_price,
+          i.buy_now_price,
+          i.current_bid,
+          i.bid_count,
+          i.submission_status,
+          i.rejection_reason,
+          i.allow_resubmit,
+          i.status,
+          i.created_at,
+          e.id as event_id,
+          e.name as event_name,
+          e.slug as event_slug,
+          e.status as event_status,
+          e.end_time as event_end_time,
+          (SELECT TOP 1 blob_url FROM event_item_images WHERE item_id = i.id ORDER BY display_order ASC) as item_image
+         FROM event_items i
+         INNER JOIN auction_events e ON i.event_id = e.id
+         WHERE i.submitted_by = @userId
+         ORDER BY i.created_at DESC`,
+        { userId }
+      )
+
+      const items = result.recordset.map((i: any) => ({
+        id: i.id,
+        title: i.title,
+        description: i.description,
+        condition: i.condition,
+        startingPrice: i.starting_price ? parseFloat(i.starting_price) : null,
+        buyNowPrice: i.buy_now_price ? parseFloat(i.buy_now_price) : null,
+        currentBid: i.current_bid ? parseFloat(i.current_bid) : null,
+        bidCount: i.bid_count,
+        submissionStatus: i.submission_status,
+        rejectionReason: i.rejection_reason,
+        allowResubmit: i.allow_resubmit,
+        status: i.status,
+        imageUrl: i.item_image,
+        createdAt: i.created_at,
+        event: {
+          id: i.event_id,
+          name: i.event_name,
+          slug: i.event_slug,
+          status: i.event_status,
+          endTime: i.event_end_time,
+        },
+      }))
+
+      res.json(items)
+    } catch (error) {
+      next(error)
+    }
+  }
+)
+
 export { router as userRoutes }

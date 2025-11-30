@@ -751,6 +751,58 @@ class ApiClient {
       method: 'DELETE',
     })
   }
+
+  // User Event Bids (across all events)
+  async getAllMyBids(): Promise<{
+    id: string
+    amount: number
+    isWinning: boolean
+    createdAt: string
+    item: {
+      id: string
+      title: string
+      currentBid: number | null
+      status: string
+      imageUrl: string | null
+    }
+    event: {
+      id: string
+      name: string
+      slug: string
+      status: string
+      endTime: string
+      auctionType: string
+    }
+  }[]> {
+    return this.request('/users/me/event-bids')
+  }
+
+  // User Submitted Items (across all events)
+  async getMySubmittedItems(): Promise<{
+    id: string
+    title: string
+    description: string | null
+    condition: string | null
+    startingPrice: number | null
+    buyNowPrice: number | null
+    currentBid: number | null
+    bidCount: number
+    submissionStatus: string
+    rejectionReason: string | null
+    allowResubmit: boolean
+    status: string
+    imageUrl: string | null
+    createdAt: string
+    event: {
+      id: string
+      name: string
+      slug: string
+      status: string
+      endTime: string
+    }
+  }[]> {
+    return this.request('/users/me/submitted-items')
+  }
 }
 
 export const apiClient = new ApiClient()

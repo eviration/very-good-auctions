@@ -1,25 +1,48 @@
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../auth/useAuth'
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import NotificationBell from './NotificationBell'
 
 export default function Header() {
   const { isAuthenticated, user, login, logout, isLoading } = useAuth()
   const location = useLocation()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false)
+  const accountMenuRef = useRef<HTMLDivElement>(null)
 
   const isActive = (path: string) => location.pathname === path
 
+  // Main nav links - same for everyone
   const navLinks = [
     { path: '/', label: 'Browse Events' },
     { path: '/how-it-works', label: 'How It Works' },
-    ...(isAuthenticated
-      ? [
-          { path: '/my-events', label: 'My Events' },
-          { path: '/my-wins', label: 'My Wins' },
-        ]
-      : []),
+    ...(isAuthenticated ? [{ path: '/events/create', label: 'Create Auction' }] : []),
   ]
+
+  // Account dropdown menu items
+  const accountMenuItems = [
+    { path: '/my-events', label: 'My Events' },
+    { path: '/my-bids', label: 'My Bids' },
+    { path: '/my-items', label: 'My Items' },
+    { path: '/my-wins', label: 'My Wins' },
+    { path: '/my-organizations', label: 'My Organizations' },
+  ]
+
+  // Close account menu when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (accountMenuRef.current && !accountMenuRef.current.contains(event.target as Node)) {
+        setAccountMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  // Close account menu on route change
+  useEffect(() => {
+    setAccountMenuOpen(false)
+  }, [location.pathname])
 
   return (
     <header className="bg-warm-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
@@ -76,23 +99,76 @@ export default function Header() {
             ) : isAuthenticated && user ? (
               <div className="flex items-center gap-3">
                 <NotificationBell />
-                <Link
-                  to="/profile"
-                  className="flex items-center gap-2 px-3 py-2 bg-cream rounded-full border border-gray-200 hover:border-sage transition-colors"
-                >
-                  <div className="w-8 h-8 rounded-full bg-sage flex items-center justify-center text-white font-semibold">
-                    {user.name.charAt(0).toUpperCase()}
-                  </div>
-                  <span className="font-medium text-charcoal hidden sm:inline">
-                    {user.name}
-                  </span>
-                </Link>
-                <button
-                  onClick={() => logout()}
-                  className="px-4 py-2 text-sage font-medium border-2 border-sage rounded-xl hover:bg-sage hover:text-white transition-colors"
-                >
-                  Sign Out
-                </button>
+
+                {/* Account Menu Dropdown */}
+                <div className="relative" ref={accountMenuRef}>
+                  <button
+                    onClick={() => setAccountMenuOpen(!accountMenuOpen)}
+                    className="flex items-center gap-2 px-3 py-2 bg-cream rounded-full border border-gray-200 hover:border-sage transition-colors"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-sage flex items-center justify-center text-white font-semibold">
+                      {user.name.charAt(0).toUpperCase()}
+                    </div>
+                    <span className="font-medium text-charcoal hidden sm:inline">
+                      {user.name}
+                    </span>
+                    <svg
+                      className={`w-4 h-4 text-gray-500 transition-transform ${accountMenuOpen ? 'rotate-180' : ''}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+
+                  {/* Dropdown Menu */}
+                  {accountMenuOpen && (
+                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50">
+                      {/* Profile link */}
+                      <Link
+                        to="/profile"
+                        className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors border-b border-gray-100"
+                      >
+                        <div className="w-10 h-10 rounded-full bg-sage flex items-center justify-center text-white font-semibold">
+                          {user.name.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="font-medium text-charcoal">{user.name}</p>
+                          <p className="text-sm text-gray-500">View Profile</p>
+                        </div>
+                      </Link>
+
+                      {/* Menu Items */}
+                      {accountMenuItems.map((item) => (
+                        <Link
+                          key={item.path}
+                          to={item.path}
+                          className={`block px-4 py-2.5 text-sm font-medium transition-colors ${
+                            isActive(item.path)
+                              ? 'text-sage bg-sage/5'
+                              : 'text-charcoal hover:bg-gray-50 hover:text-sage'
+                          }`}
+                        >
+                          {item.label}
+                        </Link>
+                      ))}
+
+                      {/* Sign Out */}
+                      <div className="border-t border-gray-100 mt-2 pt-2">
+                        <button
+                          onClick={() => {
+                            setAccountMenuOpen(false)
+                            logout()
+                          }}
+                          className="w-full text-left px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+                        >
+                          Sign Out
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             ) : (
               <div className="flex items-center gap-3">
@@ -143,6 +219,34 @@ export default function Header() {
                 {link.label}
               </Link>
             ))}
+
+            {isAuthenticated && (
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <p className="text-sm text-gray-500 uppercase tracking-wider mb-2">Account</p>
+                {accountMenuItems.map((item) => (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={`block py-2.5 text-base font-medium ${
+                      isActive(item.path) ? 'text-sage' : 'text-charcoal'
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+                <button
+                  onClick={() => {
+                    logout()
+                    setMobileMenuOpen(false)
+                  }}
+                  className="block w-full text-left py-2.5 text-base font-medium text-red-600 mt-2"
+                >
+                  Sign Out
+                </button>
+              </div>
+            )}
+
             {!isAuthenticated && (
               <div className="mt-4 space-y-3 pt-4 border-t border-gray-200">
                 <button
