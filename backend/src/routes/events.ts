@@ -321,9 +321,23 @@ router.get(
           `SELECT COUNT(*) as total FROM auction_events ${whereClause}`,
           params
         )
-      } catch (err) {
+      } catch (err: any) {
         console.error('Count query failed:', err)
-        throw err
+        // Return detailed error for debugging
+        res.status(500).json({
+          error: {
+            code: err.code || 'UNKNOWN',
+            message: err.message,
+            number: err.number,
+            state: err.state,
+            class: err.class,
+            serverName: err.serverName,
+            procName: err.procName,
+            lineNumber: err.lineNumber,
+            originalError: err.originalError?.message,
+          }
+        })
+        return
       }
       const totalItems = countResult.recordset[0].total
 
