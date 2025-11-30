@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { apiClient } from '../services/api'
-import type { Organization, EventTier, PricingTiers, CreateEventRequest } from '../types'
+import type { Organization, EventTier, PricingTiers, CreateEventRequest, OrganizationType } from '../types'
 
 const tierDescriptions: Record<EventTier, { name: string; description: string; color: string }> = {
   small: { name: 'Small', description: 'Perfect for small fundraisers', color: 'bg-clay-mint' },
@@ -20,7 +20,8 @@ export default function CreateEventPage() {
   const [organizationId, setOrganizationId] = useState<string>('')
   const [showCreateOrg, setShowCreateOrg] = useState(false)
   const [newOrgName, setNewOrgName] = useState('')
-  const [newOrgType, setNewOrgType] = useState<'nonprofit' | 'school' | 'charity' | 'community' | 'other'>('nonprofit')
+  const [newOrgType, setNewOrgType] = useState<OrganizationType>('nonprofit')
+  const [newOrgEmail, setNewOrgEmail] = useState('')
   const [isCreatingOrg, setIsCreatingOrg] = useState(false)
 
   // Pricing tiers
@@ -68,13 +69,14 @@ export default function CreateEventPage() {
   }, [])
 
   const handleCreateOrg = async () => {
-    if (!newOrgName.trim()) return
+    if (!newOrgName.trim() || !newOrgEmail.trim()) return
 
     setIsCreatingOrg(true)
     try {
       const org = await apiClient.createOrganization({
         name: newOrgName.trim(),
         orgType: newOrgType,
+        contactEmail: newOrgEmail.trim(),
       })
       setMyOrganizations([...myOrganizations, org])
       setOrganizationId(org.id)
@@ -193,17 +195,30 @@ export default function CreateEventPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-charcoal mb-2">
+                    Contact Email
+                  </label>
+                  <input
+                    type="email"
+                    value={newOrgEmail}
+                    onChange={(e) => setNewOrgEmail(e.target.value)}
+                    className="clay-input w-full"
+                    placeholder="e.g., contact@myorganization.org"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-charcoal mb-2">
                     Organization Type
                   </label>
                   <select
                     value={newOrgType}
-                    onChange={(e) => setNewOrgType(e.target.value as typeof newOrgType)}
+                    onChange={(e) => setNewOrgType(e.target.value as OrganizationType)}
                     className="clay-input w-full"
                   >
                     <option value="nonprofit">Nonprofit</option>
                     <option value="school">School</option>
-                    <option value="charity">Charity</option>
-                    <option value="community">Community Group</option>
+                    <option value="religious">Religious</option>
+                    <option value="club">Club</option>
+                    <option value="company">Company</option>
                     <option value="other">Other</option>
                   </select>
                 </div>
@@ -218,7 +233,7 @@ export default function CreateEventPage() {
                   <button
                     type="button"
                     onClick={handleCreateOrg}
-                    disabled={isCreatingOrg || !newOrgName.trim()}
+                    disabled={isCreatingOrg || !newOrgName.trim() || !newOrgEmail.trim()}
                     className="clay-button bg-clay-mint disabled:opacity-50"
                   >
                     {isCreatingOrg ? 'Creating...' : 'Create Organization'}

@@ -36,7 +36,7 @@ export default function HowItWorksPage() {
     },
     {
       title: 'Transparent Pricing',
-      description: 'A small platform fee on winning bids. That\'s it. No subscription tiers, no premium features, no surprise charges.',
+      description: 'A flat fee based on event size. That\'s it. No subscription tiers, no premium features, no surprise charges.',
     },
     {
       title: 'Built for Real Organizations',
@@ -117,9 +117,12 @@ export default function HowItWorksPage() {
             </p>
             <div className="clay-card p-6 inline-block">
               <p className="text-sm text-charcoal-light mb-2">Platform fee</p>
-              <p className="font-display text-3xl font-black text-charcoal">5%</p>
-              <p className="text-sm text-charcoal-light mt-2">on winning bids only</p>
+              <p className="font-display text-2xl font-black text-charcoal">Flat rate</p>
+              <p className="text-sm text-charcoal-light mt-2">based on event size</p>
             </div>
+            <p className="text-sm text-charcoal-light mt-4">
+              No percentage of your bids. Know your costs upfront, keep more of what you raise.
+            </p>
           </div>
         </div>
 
