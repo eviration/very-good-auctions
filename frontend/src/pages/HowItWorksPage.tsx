@@ -4,55 +4,83 @@ export default function HowItWorksPage() {
   const steps = [
     {
       number: 1,
-      title: 'Set up your group',
-      description: 'Add your school, church, club, or nonprofit. It takes about two minutes. No paperwork.',
+      title: 'Create your organization',
+      description: 'Set up your school, church, nonprofit, or community group. It takes a few minutes and there\'s no approval process to wait for.',
     },
     {
       number: 2,
-      title: 'Create an auction',
-      description: 'Pick your dates and write a short description. That\'s really all you need to get started.',
+      title: 'Set up an auction event',
+      description: 'Pick your start and end dates, add a description, and configure your settings. You can run standard auctions or silent auctions.',
     },
     {
       number: 3,
-      title: 'Gather items',
-      description: 'People in your community can submit items to donate. You decide what gets included.',
+      title: 'Collect item donations',
+      description: 'Invite your community to submit items. You review each submission and decide what gets included in your auction.',
     },
     {
       number: 4,
-      title: 'Open for bidding',
-      description: 'Share the link with your community. People can browse and bid from their phones or computers.',
+      title: 'Go live',
+      description: 'When you\'re ready, open bidding. Share your auction link and people can browse and bid from any device.',
     },
     {
       number: 5,
-      title: 'Collect the money',
-      description: 'Winners pay through the site. The money goes to your organization. That\'s it.',
+      title: 'Collect funds',
+      description: 'Winners pay securely through the site. You receive your funds and can focus on your organization\'s mission.',
+    },
+  ]
+
+  const features = [
+    {
+      title: 'Simple by design',
+      description: 'I built this to be straightforward. If you can send an email, you can run an auction here.',
+    },
+    {
+      title: 'Predictable pricing',
+      description: 'A flat fee based on event size. You\'ll know the exact cost before you start. No percentages, no surprises.',
+    },
+    {
+      title: 'Built for real groups',
+      description: 'Schools, churches, PTAs, clubs. This is for organizations that need an auction, not enterprise software.',
     },
   ]
 
   return (
     <div className="min-h-screen bg-clay-bg">
-      <div className="max-w-3xl mx-auto px-4 py-16">
+      <div className="max-w-4xl mx-auto px-4 py-16">
         {/* Hero Section */}
         <div className="clay-section text-center mb-16">
           <h1 className="font-display text-4xl font-black text-charcoal mb-4">
-            Hi, I'm glad you're here
+            A straightforward way to run online auctions
           </h1>
           <p className="text-lg text-charcoal-light font-medium max-w-2xl mx-auto mb-6">
-            I built this because I kept seeing schools and small organizations
-            struggle with complicated fundraising software, or pay way too much
-            for features they didn't need.
+            I built this because too many fundraising tools are either overly complicated
+            or way too expensive for what small organizations actually need.
           </p>
           <p className="text-lg text-charcoal-light font-medium max-w-2xl mx-auto">
-            This is just a simple auction tool. It does one thing: helps you run
-            an online auction to raise money for your group. If you can send an email,
-            you can use this.
+            This does one thing well: it helps you run an online auction to raise money
+            for your group. Nothing more, nothing less.
           </p>
+        </div>
+
+        {/* Features */}
+        <div className="mb-16">
+          <div className="grid gap-6 md:grid-cols-3">
+            {features.map((feature, index) => (
+              <div
+                key={index}
+                className="clay-card p-6 text-center"
+              >
+                <h3 className="font-bold text-charcoal mb-3">{feature.title}</h3>
+                <p className="text-charcoal-light text-sm">{feature.description}</p>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Steps */}
         <div className="mb-16">
           <h2 className="font-display text-2xl font-black text-charcoal mb-8 text-center">
-            Here's how it works
+            How it works
           </h2>
           <div className="space-y-6">
             {steps.map((step, index) => (
@@ -79,17 +107,13 @@ export default function HowItWorksPage() {
         {/* Pricing Section */}
         <div className="clay-section bg-clay-mint/30 mb-16">
           <h2 className="font-display text-2xl font-black text-charcoal mb-4 text-center">
-            What it costs
+            Clear, simple pricing
           </h2>
           <div className="text-center max-w-2xl mx-auto">
             <p className="text-charcoal-light mb-6">
-              There's a small flat fee based on how many items are in your auction.
-              You'll see the exact amount before you start. No surprises, no percentages,
-              no hidden charges.
-            </p>
-            <p className="text-charcoal-light mb-6">
-              I charge enough to keep the site running. That's it. I'm not trying to
-              build a billion-dollar company here.
+              There's a flat fee based on how many items are in your auction.
+              You see the exact amount before you commit. No percentage of your bids,
+              no hidden charges, no subscription required.
             </p>
             <div className="clay-card p-6 inline-block">
               <p className="text-sm text-charcoal-light mb-2">You pay</p>
@@ -97,7 +121,7 @@ export default function HowItWorksPage() {
               <p className="text-sm text-charcoal-light mt-2">based on your auction size</p>
             </div>
             <p className="text-sm text-charcoal-light mt-4">
-              The more you raise, the more you keep. Simple as that.
+              The more you raise, the more you keep.
             </p>
           </div>
         </div>
@@ -105,31 +129,28 @@ export default function HowItWorksPage() {
         {/* About Section */}
         <div className="clay-card p-8 mb-16">
           <h2 className="font-display text-xl font-black text-charcoal mb-4">
-            A note from me
+            About this project
           </h2>
           <p className="text-charcoal-light mb-4">
-            I'm just one person. I'm not a company with investors expecting huge returns.
-            I built this in my spare time because I thought it should exist.
-          </p>
-          <p className="text-charcoal-light mb-4">
-            If something doesn't work right, or you're confused about anything,
-            just reach out. I'll do my best to help.
+            I'm a solo developer. This isn't a venture-backed startup trying to dominate the market.
+            I built this because I thought a simple, affordable auction tool should exist for
+            everyday organizations.
           </p>
           <p className="text-charcoal-light">
-            Thanks for giving this a try.
+            If you run into any issues or have questions, feel free to reach out. I'm happy to help.
           </p>
         </div>
 
         {/* CTA */}
         <div className="text-center">
           <p className="text-charcoal-light mb-6">
-            Ready to try it out?
+            Ready to get started?
           </p>
           <Link
             to="/events/create"
             className="clay-button bg-clay-mint font-bold text-lg px-8 py-4 inline-flex items-center gap-2"
           >
-            Create an auction
+            Create your first auction
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 8l4 4m0 0l-4 4m4-4H3" />
             </svg>
