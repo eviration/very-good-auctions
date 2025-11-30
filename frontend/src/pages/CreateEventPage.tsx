@@ -62,10 +62,11 @@ export default function CreateEventPage() {
     const now = new Date()
     const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
     const twoWeeksOut = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000)
+    const dayBeforeStart = new Date(nextWeek.getTime() - 24 * 60 * 60 * 1000)
 
     setStartDate(nextWeek.toISOString().split('T')[0])
     setEndDate(twoWeeksOut.toISOString().split('T')[0])
-    setSubmissionDeadline(nextWeek.toISOString().split('T')[0])
+    setSubmissionDeadline(dayBeforeStart.toISOString().split('T')[0])
   }, [])
 
   const handleCreateOrg = async () => {
