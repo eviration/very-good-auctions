@@ -133,6 +133,8 @@ router.post(
     try {
       const errors = validationResult(req)
       if (!errors.isEmpty()) {
+        console.log('Validation errors:', JSON.stringify(errors.mapped(), null, 2))
+        console.log('Request body:', JSON.stringify(req.body, null, 2))
         throw badRequest('Validation failed', errors.mapped())
       }
 
