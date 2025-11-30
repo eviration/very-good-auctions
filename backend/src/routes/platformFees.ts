@@ -207,7 +207,7 @@ router.get(
           ae.name as event_name,
           ae.slug as event_slug,
           ae.end_time as event_ended_at,
-          (SELECT TOP 1 blobUrl FROM event_item_images WHERE item_id = ei.id ORDER BY display_order) as image_url
+          (SELECT TOP 1 blob_url FROM event_item_images WHERE item_id = ei.id ORDER BY display_order) as image_url
          FROM event_items ei
          INNER JOIN auction_events ae ON ei.event_id = ae.id
          WHERE ei.winner_id = @userId
