@@ -4,6 +4,7 @@ import crypto from 'crypto'
 import { authenticate, optionalAuth } from '../middleware/auth.js'
 import { query as dbQuery } from '../config/database.js'
 import { badRequest, notFound, forbidden } from '../middleware/errorHandler.js'
+import { sendOrganizationInvitationEmail } from '../services/email.js'
 
 const router = Router()
 
@@ -689,6 +690,23 @@ router.post(
         throw forbidden('Only owner can invite admins')
       }
 
+      // Get organization name for the email
+      const orgResult = await dbQuery(
+        `SELECT name FROM organizations WHERE id = @orgId`,
+        { orgId: id }
+      )
+      if (orgResult.recordset.length === 0) {
+        throw notFound('Organization not found')
+      }
+      const organizationName = orgResult.recordset[0].name
+
+      // Get inviter name for the email
+      const inviterResult = await dbQuery(
+        `SELECT display_name FROM users WHERE id = @userId`,
+        { userId }
+      )
+      const inviterName = inviterResult.recordset[0]?.display_name || req.user!.name || 'A team member'
+
       // Check if email already has pending invitation
       const existingInvite = await dbQuery(
         `SELECT id FROM organization_invitations
@@ -731,10 +749,18 @@ router.post(
         }
       )
 
-      // TODO: Send invitation email (Sprint 10)
+      // Send invitation email
+      const emailSent = await sendOrganizationInvitationEmail({
+        recipientEmail: email,
+        inviterName,
+        organizationName,
+        role,
+        invitationToken: token,
+      })
 
       res.status(201).json({
         message: 'Invitation sent successfully',
+        emailSent,
         token, // Return token for testing (in production, only send via email)
       })
     } catch (error) {

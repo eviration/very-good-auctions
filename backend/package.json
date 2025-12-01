@@ -15,6 +15,7 @@
     "seed": "tsx src/db/seed.ts"
   },
   "dependencies": {
+    "@azure/communication-email": "^1.1.0",
     "@azure/identity": "^4.0.0",
     "@azure/storage-blob": "^12.17.0",
     "@microsoft/signalr": "^8.0.0",
