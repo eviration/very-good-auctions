@@ -422,8 +422,29 @@ class ApiClient {
     })
   }
 
-  async publishEvent(id: string): Promise<AuctionEvent> {
+  async publishEvent(id: string): Promise<{
+    clientSecret: string
+    paymentIntentId: string
+    amount: number
+    tier: string
+    eventName: string
+    cancellationPolicy: {
+      beforeStart: string
+      afterStart: string
+    }
+  }> {
     return this.request(`/events/${id}/publish`, {
+      method: 'POST',
+    })
+  }
+
+  async cancelEvent(id: string): Promise<{
+    cancelled: boolean
+    refunded: boolean
+    refundAmount: number | null
+    message: string
+  }> {
+    return this.request(`/events/${id}/cancel`, {
       method: 'POST',
     })
   }

@@ -3,18 +3,23 @@ import { body, param, query, validationResult } from 'express-validator'
 import { authenticate, optionalAuth } from '../middleware/auth.js'
 import { query as dbQuery } from '../config/database.js'
 import { badRequest, notFound, forbidden } from '../middleware/errorHandler.js'
+import {
+  TIER_LIMITS,
+  createPublishPaymentIntent,
+  processEventCancellation,
+} from '../services/platformFees.js'
 
 const router = Router()
 
 // Access code alphabet (no confusing characters: 0/O, 1/I/L)
 const ACCESS_CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'
 
-// Pricing tiers
+// Pricing tiers (using shared config from platformFees)
 const PRICING_TIERS = {
-  small: { fee: 15, maxItems: 25 },
-  medium: { fee: 35, maxItems: 100 },
-  large: { fee: 75, maxItems: 500 },
-  unlimited: { fee: 150, maxItems: null },
+  small: { fee: TIER_LIMITS.small.flatFee, maxItems: TIER_LIMITS.small.maxItems },
+  medium: { fee: TIER_LIMITS.medium.flatFee, maxItems: TIER_LIMITS.medium.maxItems },
+  large: { fee: TIER_LIMITS.large.flatFee, maxItems: TIER_LIMITS.large.maxItems },
+  unlimited: { fee: TIER_LIMITS.unlimited.flatFee, maxItems: TIER_LIMITS.unlimited.maxItems },
 }
 
 // Helper function to generate slug from name
@@ -802,9 +807,44 @@ router.post(
   }
 )
 
-// Publish event (pay fee and schedule)
+// Publish event - Step 1: Create payment intent
 router.post(
   '/:id/publish',
+  authenticate,
+  param('id').isUUID(),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const errors = validationResult(req)
+      if (!errors.isEmpty()) {
+        throw badRequest('Invalid event ID format')
+      }
+
+      const { id } = req.params
+      const userId = req.user!.id
+
+      // Create payment intent for publishing fee
+      const paymentData = await createPublishPaymentIntent(id, userId)
+
+      res.json({
+        clientSecret: paymentData.clientSecret,
+        paymentIntentId: paymentData.paymentIntentId,
+        amount: paymentData.amount,
+        tier: paymentData.tier,
+        eventName: paymentData.eventName,
+        cancellationPolicy: {
+          beforeStart: 'Full refund available if cancelled before auction start time',
+          afterStart: 'No refund available once auction has started. All bids will be cancelled and bidders notified.',
+        },
+      })
+    } catch (error) {
+      next(error)
+    }
+  }
+)
+
+// Cancel event with refund eligibility check
+router.post(
+  '/:id/cancel',
   authenticate,
   param('id').isUUID(),
   async (req: Request, res: Response, next: NextFunction) => {
@@ -820,24 +860,19 @@ router.post(
       // Check access
       const access = await checkEventAccess(id, userId)
       if (!access) {
-        throw forbidden('You do not have permission to publish this event')
+        throw forbidden('You do not have permission to cancel this event')
       }
 
       const { event } = access
 
-      if (event.status !== 'draft') {
-        throw badRequest('Only draft events can be published')
+      if (event.status === 'ended' || event.status === 'cancelled') {
+        throw badRequest('This event cannot be cancelled')
       }
 
-      // TODO: Implement fee payment via Stripe
-      // For now, just update status to scheduled
+      // Process cancellation with refund if eligible
+      const result = await processEventCancellation(id, userId)
 
-      await dbQuery(
-        `UPDATE auction_events SET status = 'scheduled', updated_at = GETUTCDATE() WHERE id = @id`,
-        { id }
-      )
-
-      res.json({ message: 'Event published successfully', status: 'scheduled' })
+      res.json(result)
     } catch (error) {
       next(error)
     }
