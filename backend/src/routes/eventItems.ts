@@ -205,6 +205,11 @@ router.get(
   ],
   async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const errors = validationResult(req)
+      if (!errors.isEmpty()) {
+        throw badRequest('Invalid event ID format')
+      }
+
       const { eventId } = req.params
       const page = parseInt(req.query.page as string) || 1
       const pageSize = parseInt(req.query.pageSize as string) || 24
@@ -285,6 +290,11 @@ router.get(
   param('eventId').isUUID(),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const errors = validationResult(req)
+      if (!errors.isEmpty()) {
+        throw badRequest('Invalid event ID format')
+      }
+
       const { eventId } = req.params
       const userId = req.user!.id
 
@@ -354,6 +364,11 @@ router.get(
   param('eventId').isUUID(),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const errors = validationResult(req)
+      if (!errors.isEmpty()) {
+        throw badRequest('Invalid event ID format')
+      }
+
       const { eventId } = req.params
       const userId = req.user!.id
 
@@ -414,6 +429,11 @@ router.get(
   param('id').isUUID(),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const errors = validationResult(req)
+      if (!errors.isEmpty()) {
+        throw badRequest('Invalid item ID format')
+      }
+
       const { id } = req.params
       const userId = req.user?.id
 
@@ -592,6 +612,11 @@ router.delete(
   ],
   async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const errors = validationResult(req)
+      if (!errors.isEmpty()) {
+        throw badRequest('Invalid item ID format')
+      }
+
       const { id } = req.params
       const userId = req.user!.id
       const { reason } = req.body
@@ -664,6 +689,11 @@ router.post(
   ],
   async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const errors = validationResult(req)
+      if (!errors.isEmpty()) {
+        throw badRequest('Invalid item ID format')
+      }
+
       const { id } = req.params
       const userId = req.user!.id
       const { startingPrice, buyNowPrice } = req.body
@@ -744,6 +774,11 @@ router.post(
   ],
   async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const errors = validationResult(req)
+      if (!errors.isEmpty()) {
+        throw badRequest('Invalid item ID format')
+      }
+
       const { id } = req.params
       const userId = req.user!.id
       const { reason, allowResubmit = false } = req.body
@@ -822,6 +857,11 @@ router.post(
   ],
   async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const errors = validationResult(req)
+      if (!errors.isEmpty()) {
+        throw badRequest('Invalid item ID format')
+      }
+
       const { id } = req.params
       const userId = req.user!.id
       const { title, description } = req.body
@@ -894,6 +934,11 @@ router.post(
   upload.array('images', MAX_IMAGES_PER_ITEM),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const errors = validationResult(req)
+      if (!errors.isEmpty()) {
+        throw badRequest('Invalid item ID format')
+      }
+
       const { id } = req.params
       const userId = req.user!.id
       const files = req.files as Express.Multer.File[]
@@ -983,6 +1028,11 @@ router.delete(
   ],
   async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const errors = validationResult(req)
+      if (!errors.isEmpty()) {
+        throw badRequest('Invalid ID format')
+      }
+
       const { id, imageId } = req.params
       const userId = req.user!.id
 

@@ -387,6 +387,11 @@ router.get(
   param('id').isUUID(),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const errors = validationResult(req)
+      if (!errors.isEmpty()) {
+        throw badRequest('Invalid event ID format')
+      }
+
       const { id } = req.params
       const userId = req.user?.id
 
@@ -644,6 +649,11 @@ router.delete(
   param('id').isUUID(),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const errors = validationResult(req)
+      if (!errors.isEmpty()) {
+        throw badRequest('Invalid event ID format')
+      }
+
       const { id } = req.params
       const userId = req.user!.id
 
@@ -724,6 +734,11 @@ router.get(
   param('id').isUUID(),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const errors = validationResult(req)
+      if (!errors.isEmpty()) {
+        throw badRequest('Invalid event ID format')
+      }
+
       const { id } = req.params
       const userId = req.user!.id
 
@@ -755,6 +770,11 @@ router.post(
   param('id').isUUID(),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const errors = validationResult(req)
+      if (!errors.isEmpty()) {
+        throw badRequest('Invalid event ID format')
+      }
+
       const { id } = req.params
       const userId = req.user!.id
 
@@ -785,6 +805,11 @@ router.post(
   param('id').isUUID(),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const errors = validationResult(req)
+      if (!errors.isEmpty()) {
+        throw badRequest('Invalid event ID format')
+      }
+
       const { id } = req.params
       const userId = req.user!.id
 
