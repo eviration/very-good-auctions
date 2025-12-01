@@ -67,7 +67,12 @@ class ApiClient {
 
       try {
         const errorJson = JSON.parse(errorText)
-        errorMessage = errorJson.message || errorJson.error || errorText || errorMessage
+        // Handle nested error objects (e.g., {error: {message: "..."}})
+        if (errorJson.error && typeof errorJson.error === 'object') {
+          errorMessage = errorJson.error.message || JSON.stringify(errorJson.error)
+        } else {
+          errorMessage = errorJson.message || errorJson.error || errorText || errorMessage
+        }
       } catch {
         errorMessage = errorText || errorMessage
       }
