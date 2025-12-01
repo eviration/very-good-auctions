@@ -5,7 +5,7 @@ import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-
 import { apiClient } from '../services/api'
 import type { AuctionEvent, EventItem, UpdateEventRequest, ItemSubmissionStatus } from '../types'
 
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '')
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY || '')
 
 const statusColors = {
   draft: 'bg-gray-100 text-gray-800',
