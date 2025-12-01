@@ -600,6 +600,18 @@ export async function processEventCancellation(
 
   const event = eventResult.recordset[0]
 
+  // Verify user has permission (must be org admin or owner)
+  const permissionResult = await dbQuery(
+    `SELECT om.role FROM organization_members om
+     JOIN auction_events ae ON ae.organization_id = om.organization_id
+     WHERE ae.id = @eventId AND om.user_id = @userId AND om.role IN ('admin', 'owner')`,
+    { eventId, userId }
+  )
+
+  if (permissionResult.recordset.length === 0) {
+    throw new Error('You do not have permission to cancel this event')
+  }
+
   // Check if event has already started (active)
   const now = new Date()
   const startTime = new Date(event.start_time)
@@ -665,7 +677,7 @@ export async function processEventCancellation(
   if (event.fee_id && event.fee_status === 'paid' && event.stripe_payment_intent_id) {
     try {
       // Create refund via Stripe
-      const refund = await stripe.refunds.create({
+      await stripe.refunds.create({
         payment_intent: event.stripe_payment_intent_id,
       })
 
