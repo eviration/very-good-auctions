@@ -1,99 +1,184 @@
-import * as signalR from '@microsoft/signalr'
 import type { BidUpdateEvent, AuctionEndedEvent } from '../types'
 
 type BidUpdateHandler = (event: BidUpdateEvent) => void
 type AuctionEndedHandler = (event: AuctionEndedEvent) => void
 
+// Connection states matching SignalR for compatibility
+enum ConnectionState {
+  Disconnected = 0,
+  Connecting = 1,
+  Connected = 2,
+  Reconnecting = 3,
+}
+
 class SignalRService {
-  private connection: signalR.HubConnection | null = null
+  private ws: WebSocket | null = null
+  private connectionState: ConnectionState = ConnectionState.Disconnected
   private bidUpdateHandlers: Map<string, Set<BidUpdateHandler>> = new Map()
   private auctionEndedHandlers: Map<string, Set<AuctionEndedHandler>> = new Map()
   private globalBidUpdateHandlers: Set<BidUpdateHandler> = new Set()
   private reconnectAttempts = 0
   private maxReconnectAttempts = 5
+  private subscribedAuctions: Set<string> = new Set()
+  private reconnectTimeout: ReturnType<typeof setTimeout> | null = null
 
   async connect(): Promise<void> {
-    if (this.connection?.state === signalR.HubConnectionState.Connected) {
+    if (this.connectionState === ConnectionState.Connected) {
       return
     }
 
-    const hubUrl = import.meta.env.VITE_SIGNALR_URL || '/hubs/auction'
-
-    this.connection = new signalR.HubConnectionBuilder()
-      .withUrl(hubUrl)
-      .withAutomaticReconnect({
-        nextRetryDelayInMilliseconds: (retryContext) => {
-          if (retryContext.previousRetryCount >= this.maxReconnectAttempts) {
-            return null // Stop reconnecting
+    if (this.connectionState === ConnectionState.Connecting) {
+      // Wait for existing connection attempt
+      return new Promise((resolve, reject) => {
+        const checkConnection = setInterval(() => {
+          if (this.connectionState === ConnectionState.Connected) {
+            clearInterval(checkConnection)
+            resolve()
+          } else if (this.connectionState === ConnectionState.Disconnected) {
+            clearInterval(checkConnection)
+            reject(new Error('Connection failed'))
           }
-          // Exponential backoff: 1s, 2s, 4s, 8s, 16s
-          return Math.min(1000 * Math.pow(2, retryContext.previousRetryCount), 30000)
-        },
+        }, 100)
       })
-      .configureLogging(signalR.LogLevel.Warning)
-      .build()
+    }
 
-    // Set up event handlers
-    this.connection.on('BidUpdate', (event: BidUpdateEvent) => {
-      this.handleBidUpdate(event)
+    this.connectionState = ConnectionState.Connecting
+
+    return new Promise((resolve, reject) => {
+      const baseUrl = import.meta.env.VITE_SIGNALR_URL || this.getDefaultHubUrl()
+      // Convert http(s) to ws(s) if needed
+      const wsUrl = baseUrl.replace(/^http/, 'ws')
+
+      try {
+        this.ws = new WebSocket(wsUrl)
+
+        this.ws.onopen = () => {
+          console.log('WebSocket connected')
+          this.connectionState = ConnectionState.Connected
+          this.reconnectAttempts = 0
+          this.resubscribeAll()
+          resolve()
+        }
+
+        this.ws.onmessage = (event) => {
+          try {
+            const message = JSON.parse(event.data)
+            this.handleMessage(message)
+          } catch (error) {
+            console.error('Failed to parse WebSocket message:', error)
+          }
+        }
+
+        this.ws.onclose = () => {
+          console.log('WebSocket connection closed')
+          this.connectionState = ConnectionState.Disconnected
+          this.ws = null
+          this.attemptReconnect()
+        }
+
+        this.ws.onerror = (error) => {
+          console.error('WebSocket error:', error)
+          if (this.connectionState === ConnectionState.Connecting) {
+            this.connectionState = ConnectionState.Disconnected
+            reject(new Error('WebSocket connection failed'))
+          }
+        }
+      } catch (error) {
+        this.connectionState = ConnectionState.Disconnected
+        reject(error)
+      }
     })
+  }
 
-    this.connection.on('AuctionEnded', (event: AuctionEndedEvent) => {
-      this.handleAuctionEnded(event)
-    })
+  private getDefaultHubUrl(): string {
+    // In production, use the API URL from environment
+    const apiUrl = import.meta.env.VITE_API_URL
+    if (apiUrl) {
+      // Convert http(s) to ws(s)
+      return apiUrl.replace(/^http/, 'ws').replace(/\/api$/, '') + '/hubs/auction'
+    }
+    // Development fallback
+    return 'ws://localhost:4000/hubs/auction'
+  }
 
-    // Handle connection state changes
-    this.connection.onreconnecting(() => {
-      console.log('SignalR reconnecting...')
-    })
+  private attemptReconnect(): void {
+    if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+      console.log('Max reconnect attempts reached')
+      return
+    }
 
-    this.connection.onreconnected(() => {
-      console.log('SignalR reconnected')
-      this.reconnectAttempts = 0
-      // Re-subscribe to all watched auctions
-      this.resubscribeAll()
-    })
+    this.connectionState = ConnectionState.Reconnecting
+    this.reconnectAttempts++
+    const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts - 1), 30000)
 
-    this.connection.onclose(() => {
-      console.log('SignalR connection closed')
-    })
+    console.log(`Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`)
 
-    try {
-      await this.connection.start()
-      console.log('SignalR connected')
-      this.reconnectAttempts = 0
-    } catch (error) {
-      console.error('SignalR connection failed:', error)
-      throw error
+    this.reconnectTimeout = setTimeout(async () => {
+      try {
+        await this.connect()
+      } catch (error) {
+        console.error('Reconnect failed:', error)
+      }
+    }, delay)
+  }
+
+  private handleMessage(message: { type: string; data?: unknown; clientId?: string }): void {
+    switch (message.type) {
+      case 'connected':
+        console.log('Server acknowledged connection:', message.clientId)
+        break
+
+      case 'BidUpdate':
+        this.handleBidUpdate(message.data as BidUpdateEvent)
+        break
+
+      case 'AuctionEnded':
+        this.handleAuctionEnded(message.data as AuctionEndedEvent)
+        break
+
+      default:
+        console.log('Unknown message type:', message.type)
     }
   }
 
   async disconnect(): Promise<void> {
-    if (this.connection) {
-      await this.connection.stop()
-      this.connection = null
+    if (this.reconnectTimeout) {
+      clearTimeout(this.reconnectTimeout)
+      this.reconnectTimeout = null
     }
+
+    if (this.ws) {
+      this.ws.close()
+      this.ws = null
+    }
+
+    this.connectionState = ConnectionState.Disconnected
+    this.subscribedAuctions.clear()
   }
 
   async subscribeToAuction(auctionId: string): Promise<void> {
-    if (this.connection?.state !== signalR.HubConnectionState.Connected) {
+    if (this.connectionState !== ConnectionState.Connected) {
       await this.connect()
     }
 
-    try {
-      await this.connection?.invoke('JoinAuctionGroup', auctionId)
+    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+      this.ws.send(JSON.stringify({
+        type: 'JoinAuctionGroup',
+        auctionId,
+      }))
+      this.subscribedAuctions.add(auctionId)
       console.log(`Subscribed to auction: ${auctionId}`)
-    } catch (error) {
-      console.error(`Failed to subscribe to auction ${auctionId}:`, error)
     }
   }
 
   async unsubscribeFromAuction(auctionId: string): Promise<void> {
-    try {
-      await this.connection?.invoke('LeaveAuctionGroup', auctionId)
+    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+      this.ws.send(JSON.stringify({
+        type: 'LeaveAuctionGroup',
+        auctionId,
+      }))
+      this.subscribedAuctions.delete(auctionId)
       console.log(`Unsubscribed from auction: ${auctionId}`)
-    } catch (error) {
-      console.error(`Failed to unsubscribe from auction ${auctionId}:`, error)
     }
   }
 
@@ -149,11 +234,17 @@ class SignalRService {
     const auctionIds = new Set([
       ...this.bidUpdateHandlers.keys(),
       ...this.auctionEndedHandlers.keys(),
+      ...this.subscribedAuctions,
     ])
 
     for (const auctionId of auctionIds) {
       await this.subscribeToAuction(auctionId)
     }
+  }
+
+  // Check if connected (for external status checks)
+  isConnected(): boolean {
+    return this.connectionState === ConnectionState.Connected
   }
 }
 
