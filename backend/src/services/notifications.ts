@@ -1,4 +1,14 @@
 import { query as dbQuery } from '../config/database.js'
+import {
+  sendAuctionWonEmail,
+  sendOutbidEmail,
+  sendEventCancelledEmail,
+  sendEventLiveEmail,
+  sendItemApprovedEmail,
+  sendItemRejectedEmail,
+  sendResubmitRequestedEmail,
+  sendAuctionLostEmail,
+} from './email.js'
 
 // Notification types matching database constraint
 export type NotificationType =
@@ -139,6 +149,39 @@ export async function deleteNotification(notificationId: string, userId: string)
 // Notification Creation Helpers (called from other services)
 // =====================================================
 
+// Helper to get user info for email notifications
+async function getUserInfo(userId: string): Promise<{ email: string; name: string } | null> {
+  const result = await dbQuery(
+    `SELECT email, name FROM users WHERE id = @userId`,
+    { userId }
+  )
+  if (result.recordset.length === 0) return null
+  return { email: result.recordset[0].email, name: result.recordset[0].name }
+}
+
+// Helper to get event info
+async function getEventInfo(eventId: string): Promise<{
+  name: string
+  slug: string
+  organizationName: string
+  endTime: Date
+} | null> {
+  const result = await dbQuery(
+    `SELECT ae.name, ae.slug, ae.end_time, o.name as org_name
+     FROM auction_events ae
+     LEFT JOIN organizations o ON ae.organization_id = o.id
+     WHERE ae.id = @eventId`,
+    { eventId }
+  )
+  if (result.recordset.length === 0) return null
+  return {
+    name: result.recordset[0].name,
+    slug: result.recordset[0].slug,
+    organizationName: result.recordset[0].org_name || 'Unknown Organization',
+    endTime: new Date(result.recordset[0].end_time),
+  }
+}
+
 // Notify user when their item submission is approved
 export async function notifyItemApproved(
   userId: string,
@@ -147,7 +190,8 @@ export async function notifyItemApproved(
   eventId: string,
   itemId: string
 ): Promise<string> {
-  return createNotification({
+  // Create in-app notification
+  const notificationId = await createNotification({
     userId,
     type: 'item_approved',
     title: 'Item Approved',
@@ -155,6 +199,24 @@ export async function notifyItemApproved(
     eventId,
     itemId,
   })
+
+  // Send email (fire and forget, don't block on email)
+  getUserInfo(userId).then(async (user) => {
+    if (user) {
+      const event = await getEventInfo(eventId)
+      if (event) {
+        sendItemApprovedEmail({
+          recipientEmail: user.email,
+          recipientName: user.name,
+          itemTitle,
+          eventName,
+          eventSlug: event.slug,
+        }).catch((err) => console.error('Failed to send item approved email:', err))
+      }
+    }
+  })
+
+  return notificationId
 }
 
 // Notify user when their item submission is rejected
@@ -166,7 +228,7 @@ export async function notifyItemRejected(
   eventId: string,
   itemId: string
 ): Promise<string> {
-  return createNotification({
+  const notificationId = await createNotification({
     userId,
     type: 'item_rejected',
     title: 'Item Rejected',
@@ -174,6 +236,21 @@ export async function notifyItemRejected(
     eventId,
     itemId,
   })
+
+  // Send email
+  getUserInfo(userId).then((user) => {
+    if (user) {
+      sendItemRejectedEmail({
+        recipientEmail: user.email,
+        recipientName: user.name,
+        itemTitle,
+        eventName,
+        rejectionReason: reason,
+      }).catch((err) => console.error('Failed to send item rejected email:', err))
+    }
+  })
+
+  return notificationId
 }
 
 // Notify user when resubmission is requested
@@ -185,7 +262,7 @@ export async function notifyResubmitRequested(
   eventId: string,
   itemId: string
 ): Promise<string> {
-  return createNotification({
+  const notificationId = await createNotification({
     userId,
     type: 'resubmit_requested',
     title: 'Resubmission Requested',
@@ -193,9 +270,28 @@ export async function notifyResubmitRequested(
     eventId,
     itemId,
   })
+
+  // Send email
+  getUserInfo(userId).then(async (user) => {
+    if (user) {
+      const event = await getEventInfo(eventId)
+      if (event) {
+        sendResubmitRequestedEmail({
+          recipientEmail: user.email,
+          recipientName: user.name,
+          itemTitle,
+          eventName,
+          eventSlug: event.slug,
+          reason,
+        }).catch((err) => console.error('Failed to send resubmit requested email:', err))
+      }
+    }
+  })
+
+  return notificationId
 }
 
-// Notify users when an event goes live
+// Notify users when an event goes live (in-app only - batch email handled separately)
 export async function notifyEventLive(
   userId: string,
   eventName: string,
@@ -216,9 +312,10 @@ export async function notifyOutbid(
   itemTitle: string,
   newBidAmount: number,
   eventId: string,
-  itemId: string
+  itemId: string,
+  previousBidAmount?: number
 ): Promise<string> {
-  return createNotification({
+  const notificationId = await createNotification({
     userId,
     type: 'outbid',
     title: 'You\'ve Been Outbid',
@@ -226,6 +323,27 @@ export async function notifyOutbid(
     eventId,
     itemId,
   })
+
+  // Send email
+  getUserInfo(userId).then(async (user) => {
+    if (user) {
+      const event = await getEventInfo(eventId)
+      if (event) {
+        sendOutbidEmail({
+          recipientEmail: user.email,
+          recipientName: user.name,
+          itemTitle,
+          newHighBid: newBidAmount,
+          yourBid: previousBidAmount || newBidAmount - 1, // fallback if not provided
+          eventName: event.name,
+          eventSlug: event.slug,
+          itemId,
+        }).catch((err) => console.error('Failed to send outbid email:', err))
+      }
+    }
+  })
+
+  return notificationId
 }
 
 // Notify user when they won an auction
@@ -236,7 +354,7 @@ export async function notifyAuctionWon(
   eventId: string,
   itemId: string
 ): Promise<string> {
-  return createNotification({
+  const notificationId = await createNotification({
     userId,
     type: 'auction_won',
     title: 'Congratulations! You Won!',
@@ -244,6 +362,26 @@ export async function notifyAuctionWon(
     eventId,
     itemId,
   })
+
+  // Send email
+  getUserInfo(userId).then(async (user) => {
+    if (user) {
+      const event = await getEventInfo(eventId)
+      if (event) {
+        sendAuctionWonEmail({
+          recipientEmail: user.email,
+          recipientName: user.name,
+          itemTitle,
+          winningBid: winningAmount,
+          eventName: event.name,
+          organizationName: event.organizationName,
+          eventSlug: event.slug,
+        }).catch((err) => console.error('Failed to send auction won email:', err))
+      }
+    }
+  })
+
+  return notificationId
 }
 
 // Notify user when they lost an auction (were outbid at the end)
@@ -251,9 +389,11 @@ export async function notifyAuctionLost(
   userId: string,
   itemTitle: string,
   eventId: string,
-  itemId: string
+  itemId: string,
+  userBid?: number,
+  winningBid?: number
 ): Promise<string> {
-  return createNotification({
+  const notificationId = await createNotification({
     userId,
     type: 'auction_lost',
     title: 'Auction Ended',
@@ -261,6 +401,27 @@ export async function notifyAuctionLost(
     eventId,
     itemId,
   })
+
+  // Send email (only if we have bid amounts)
+  if (userBid !== undefined && winningBid !== undefined) {
+    getUserInfo(userId).then(async (user) => {
+      if (user) {
+        const event = await getEventInfo(eventId)
+        if (event) {
+          sendAuctionLostEmail({
+            recipientEmail: user.email,
+            recipientName: user.name,
+            itemTitle,
+            yourBid: userBid,
+            winningBid: winningBid,
+            eventName: event.name,
+          }).catch((err) => console.error('Failed to send auction lost email:', err))
+        }
+      }
+    })
+  }
+
+  return notificationId
 }
 
 // Notify user when their item is removed
@@ -318,17 +479,90 @@ export async function notifyAllBiddersOnItem(
   )
 }
 
-// Notify all item submitters when event goes live
+// Notify all item submitters when event goes live (includes email)
 export async function notifyEventSubmittersLive(eventId: string, eventName: string): Promise<void> {
+  // Get submitters with their items and user info
   const submittersResult = await dbQuery(
-    `SELECT DISTINCT submitted_by FROM event_items
-     WHERE event_id = @eventId AND submission_status = 'approved'`,
+    `SELECT
+       u.id as user_id, u.email, u.name,
+       STRING_AGG(ei.title, '|||') as item_titles
+     FROM event_items ei
+     JOIN users u ON ei.submitted_by = u.id
+     WHERE ei.event_id = @eventId AND ei.submission_status = 'approved'
+     GROUP BY u.id, u.email, u.name`,
+    { eventId }
+  )
+
+  const event = await getEventInfo(eventId)
+
+  await Promise.all(
+    submittersResult.recordset.map(async (row: any) => {
+      // Create in-app notification
+      await notifyEventLive(row.user_id, eventName, eventId)
+
+      // Send email with all their items
+      if (event && row.email) {
+        const itemTitles = row.item_titles ? row.item_titles.split('|||') : []
+        sendEventLiveEmail({
+          recipientEmail: row.email,
+          recipientName: row.name,
+          eventName,
+          organizationName: event.organizationName,
+          itemTitles,
+          eventSlug: event.slug,
+          endTime: event.endTime,
+        }).catch((err) => console.error('Failed to send event live email:', err))
+      }
+    })
+  )
+}
+
+// Notify all bidders when event is cancelled (includes email)
+export async function notifyEventBiddersCancelled(
+  eventId: string,
+  eventName: string,
+  organizationName: string
+): Promise<void> {
+  // Get all bidders with their bid item titles
+  const biddersResult = await dbQuery(
+    `SELECT
+       u.id as user_id, u.email, u.name,
+       STRING_AGG(ei.title, '|||') as item_titles
+     FROM (
+       SELECT DISTINCT bidder_id, item_id FROM event_item_bids
+       WHERE item_id IN (SELECT id FROM event_items WHERE event_id = @eventId)
+       UNION
+       SELECT DISTINCT bidder_id, item_id FROM event_item_silent_bids
+       WHERE item_id IN (SELECT id FROM event_items WHERE event_id = @eventId)
+     ) AS bids
+     JOIN users u ON bids.bidder_id = u.id
+     JOIN event_items ei ON bids.item_id = ei.id
+     GROUP BY u.id, u.email, u.name`,
     { eventId }
   )
 
   await Promise.all(
-    submittersResult.recordset.map((row: any) =>
-      notifyEventLive(row.submitted_by, eventName, eventId)
-    )
+    biddersResult.recordset.map(async (row: any) => {
+      // Create in-app notification
+      await createNotification({
+        userId: row.user_id,
+        type: 'bid_cancelled',
+        title: 'Auction Cancelled',
+        message: `The ${eventName} auction has been cancelled. Your bids have been removed.`,
+        eventId,
+      })
+
+      // Send email
+      if (row.email) {
+        const itemTitles = row.item_titles ? row.item_titles.split('|||') : []
+        sendEventCancelledEmail({
+          recipientEmail: row.email,
+          recipientName: row.name,
+          eventName,
+          organizationName,
+          itemTitles,
+        }).catch((err) => console.error('Failed to send event cancelled email:', err))
+      }
+    })
   )
 }
