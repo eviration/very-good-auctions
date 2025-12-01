@@ -192,6 +192,9 @@ export default function EventDashboardPage() {
   const [showShareModal, setShowShareModal] = useState(false)
   const [submissionLink, setSubmissionLink] = useState<{ url: string; accessCode: string } | null>(null)
 
+  // Success banner state (for showing payment confirmation)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
+
   // Payment modal state
   const [showPublishPaymentModal, setShowPublishPaymentModal] = useState(false)
   const [publishPaymentData, setPublishPaymentData] = useState<{
@@ -249,8 +252,12 @@ export default function EventDashboardPage() {
   const handlePublishPaymentSuccess = async () => {
     setShowPublishPaymentModal(false)
     setPublishPaymentData(null)
+    // Show success message
+    setSuccessMessage('Your auction has been published successfully! It will go live at the scheduled start time.')
     // Refresh event data to get updated status
     await fetchData()
+    // Auto-dismiss success message after 10 seconds
+    setTimeout(() => setSuccessMessage(null), 10000)
   }
 
   const handleApproveItem = async (itemId: string) => {
@@ -429,6 +436,26 @@ export default function EventDashboardPage() {
           </Link>
         </div>
       </div>
+
+      {/* Success Banner */}
+      {successMessage && (
+        <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg mb-6 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>{successMessage}</span>
+          </div>
+          <button
+            onClick={() => setSuccessMessage(null)}
+            className="text-green-600 hover:text-green-800"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      )}
 
       {/* Pending Items Alert */}
       {pendingCount > 0 && (
@@ -802,6 +829,45 @@ export default function EventDashboardPage() {
                 className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700"
               >
                 Delete Event
+              </button>
+            </div>
+          )}
+
+          {(event.status === 'scheduled' || event.status === 'active') && (
+            <div className="bg-white rounded-lg shadow-sm border border-red-200 p-6">
+              <h3 className="text-lg font-semibold text-red-600 mb-2">Cancel Auction</h3>
+              {event.status === 'scheduled' ? (
+                <p className="text-sm text-gray-500 mb-4">
+                  Cancel this auction before it starts. You will receive a full refund of the publishing fee.
+                  All submitted items will be preserved but the auction will not go live.
+                </p>
+              ) : (
+                <p className="text-sm text-gray-500 mb-4">
+                  Cancel this active auction. <strong>No refund will be issued</strong> as the auction has already started.
+                  All current bids will be cancelled and bidders will be notified.
+                </p>
+              )}
+              <button
+                onClick={async () => {
+                  const warningMessage = event.status === 'active'
+                    ? `Are you sure you want to cancel "${event.name}"? This auction is currently active. All bids will be cancelled, bidders will be notified, and NO REFUND will be issued.`
+                    : `Are you sure you want to cancel "${event.name}"? You will receive a full refund of the publishing fee.`
+                  if (!confirm(warningMessage)) return
+                  try {
+                    const result = await apiClient.cancelEvent(event.id)
+                    if (result.refunded) {
+                      setSuccessMessage(`Auction cancelled. A refund of $${result.refundAmount?.toFixed(2) || '0.00'} has been processed.`)
+                    } else {
+                      setSuccessMessage('Auction cancelled successfully.')
+                    }
+                    await fetchData()
+                  } catch (err) {
+                    alert(err instanceof Error ? err.message : 'Failed to cancel auction')
+                  }
+                }}
+                className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700"
+              >
+                Cancel Auction
               </button>
             </div>
           )}
