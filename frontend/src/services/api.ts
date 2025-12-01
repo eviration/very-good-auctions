@@ -461,7 +461,8 @@ class ApiClient {
       })
     }
     const query = searchParams.toString()
-    return this.request(`/events/${eventId}/items${query ? `?${query}` : ''}`)
+    const response = await this.request<{ data: EventItem[] }>(`/events/${eventId}/items${query ? `?${query}` : ''}`)
+    return response.data
   }
 
   async getEventItem(eventId: string, itemId: string): Promise<EventItem> {
