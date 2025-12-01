@@ -6,6 +6,7 @@ import { badRequest, notFound, forbidden } from '../middleware/errorHandler.js'
 import {
   TIER_LIMITS,
   createPublishPaymentIntent,
+  confirmPublishPayment,
   processEventCancellation,
 } from '../services/platformFees.js'
 
@@ -836,6 +837,37 @@ router.post(
           afterStart: 'No refund available once auction has started. All bids will be cancelled and bidders notified.',
         },
       })
+    } catch (error) {
+      next(error)
+    }
+  }
+)
+
+// Publish event - Step 2: Confirm payment and publish
+router.post(
+  '/:id/publish/confirm',
+  authenticate,
+  param('id').isUUID(),
+  body('paymentIntentId').isString().notEmpty(),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const errors = validationResult(req)
+      if (!errors.isEmpty()) {
+        throw badRequest('Invalid request parameters')
+      }
+
+      const { id } = req.params
+      const { paymentIntentId } = req.body
+      const userId = req.user!.id
+
+      // Confirm payment and publish event
+      const result = await confirmPublishPayment(id, paymentIntentId, userId)
+
+      if (!result.success) {
+        throw badRequest(result.message)
+      }
+
+      res.json({ success: true, message: result.message })
     } catch (error) {
       next(error)
     }

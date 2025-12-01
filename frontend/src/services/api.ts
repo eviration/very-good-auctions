@@ -443,6 +443,16 @@ class ApiClient {
     })
   }
 
+  async confirmPublishPayment(
+    eventId: string,
+    paymentIntentId: string
+  ): Promise<{ success: boolean; message: string }> {
+    return this.request(`/events/${eventId}/publish/confirm`, {
+      method: 'POST',
+      body: JSON.stringify({ paymentIntentId }),
+    })
+  }
+
   async cancelEvent(id: string): Promise<{
     cancelled: boolean
     refunded: boolean

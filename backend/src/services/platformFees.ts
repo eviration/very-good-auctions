@@ -716,4 +716,110 @@ export async function processEventCancellation(
   }
 }
 
+/**
+ * Confirm payment and publish event (called from frontend after successful payment)
+ * This is an alternative to webhook-based confirmation
+ */
+export async function confirmPublishPayment(
+  eventId: string,
+  paymentIntentId: string,
+  userId: string
+): Promise<{ success: boolean; message: string }> {
+  // Verify the payment intent from Stripe
+  const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId)
+
+  // Verify payment succeeded
+  if (paymentIntent.status !== 'succeeded') {
+    return {
+      success: false,
+      message: `Payment not completed. Status: ${paymentIntent.status}`,
+    }
+  }
+
+  // Verify this is an event_publish payment for the correct event
+  if (
+    paymentIntent.metadata?.type !== 'event_publish' ||
+    paymentIntent.metadata?.eventId !== eventId
+  ) {
+    return {
+      success: false,
+      message: 'Payment does not match this event',
+    }
+  }
+
+  // Check if event is already published (idempotency)
+  const eventResult = await dbQuery(
+    `SELECT status, fee_id FROM auction_events WHERE id = @eventId`,
+    { eventId }
+  )
+
+  if (eventResult.recordset.length === 0) {
+    return { success: false, message: 'Event not found' }
+  }
+
+  const event = eventResult.recordset[0]
+
+  // Already published - return success (idempotent)
+  if (event.status === 'scheduled' && event.fee_id) {
+    return { success: true, message: 'Event already published' }
+  }
+
+  // Check if fee record already exists for this payment (webhook might have processed it)
+  const existingFee = await dbQuery(
+    `SELECT id FROM platform_fees WHERE stripe_payment_intent_id = @paymentIntentId`,
+    { paymentIntentId }
+  )
+
+  if (existingFee.recordset.length > 0) {
+    // Fee exists, just make sure event is updated
+    await dbQuery(
+      `UPDATE auction_events
+       SET status = 'scheduled',
+           fee_id = @feeId,
+           updated_at = GETUTCDATE()
+       WHERE id = @eventId AND status = 'draft'`,
+      { eventId, feeId: existingFee.recordset[0].id }
+    )
+    return { success: true, message: 'Event published successfully' }
+  }
+
+  // Create platform fee record and publish event
+  const { tier, organizationId } = paymentIntent.metadata
+  const flatFee = getTierFlatFee(tier as EventTier)
+
+  const feeId = uuidv4()
+  await dbQuery(
+    `INSERT INTO platform_fees (
+      id, user_id, organization_id, event_id, fee_type, amount,
+      stripe_payment_intent_id, status, created_at
+    ) VALUES (
+      @feeId, @userId, @organizationId, @eventId, @feeType, @amount,
+      @paymentIntentId, 'paid', GETUTCDATE()
+    )`,
+    {
+      feeId,
+      userId,
+      organizationId: organizationId || null,
+      eventId,
+      feeType: `event_${tier}`,
+      amount: flatFee,
+      paymentIntentId,
+    }
+  )
+
+  // Update event status to scheduled
+  await dbQuery(
+    `UPDATE auction_events
+     SET status = 'scheduled',
+         fee_id = @feeId,
+         updated_at = GETUTCDATE()
+     WHERE id = @eventId`,
+    { eventId, feeId }
+  )
+
+  console.log(`Event ${eventId} published after payment confirmation ${paymentIntentId}`)
+
+  return { success: true, message: 'Event published successfully' }
+}
+
 export { stripe }

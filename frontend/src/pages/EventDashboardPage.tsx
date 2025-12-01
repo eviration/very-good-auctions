@@ -24,6 +24,8 @@ const submissionStatusColors: Record<ItemSubmissionStatus, string> = {
 
 // Payment form component for Stripe Elements
 interface PaymentFormProps {
+  eventId: string
+  paymentIntentId: string
   amount: number
   tier: string
   eventName: string
@@ -36,6 +38,8 @@ interface PaymentFormProps {
 }
 
 function PublishPaymentForm({
+  eventId,
+  paymentIntentId,
   amount,
   tier,
   eventName,
@@ -75,6 +79,14 @@ function PublishPaymentForm({
 
       if (confirmError) {
         setError(confirmError.message || 'Payment failed')
+        setProcessing(false)
+        return
+      }
+
+      // Payment succeeded, now confirm with backend to publish the event
+      const result = await apiClient.confirmPublishPayment(eventId, paymentIntentId)
+      if (!result.success) {
+        setError(result.message || 'Failed to publish event')
         setProcessing(false)
         return
       }
@@ -184,6 +196,7 @@ export default function EventDashboardPage() {
   const [showPublishPaymentModal, setShowPublishPaymentModal] = useState(false)
   const [publishPaymentData, setPublishPaymentData] = useState<{
     clientSecret: string
+    paymentIntentId: string
     amount: number
     tier: string
     eventName: string
@@ -947,6 +960,8 @@ export default function EventDashboardPage() {
               }}
             >
               <PublishPaymentForm
+                eventId={event.id}
+                paymentIntentId={publishPaymentData.paymentIntentId}
                 amount={publishPaymentData.amount}
                 tier={publishPaymentData.tier}
                 eventName={publishPaymentData.eventName}
