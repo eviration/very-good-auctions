@@ -931,8 +931,8 @@ export default function EventDashboardPage() {
 
       {/* Publish Payment Modal */}
       {showPublishPaymentModal && publishPaymentData && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-4">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md my-8 max-h-[90vh] overflow-y-auto">
             <h2 className="text-lg font-semibold text-charcoal mb-4">Publish Your Auction</h2>
             <Elements
               stripe={stripePromise}
