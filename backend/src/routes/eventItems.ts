@@ -17,6 +17,31 @@ import { v4 as uuidv4 } from 'uuid'
 
 const router = Router()
 
+// Helper to check if string is a valid UUID
+function isUUID(str: string): boolean {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+  return uuidRegex.test(str)
+}
+
+// Helper to resolve event ID from ID or slug
+async function resolveEventId(idOrSlug: string): Promise<string | null> {
+  if (isUUID(idOrSlug)) {
+    return idOrSlug
+  }
+
+  // Look up by slug
+  const result = await dbQuery(
+    'SELECT id FROM auction_events WHERE slug = @slug',
+    { slug: idOrSlug }
+  )
+
+  if (result.recordset.length === 0) {
+    return null
+  }
+
+  return result.recordset[0].id
+}
+
 // Configure multer for image uploads
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -199,18 +224,19 @@ router.get(
   '/events/:eventId/items',
   optionalAuth,
   [
-    param('eventId').isUUID(),
+    param('eventId').isString(),
     query('page').optional().isInt({ min: 1 }),
     query('pageSize').optional().isInt({ min: 1, max: 50 }),
   ],
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const errors = validationResult(req)
-      if (!errors.isEmpty()) {
-        throw badRequest('Invalid event ID format')
-      }
+      const { eventId: eventIdOrSlug } = req.params
 
-      const { eventId } = req.params
+      // Resolve event ID from ID or slug
+      const eventId = await resolveEventId(eventIdOrSlug)
+      if (!eventId) {
+        throw notFound('Event not found')
+      }
       const page = parseInt(req.query.page as string) || 1
       const pageSize = parseInt(req.query.pageSize as string) || 24
       const offset = (page - 1) * pageSize
@@ -287,16 +313,17 @@ router.get(
 router.get(
   '/events/:eventId/items/pending',
   authenticate,
-  param('eventId').isUUID(),
+  param('eventId').isString(),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const errors = validationResult(req)
-      if (!errors.isEmpty()) {
-        throw badRequest('Invalid event ID format')
-      }
-
-      const { eventId } = req.params
+      const { eventId: eventIdOrSlug } = req.params
       const userId = req.user!.id
+
+      // Resolve event ID from ID or slug
+      const eventId = await resolveEventId(eventIdOrSlug)
+      if (!eventId) {
+        throw notFound('Event not found')
+      }
 
       // Check admin access
       const access = await checkEventAccess(eventId, userId)
@@ -361,16 +388,17 @@ router.get(
 router.get(
   '/events/:eventId/items/my-submissions',
   authenticate,
-  param('eventId').isUUID(),
+  param('eventId').isString(),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const errors = validationResult(req)
-      if (!errors.isEmpty()) {
-        throw badRequest('Invalid event ID format')
-      }
-
-      const { eventId } = req.params
+      const { eventId: eventIdOrSlug } = req.params
       const userId = req.user!.id
+
+      // Resolve event ID from ID or slug
+      const eventId = await resolveEventId(eventIdOrSlug)
+      if (!eventId) {
+        throw notFound('Event not found')
+      }
 
       const result = await dbQuery(
         `SELECT i.*

@@ -380,20 +380,24 @@ router.get(
   }
 )
 
-// Get event by ID
+// Helper to check if string is a valid UUID
+function isUUID(str: string): boolean {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+  return uuidRegex.test(str)
+}
+
+// Get event by ID or slug
 router.get(
-  '/:id',
+  '/:idOrSlug',
   optionalAuth,
-  param('id').isUUID(),
+  param('idOrSlug').isString(),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const errors = validationResult(req)
-      if (!errors.isEmpty()) {
-        throw badRequest('Invalid event ID format')
-      }
-
-      const { id } = req.params
+      const { idOrSlug } = req.params
       const userId = req.user?.id
+
+      // Determine if this is a UUID or slug
+      const isId = isUUID(idOrSlug)
 
       const result = await dbQuery(
         `SELECT e.*, o.name as organization_name, o.slug as organization_slug,
@@ -401,8 +405,8 @@ router.get(
          FROM auction_events e
          LEFT JOIN organizations o ON e.organization_id = o.id
          LEFT JOIN users u ON e.owner_id = u.id
-         WHERE e.id = @id`,
-        { id }
+         WHERE ${isId ? 'e.id = @idOrSlug' : 'e.slug = @idOrSlug'}`,
+        { idOrSlug }
       )
 
       if (result.recordset.length === 0) {
