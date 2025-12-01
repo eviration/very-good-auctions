@@ -737,9 +737,10 @@ export async function confirmPublishPayment(
   }
 
   // Verify this is an event_publish payment for the correct event
+  // Use case-insensitive comparison for UUIDs
   if (
     paymentIntent.metadata?.type !== 'event_publish' ||
-    paymentIntent.metadata?.eventId !== eventId
+    paymentIntent.metadata?.eventId?.toLowerCase() !== eventId.toLowerCase()
   ) {
     return {
       success: false,
