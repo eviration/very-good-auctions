@@ -1,5 +1,8 @@
 import { Router, Request, Response, NextFunction } from 'express'
 import { body, param, query, validationResult } from 'express-validator'
+import multer from 'multer'
+import path from 'path'
+import { v4 as uuidv4 } from 'uuid'
 import { authenticate, optionalAuth } from '../middleware/auth.js'
 import { query as dbQuery } from '../config/database.js'
 import { badRequest, notFound, forbidden } from '../middleware/errorHandler.js'
@@ -9,8 +12,23 @@ import {
   confirmPublishPayment,
   processEventCancellation,
 } from '../services/platformFees.js'
+import { uploadToBlob, deleteImage } from '../services/storage.js'
 
 const router = Router()
+
+// Multer configuration for cover image uploads
+const coverImageUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit for cover images
+  fileFilter: (_req, file, cb) => {
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true)
+    } else {
+      cb(new Error('Invalid file type. Allowed: jpg, jpeg, png, gif, webp'))
+    }
+  },
+})
 
 // Access code alphabet (no confusing characters: 0/O, 1/I/L)
 const ACCESS_CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'
@@ -965,6 +983,109 @@ router.get(
       }))
 
       res.json(events)
+    } catch (error) {
+      next(error)
+    }
+  }
+)
+
+// Upload event cover image
+router.post(
+  '/:id/cover-image',
+  authenticate,
+  param('id').isUUID(),
+  coverImageUpload.single('coverImage'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params
+      const userId = req.user!.id
+
+      // Check if user has admin access to event
+      const access = await checkEventAccess(id, userId)
+      if (!access) {
+        throw forbidden('You do not have permission to update this event')
+      }
+
+      if (!req.file) {
+        throw badRequest('No cover image file provided')
+      }
+
+      // Get current cover image URL to delete later
+      const currentResult = await dbQuery(
+        'SELECT cover_image_url FROM auction_events WHERE id = @id',
+        { id }
+      )
+      const currentCoverUrl = currentResult.recordset[0]?.cover_image_url
+
+      // Generate unique blob name for the cover image
+      const ext = path.extname(req.file.originalname).toLowerCase() || '.png'
+      const blobName = `events/${id}/cover-${uuidv4()}${ext}`
+
+      // Upload to blob storage
+      const coverImageUrl = await uploadToBlob(
+        req.file.buffer,
+        blobName,
+        req.file.mimetype
+      )
+
+      // Update event with new cover image URL
+      await dbQuery(
+        `UPDATE auction_events SET cover_image_url = @coverImageUrl, updated_at = GETUTCDATE() WHERE id = @id`,
+        { id, coverImageUrl }
+      )
+
+      // Delete old cover image if it exists
+      if (currentCoverUrl) {
+        try {
+          await deleteImage(currentCoverUrl)
+        } catch (deleteError) {
+          console.error('Failed to delete old cover image:', deleteError)
+          // Don't fail the request if old cover deletion fails
+        }
+      }
+
+      res.json({ coverImageUrl })
+    } catch (error) {
+      next(error)
+    }
+  }
+)
+
+// Delete event cover image
+router.delete(
+  '/:id/cover-image',
+  authenticate,
+  param('id').isUUID(),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params
+      const userId = req.user!.id
+
+      // Check if user has admin access to event
+      const access = await checkEventAccess(id, userId)
+      if (!access) {
+        throw forbidden('You do not have permission to update this event')
+      }
+
+      // Get current cover image URL
+      const result = await dbQuery(
+        'SELECT cover_image_url FROM auction_events WHERE id = @id',
+        { id }
+      )
+      const coverImageUrl = result.recordset[0]?.cover_image_url
+
+      if (coverImageUrl) {
+        // Delete from blob storage
+        await deleteImage(coverImageUrl)
+
+        // Update event
+        await dbQuery(
+          `UPDATE auction_events SET cover_image_url = NULL, updated_at = GETUTCDATE() WHERE id = @id`,
+          { id }
+        )
+      }
+
+      res.status(204).send()
     } catch (error) {
       next(error)
     }

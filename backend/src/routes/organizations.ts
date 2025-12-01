@@ -1,12 +1,30 @@
 import { Router, Request, Response, NextFunction } from 'express'
 import { body, param, query, validationResult } from 'express-validator'
 import crypto from 'crypto'
+import multer from 'multer'
+import path from 'path'
+import { v4 as uuidv4 } from 'uuid'
 import { authenticate, optionalAuth } from '../middleware/auth.js'
 import { query as dbQuery } from '../config/database.js'
 import { badRequest, notFound, forbidden } from '../middleware/errorHandler.js'
 import { sendOrganizationInvitationEmail } from '../services/email.js'
+import { uploadToBlob, deleteImage } from '../services/storage.js'
 
 const router = Router()
+
+// Multer configuration for logo uploads
+const logoUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit for logos
+  fileFilter: (_req, file, cb) => {
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true)
+    } else {
+      cb(new Error('Invalid file type. Allowed: jpg, jpeg, png, gif, webp'))
+    }
+  },
+})
 
 // Helper function to generate slug from name
 function generateSlug(name: string): string {
@@ -419,6 +437,109 @@ router.delete(
         'DELETE FROM organizations WHERE id = @id',
         { id }
       )
+
+      res.status(204).send()
+    } catch (error) {
+      next(error)
+    }
+  }
+)
+
+// Upload organization logo
+router.post(
+  '/:id/logo',
+  authenticate,
+  param('id').isUUID(),
+  logoUpload.single('logo'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params
+      const userId = req.user!.id
+
+      // Check if user is owner or admin
+      const membership = await checkOrgMembership(id, userId, ['owner', 'admin'])
+      if (!membership) {
+        throw forbidden('Only owners and admins can update organization logo')
+      }
+
+      if (!req.file) {
+        throw badRequest('No logo file provided')
+      }
+
+      // Get current logo URL to delete later
+      const currentResult = await dbQuery(
+        'SELECT logo_url FROM organizations WHERE id = @id',
+        { id }
+      )
+      const currentLogoUrl = currentResult.recordset[0]?.logo_url
+
+      // Generate unique blob name for the logo
+      const ext = path.extname(req.file.originalname).toLowerCase() || '.png'
+      const blobName = `organizations/${id}/logo-${uuidv4()}${ext}`
+
+      // Upload to blob storage
+      const logoUrl = await uploadToBlob(
+        req.file.buffer,
+        blobName,
+        req.file.mimetype
+      )
+
+      // Update organization with new logo URL
+      await dbQuery(
+        `UPDATE organizations SET logo_url = @logoUrl, updated_at = GETUTCDATE() WHERE id = @id`,
+        { id, logoUrl }
+      )
+
+      // Delete old logo if it exists
+      if (currentLogoUrl) {
+        try {
+          await deleteImage(currentLogoUrl)
+        } catch (deleteError) {
+          console.error('Failed to delete old logo:', deleteError)
+          // Don't fail the request if old logo deletion fails
+        }
+      }
+
+      res.json({ logoUrl })
+    } catch (error) {
+      next(error)
+    }
+  }
+)
+
+// Delete organization logo
+router.delete(
+  '/:id/logo',
+  authenticate,
+  param('id').isUUID(),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params
+      const userId = req.user!.id
+
+      // Check if user is owner or admin
+      const membership = await checkOrgMembership(id, userId, ['owner', 'admin'])
+      if (!membership) {
+        throw forbidden('Only owners and admins can delete organization logo')
+      }
+
+      // Get current logo URL
+      const result = await dbQuery(
+        'SELECT logo_url FROM organizations WHERE id = @id',
+        { id }
+      )
+      const logoUrl = result.recordset[0]?.logo_url
+
+      if (logoUrl) {
+        // Delete from blob storage
+        await deleteImage(logoUrl)
+
+        // Update organization
+        await dbQuery(
+          `UPDATE organizations SET logo_url = NULL, updated_at = GETUTCDATE() WHERE id = @id`,
+          { id }
+        )
+      }
 
       res.status(204).send()
     } catch (error) {

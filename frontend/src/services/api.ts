@@ -294,6 +294,48 @@ class ApiClient {
     })
   }
 
+  async uploadOrganizationLogo(
+    orgId: string,
+    file: File
+  ): Promise<{ logoUrl: string }> {
+    const formData = new FormData()
+    formData.append('logo', file)
+
+    const token = this.getAccessToken ? await this.getAccessToken() : null
+    const headers: HeadersInit = {}
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
+
+    const response = await fetch(
+      `${API_BASE_URL}/organizations/${orgId}/logo`,
+      {
+        method: 'POST',
+        headers,
+        body: formData,
+      }
+    )
+
+    if (!response.ok) {
+      let errorMessage = `Logo upload failed (${response.status})`
+      try {
+        const errorData = await response.json()
+        errorMessage = errorData.error || errorData.details || errorMessage
+      } catch {
+        // Ignore JSON parse errors
+      }
+      throw new Error(errorMessage)
+    }
+
+    return response.json()
+  }
+
+  async deleteOrganizationLogo(orgId: string): Promise<void> {
+    return this.request(`/organizations/${orgId}/logo`, {
+      method: 'DELETE',
+    })
+  }
+
   async getMyOrganizations(): Promise<Organization[]> {
     return this.request('/organizations/my/list')
   }
@@ -461,6 +503,48 @@ class ApiClient {
   }> {
     return this.request(`/events/${id}/cancel`, {
       method: 'POST',
+    })
+  }
+
+  async uploadEventCoverImage(
+    eventId: string,
+    file: File
+  ): Promise<{ coverImageUrl: string }> {
+    const formData = new FormData()
+    formData.append('coverImage', file)
+
+    const token = this.getAccessToken ? await this.getAccessToken() : null
+    const headers: HeadersInit = {}
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
+
+    const response = await fetch(
+      `${API_BASE_URL}/events/${eventId}/cover-image`,
+      {
+        method: 'POST',
+        headers,
+        body: formData,
+      }
+    )
+
+    if (!response.ok) {
+      let errorMessage = `Cover image upload failed (${response.status})`
+      try {
+        const errorData = await response.json()
+        errorMessage = errorData.error || errorData.details || errorMessage
+      } catch {
+        // Ignore JSON parse errors
+      }
+      throw new Error(errorMessage)
+    }
+
+    return response.json()
+  }
+
+  async deleteEventCoverImage(eventId: string): Promise<void> {
+    return this.request(`/events/${eventId}/cover-image`, {
+      method: 'DELETE',
     })
   }
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { apiClient } from '../services/api'
 import type { Organization, EventTier, PricingTiers, CreateEventRequest, OrganizationType } from '../types'
@@ -26,6 +26,11 @@ export default function CreateEventPage() {
 
   // Pricing tiers
   const [pricingTiers, setPricingTiers] = useState<PricingTiers | null>(null)
+
+  // Cover image
+  const [coverImageFile, setCoverImageFile] = useState<File | null>(null)
+  const [coverImagePreview, setCoverImagePreview] = useState<string | null>(null)
+  const coverImageInputRef = useRef<HTMLInputElement>(null)
 
   // Form fields
   const [name, setName] = useState('')
@@ -68,6 +73,35 @@ export default function CreateEventPage() {
     setEndDate(twoWeeksOut.toISOString().split('T')[0])
     setSubmissionDeadline(dayBeforeStart.toISOString().split('T')[0])
   }, [])
+
+  const handleCoverImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+      if (!allowedTypes.includes(file.type)) {
+        setError('Invalid file type. Please upload a JPG, PNG, GIF, or WebP image.')
+        return
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        setError('File too large. Maximum size is 10MB.')
+        return
+      }
+      setCoverImageFile(file)
+      setCoverImagePreview(URL.createObjectURL(file))
+      setError(null)
+    }
+  }
+
+  const handleRemoveCoverImage = () => {
+    setCoverImageFile(null)
+    if (coverImagePreview) {
+      URL.revokeObjectURL(coverImagePreview)
+      setCoverImagePreview(null)
+    }
+    if (coverImageInputRef.current) {
+      coverImageInputRef.current.value = ''
+    }
+  }
 
   const handleCreateOrg = async () => {
     if (!newOrgName.trim() || !newOrgEmail.trim()) return
@@ -117,6 +151,17 @@ export default function CreateEventPage() {
       }
 
       const event = await apiClient.createEvent(payload)
+
+      // Upload cover image if one was selected
+      if (coverImageFile) {
+        try {
+          await apiClient.uploadEventCoverImage(event.id, coverImageFile)
+        } catch (imageErr) {
+          console.error('Failed to upload cover image:', imageErr)
+          // Continue anyway - event was created successfully
+        }
+      }
+
       navigate(`/events/${event.slug}/manage`)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create event')
@@ -280,6 +325,56 @@ export default function CreateEventPage() {
                 className="clay-input w-full"
                 placeholder="Tell people what this auction is about..."
               />
+            </div>
+
+            {/* Cover Image */}
+            <div>
+              <label className="block text-sm font-bold text-charcoal mb-2">
+                Cover Image
+              </label>
+              <div className="flex items-start gap-4">
+                <div className="w-32 h-20 rounded-lg border-2 border-dashed border-charcoal-light/30 flex items-center justify-center bg-clay-surface overflow-hidden">
+                  {coverImagePreview ? (
+                    <img
+                      src={coverImagePreview}
+                      alt="Cover preview"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <svg className="w-8 h-8 text-charcoal-light/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  )}
+                </div>
+                <div className="flex-1">
+                  <input
+                    ref={coverImageInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/gif,image/webp"
+                    onChange={handleCoverImageChange}
+                    className="hidden"
+                    id="cover-image-upload"
+                  />
+                  <label
+                    htmlFor="cover-image-upload"
+                    className="inline-block clay-button bg-clay-surface text-sm cursor-pointer"
+                  >
+                    {coverImagePreview ? 'Change Image' : 'Upload Cover Image'}
+                  </label>
+                  {coverImagePreview && (
+                    <button
+                      type="button"
+                      onClick={handleRemoveCoverImage}
+                      className="ml-2 text-sm text-clay-coral font-bold hover:underline"
+                    >
+                      Remove
+                    </button>
+                  )}
+                  <p className="text-xs text-charcoal-light mt-2">
+                    JPG, PNG, GIF or WebP. Max 10MB. Recommended 1200x600px.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
 

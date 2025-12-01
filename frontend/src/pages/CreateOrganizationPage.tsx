@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { apiClient } from '../services/api'
 import type { OrganizationType, CreateOrganizationRequest } from '../types'
@@ -16,6 +16,9 @@ export default function CreateOrganizationPage() {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [logoFile, setLogoFile] = useState<File | null>(null)
+  const [logoPreview, setLogoPreview] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [formData, setFormData] = useState<CreateOrganizationRequest>({
     name: '',
@@ -27,6 +30,37 @@ export default function CreateOrganizationPage() {
     taxId: '',
   })
 
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      // Validate file type
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+      if (!allowedTypes.includes(file.type)) {
+        setError('Invalid file type. Please upload a JPG, PNG, GIF, or WebP image.')
+        return
+      }
+      // Validate file size (5MB limit)
+      if (file.size > 5 * 1024 * 1024) {
+        setError('File too large. Maximum size is 5MB.')
+        return
+      }
+      setLogoFile(file)
+      setLogoPreview(URL.createObjectURL(file))
+      setError(null)
+    }
+  }
+
+  const handleRemoveLogo = () => {
+    setLogoFile(null)
+    if (logoPreview) {
+      URL.revokeObjectURL(logoPreview)
+      setLogoPreview(null)
+    }
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -34,6 +68,17 @@ export default function CreateOrganizationPage() {
 
     try {
       const org = await apiClient.createOrganization(formData)
+
+      // Upload logo if one was selected
+      if (logoFile) {
+        try {
+          await apiClient.uploadOrganizationLogo(org.id, logoFile)
+        } catch (logoErr) {
+          console.error('Failed to upload logo:', logoErr)
+          // Continue anyway - org was created successfully
+        }
+      }
+
       navigate(`/organizations/${org.slug}/manage`)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create organization')
@@ -73,6 +118,56 @@ export default function CreateOrganizationPage() {
           <h2 className="text-lg font-semibold text-charcoal mb-4">Basic Information</h2>
 
           <div className="space-y-4">
+            {/* Logo Upload */}
+            <div>
+              <label className="block text-sm font-medium text-charcoal mb-2">
+                Organization Logo
+              </label>
+              <div className="flex items-start gap-4">
+                <div className="w-24 h-24 rounded-lg border-2 border-dashed border-sage/30 flex items-center justify-center bg-sage/5 overflow-hidden">
+                  {logoPreview ? (
+                    <img
+                      src={logoPreview}
+                      alt="Logo preview"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <svg className="w-8 h-8 text-sage/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  )}
+                </div>
+                <div className="flex-1">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/gif,image/webp"
+                    onChange={handleLogoChange}
+                    className="hidden"
+                    id="logo-upload"
+                  />
+                  <label
+                    htmlFor="logo-upload"
+                    className="inline-block px-4 py-2 border border-sage/30 rounded-lg text-sm font-medium text-charcoal hover:bg-sage/10 cursor-pointer transition-colors"
+                  >
+                    {logoPreview ? 'Change Logo' : 'Upload Logo'}
+                  </label>
+                  {logoPreview && (
+                    <button
+                      type="button"
+                      onClick={handleRemoveLogo}
+                      className="ml-2 px-4 py-2 text-sm text-red-600 hover:text-red-700"
+                    >
+                      Remove
+                    </button>
+                  )}
+                  <p className="text-xs text-gray-500 mt-1">
+                    JPG, PNG, GIF or WebP. Max 5MB.
+                  </p>
+                </div>
+              </div>
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-charcoal mb-1">
                 Organization Name <span className="text-red-500">*</span>
