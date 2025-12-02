@@ -27,7 +27,18 @@ interface SendEmailParams {
   plainTextContent?: string
 }
 
+export interface SendEmailResult {
+  success: boolean
+  error?: string
+  details?: unknown
+}
+
 export async function sendEmail(params: SendEmailParams): Promise<boolean> {
+  const result = await sendEmailWithDetails(params)
+  return result.success
+}
+
+export async function sendEmailWithDetails(params: SendEmailParams): Promise<SendEmailResult> {
   const { to, subject, htmlContent, plainTextContent } = params
 
   const client = getEmailClient()
@@ -39,10 +50,12 @@ export async function sendEmail(params: SendEmailParams): Promise<boolean> {
     console.log(`Subject: ${subject}`)
     console.log(`Content: ${plainTextContent || htmlContent}`)
     console.log('=================================================')
-    return true // Return true so invitation flow continues
+    return { success: true } // Return true so invitation flow continues
   }
 
   try {
+    console.log(`[Email] Attempting to send to: ${to} from: ${senderAddress}`)
+
     const message: EmailMessage = {
       senderAddress,
       content: {
@@ -59,15 +72,23 @@ export async function sendEmail(params: SendEmailParams): Promise<boolean> {
     const result = await poller.pollUntilDone()
 
     if (result.status === 'Succeeded') {
-      console.log(`Email sent successfully to ${to}`)
-      return true
+      console.log(`[Email] Sent successfully to ${to}`)
+      return { success: true }
     } else {
-      console.error(`Email failed to send: ${result.status}`)
-      return false
+      console.error(`[Email] Failed to send: ${result.status}`, result.error)
+      return {
+        success: false,
+        error: `Status: ${result.status}`,
+        details: result.error
+      }
     }
   } catch (error) {
-    console.error('Error sending email:', error)
-    return false
+    console.error('[Email] Error sending:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      details: error
+    }
   }
 }
 

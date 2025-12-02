@@ -17,7 +17,7 @@ import { errorHandler } from './middleware/errorHandler.js'
 import { requestLogger } from './middleware/requestLogger.js'
 import { initializeDatabase } from './config/database.js'
 import { initializeSignalR } from './services/signalr.js'
-import { sendEmail } from './services/email.js'
+import { sendEmailWithDetails } from './services/email.js'
 
 dotenv.config()
 
@@ -70,7 +70,7 @@ app.post('/api/debug/test-email', async (req, res) => {
   console.log(`[Email Test] Attempting to send test email to: ${to}`)
 
   try {
-    const result = await sendEmail({
+    const result = await sendEmailWithDetails({
       to,
       subject: 'Very Good Auctions - Test Email',
       htmlContent: `
@@ -82,8 +82,8 @@ app.post('/api/debug/test-email', async (req, res) => {
       plainTextContent: `Test Email\n\nThis is a test email from Very Good Auctions.\nIf you received this, email is working correctly!\nSent at: ${new Date().toISOString()}`,
     })
 
-    console.log(`[Email Test] Send result: ${result}`)
-    res.json({ success: result, message: result ? 'Email sent successfully' : 'Email failed to send' })
+    console.log(`[Email Test] Send result:`, result)
+    res.json(result)
   } catch (error) {
     console.error('[Email Test] Error:', error)
     res.status(500).json({
