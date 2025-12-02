@@ -14,6 +14,9 @@ import Footer from './components/Footer'
 import HomePage from './pages/HomePage'
 import ProfilePage from './pages/ProfilePage'
 import HowItWorksPage from './pages/HowItWorksPage'
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage'
+import TermsOfServicePage from './pages/TermsOfServicePage'
+import DataDeletionPage from './pages/DataDeletionPage'
 import NotFoundPage from './pages/NotFoundPage'
 import CreateOrganizationPage from './pages/CreateOrganizationPage'
 import OrganizationDetailPage from './pages/OrganizationDetailPage'
@@ -93,6 +96,9 @@ function App() {
           {/* Public routes */}
           <Route path="/" element={<HomePage />} />
           <Route path="/how-it-works" element={<HowItWorksPage />} />
+          <Route path="/privacy" element={<PrivacyPolicyPage />} />
+          <Route path="/terms" element={<TermsOfServicePage />} />
+          <Route path="/data-deletion" element={<DataDeletionPage />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="/organizations/:slug" element={<OrganizationDetailPage />} />
           <Route path="/invitations/:token" element={<InvitationAcceptPage />} />
