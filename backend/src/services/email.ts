@@ -2,7 +2,8 @@ import { EmailClient, EmailMessage } from '@azure/communication-email'
 
 // Email configuration from environment
 const connectionString = process.env.AZURE_COMMUNICATION_CONNECTION_STRING
-const senderAddress = process.env.EMAIL_SENDER_ADDRESS || 'noreply@verygoodnuctions.com'
+const senderAddress = process.env.EMAIL_SENDER_ADDRESS || 'noreply@verygoodauctions.com'
+const replyToAddress = process.env.EMAIL_REPLY_TO_ADDRESS || 'support@verygoodauctions.com'
 const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000'
 
 let emailClient: EmailClient | null = null
@@ -66,6 +67,7 @@ export async function sendEmailWithDetails(params: SendEmailParams): Promise<Sen
       recipients: {
         to: [{ address: to }],
       },
+      replyTo: [{ address: replyToAddress }],
     }
 
     const poller = await client.beginSend(message)
@@ -168,8 +170,14 @@ export async function sendOrganizationInvitationEmail(params: {
           <!-- Footer -->
           <tr>
             <td style="background-color: #f9f9f9; padding: 20px 40px; text-align: center; border-top: 1px solid #eeeeee;">
-              <p style="margin: 0; color: #888888; font-size: 12px;">
+              <p style="margin: 0 0 10px 0; color: #888888; font-size: 12px;">
                 &copy; ${new Date().getFullYear()} Very Good Auctions. All rights reserved.
+              </p>
+              <p style="margin: 0 0 10px 0; color: #888888; font-size: 12px;">
+                Questions? Contact us at <a href="mailto:${replyToAddress}" style="color: #5A7C6F;">${replyToAddress}</a>
+              </p>
+              <p style="margin: 0; color: #888888; font-size: 11px;">
+                <a href="${frontendUrl}/profile" style="color: #888888;">Manage email preferences</a>
               </p>
             </td>
           </tr>
@@ -205,6 +213,7 @@ This invitation will expire in 7 days. If you didn't expect this invitation, you
 
 // Helper function for email template wrapper
 function emailWrapper(title: string, content: string): string {
+  const unsubscribeUrl = `${frontendUrl}/profile`
   return `
 <!DOCTYPE html>
 <html>
@@ -235,8 +244,14 @@ function emailWrapper(title: string, content: string): string {
           <!-- Footer -->
           <tr>
             <td style="background-color: #f9f9f9; padding: 20px 40px; text-align: center; border-top: 1px solid #eeeeee;">
-              <p style="margin: 0; color: #888888; font-size: 12px;">
+              <p style="margin: 0 0 10px 0; color: #888888; font-size: 12px;">
                 &copy; ${new Date().getFullYear()} Very Good Auctions. All rights reserved.
+              </p>
+              <p style="margin: 0 0 10px 0; color: #888888; font-size: 12px;">
+                Questions? Contact us at <a href="mailto:${replyToAddress}" style="color: #5A7C6F;">${replyToAddress}</a>
+              </p>
+              <p style="margin: 0; color: #888888; font-size: 11px;">
+                <a href="${unsubscribeUrl}" style="color: #888888;">Manage email preferences</a>
               </p>
             </td>
           </tr>
