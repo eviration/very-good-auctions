@@ -8,6 +8,7 @@ import {
   sendItemRejectedEmail,
   sendResubmitRequestedEmail,
   sendAuctionLostEmail,
+  sendBidConfirmationEmail,
 } from './email.js'
 
 // Notification types matching database constraint
@@ -21,6 +22,7 @@ export type NotificationType =
   | 'auction_lost'
   | 'item_removed'
   | 'bid_cancelled'
+  | 'bid_placed'
 
 interface CreateNotificationParams {
   userId: string
@@ -515,6 +517,47 @@ export async function notifyEventSubmittersLive(eventId: string, eventName: stri
       }
     })
   )
+}
+
+// Notify user when they place a bid
+export async function notifyBidPlaced(
+  userId: string,
+  itemTitle: string,
+  bidAmount: number,
+  eventId: string,
+  itemId: string,
+  auctionType: 'standard' | 'silent'
+): Promise<string> {
+  const notificationId = await createNotification({
+    userId,
+    type: 'bid_placed',
+    title: 'Bid Confirmed',
+    message: `Your bid of $${bidAmount.toFixed(2)} on "${itemTitle}" has been placed.`,
+    eventId,
+    itemId,
+  })
+
+  // Send email
+  getUserInfo(userId).then(async (user) => {
+    if (user) {
+      const event = await getEventInfo(eventId)
+      if (event) {
+        sendBidConfirmationEmail({
+          recipientEmail: user.email,
+          recipientName: user.name,
+          itemTitle,
+          bidAmount,
+          eventName: event.name,
+          eventSlug: event.slug,
+          itemId,
+          auctionType,
+          auctionEndTime: event.endTime,
+        }).catch((err) => console.error('Failed to send bid confirmation email:', err))
+      }
+    }
+  })
+
+  return notificationId
 }
 
 // Notify all bidders when event is cancelled (includes email)

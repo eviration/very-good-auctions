@@ -806,6 +806,110 @@ Update submission: ${submitUrl}
   })
 }
 
+// Bid confirmation email - sent when user places a bid
+export async function sendBidConfirmationEmail(params: {
+  recipientEmail: string
+  recipientName: string
+  itemTitle: string
+  bidAmount: number
+  eventName: string
+  eventSlug: string
+  itemId: string
+  auctionType: 'standard' | 'silent'
+  auctionEndTime: Date
+}): Promise<boolean> {
+  const { recipientEmail, recipientName, itemTitle, bidAmount, eventName, eventSlug, itemId, auctionType, auctionEndTime } = params
+
+  const itemUrl = `${frontendUrl}/events/${eventSlug}/items/${itemId}`
+  const formattedEndTime = auctionEndTime.toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  })
+
+  const subject = `Bid Confirmed: $${bidAmount.toFixed(2)} on "${itemTitle}"`
+
+  const auctionTypeNote = auctionType === 'silent'
+    ? `<p style="margin: 0 0 10px 0; color: #4a4a4a; font-size: 14px;">
+        <strong>Note:</strong> This is a silent auction. Your bid amount is private until the auction ends.
+       </p>`
+    : `<p style="margin: 0 0 10px 0; color: #4a4a4a; font-size: 14px;">
+        <strong>Note:</strong> You'll receive a notification if someone outbids you.
+       </p>`
+
+  const content = `
+    <h2 style="margin: 0 0 20px 0; color: #1a1a1a; font-size: 20px; font-weight: 600;">
+      Bid Confirmed!
+    </h2>
+
+    <p style="margin: 0 0 20px 0; color: #4a4a4a; font-size: 16px; line-height: 1.6;">
+      Hi ${recipientName}, your bid has been successfully placed!
+    </p>
+
+    <div style="background-color: #f0f7f4; border-radius: 8px; padding: 20px; margin: 20px 0; border-left: 4px solid #10b981;">
+      <p style="margin: 0 0 10px 0; color: #4a4a4a; font-size: 14px;">
+        <strong>Item:</strong> ${itemTitle}
+      </p>
+      <p style="margin: 0 0 10px 0; color: #4a4a4a; font-size: 14px;">
+        <strong>Your Bid:</strong> $${bidAmount.toFixed(2)}
+      </p>
+      <p style="margin: 0 0 10px 0; color: #4a4a4a; font-size: 14px;">
+        <strong>Event:</strong> ${eventName}
+      </p>
+      <p style="margin: 0; color: #4a4a4a; font-size: 14px;">
+        <strong>Auction Ends:</strong> ${formattedEndTime}
+      </p>
+    </div>
+
+    ${auctionTypeNote}
+
+    <!-- CTA Button -->
+    <table role="presentation" style="width: 100%; border-collapse: collapse;">
+      <tr>
+        <td style="text-align: center; padding: 20px 0;">
+          <a href="${itemUrl}"
+             style="display: inline-block; background-color: #5A7C6F; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 6px; font-size: 16px; font-weight: 600;">
+            View Item
+          </a>
+        </td>
+      </tr>
+    </table>
+
+    <p style="margin: 20px 0 0 0; color: #888888; font-size: 14px; line-height: 1.6;">
+      Good luck! We'll notify you when the auction ends.
+    </p>
+  `
+
+  const plainTextContent = `
+Bid Confirmed!
+
+Hi ${recipientName}, your bid has been successfully placed!
+
+Item: ${itemTitle}
+Your Bid: $${bidAmount.toFixed(2)}
+Event: ${eventName}
+Auction Ends: ${formattedEndTime}
+
+${auctionType === 'silent' ? 'Note: This is a silent auction. Your bid amount is private until the auction ends.' : "Note: You'll receive a notification if someone outbids you."}
+
+View item: ${itemUrl}
+
+Good luck! We'll notify you when the auction ends.
+
+© ${new Date().getFullYear()} Very Good Auctions. All rights reserved.
+`
+
+  return sendEmail({
+    to: recipientEmail,
+    subject,
+    htmlContent: emailWrapper('Bid Confirmed', content),
+    plainTextContent,
+  })
+}
+
 // Auction lost email - sent when user is outbid at end of auction
 export async function sendAuctionLostEmail(params: {
   recipientEmail: string

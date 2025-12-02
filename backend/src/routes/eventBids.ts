@@ -3,7 +3,7 @@ import { body, param, validationResult } from 'express-validator'
 import { authenticate, optionalAuth } from '../middleware/auth.js'
 import { query as dbQuery } from '../config/database.js'
 import { badRequest, notFound } from '../middleware/errorHandler.js'
-import { notifyOutbid } from '../services/notifications.js'
+import { notifyOutbid, notifyBidPlaced } from '../services/notifications.js'
 
 const router = Router()
 
@@ -155,6 +155,9 @@ router.post(
       if (previousBidderId && previousBidderId !== userId) {
         await notifyOutbid(previousBidderId, item.title, amount, item.event_id, id)
       }
+
+      // Send bid confirmation to the bidder
+      notifyBidPlaced(userId, item.title, amount, item.event_id, id, 'standard')
 
       // TODO: Broadcast via SignalR for real-time updates
 
@@ -354,6 +357,9 @@ router.post(
           { itemId: id, amount, bidId: existingBid.id }
         )
 
+        // Send bid confirmation for the increased bid
+        notifyBidPlaced(userId, item.title, amount, item.event_id, id, 'silent')
+
         res.json({
           id: existingBid.id,
           amount,
@@ -402,6 +408,9 @@ router.post(
         )
 
         // TODO: If user pushed someone else down from #1, notify them
+
+        // Send bid confirmation for the new bid
+        notifyBidPlaced(userId, item.title, amount, item.event_id, id, 'silent')
 
         res.status(201).json({
           id: bid.id,
