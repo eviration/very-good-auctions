@@ -17,6 +17,7 @@ import { errorHandler } from './middleware/errorHandler.js'
 import { requestLogger } from './middleware/requestLogger.js'
 import { initializeDatabase } from './config/database.js'
 import { initializeSignalR } from './services/signalr.js'
+import { sendEmail } from './services/email.js'
 
 dotenv.config()
 
@@ -43,6 +44,54 @@ app.use(requestLogger)
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() })
+})
+
+// Email diagnostic endpoint
+app.get('/api/debug/email-config', (req, res) => {
+  const connectionString = process.env.AZURE_COMMUNICATION_CONNECTION_STRING
+  const senderAddress = process.env.EMAIL_SENDER_ADDRESS
+
+  res.json({
+    hasConnectionString: !!connectionString,
+    connectionStringPrefix: connectionString ? connectionString.substring(0, 50) + '...' : null,
+    senderAddress: senderAddress || 'not configured',
+    frontendUrl: process.env.FRONTEND_URL || 'not configured',
+  })
+})
+
+// Email test endpoint
+app.post('/api/debug/test-email', async (req, res) => {
+  const { to } = req.body
+
+  if (!to) {
+    return res.status(400).json({ error: 'Missing "to" email address in request body' })
+  }
+
+  console.log(`[Email Test] Attempting to send test email to: ${to}`)
+
+  try {
+    const result = await sendEmail({
+      to,
+      subject: 'Very Good Auctions - Test Email',
+      htmlContent: `
+        <h1>Test Email</h1>
+        <p>This is a test email from Very Good Auctions.</p>
+        <p>If you received this, email is working correctly!</p>
+        <p>Sent at: ${new Date().toISOString()}</p>
+      `,
+      plainTextContent: `Test Email\n\nThis is a test email from Very Good Auctions.\nIf you received this, email is working correctly!\nSent at: ${new Date().toISOString()}`,
+    })
+
+    console.log(`[Email Test] Send result: ${result}`)
+    res.json({ success: result, message: result ? 'Email sent successfully' : 'Email failed to send' })
+  } catch (error) {
+    console.error('[Email Test] Error:', error)
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      details: error instanceof Error ? error.stack : undefined
+    })
+  }
 })
 
 // API Routes
