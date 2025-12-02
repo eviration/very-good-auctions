@@ -22,6 +22,7 @@ export default function OrganizationDashboardPage() {
   const [editMode, setEditMode] = useState(false)
   const [editData, setEditData] = useState<UpdateOrganizationRequest>({})
   const [saving, setSaving] = useState(false)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -62,10 +63,11 @@ export default function OrganizationDashboardPage() {
     e.preventDefault()
     if (!organization) return
 
+    const emailToInvite = inviteEmail
     setInviting(true)
     try {
       await apiClient.sendOrganizationInvitation(organization.id, {
-        email: inviteEmail,
+        email: emailToInvite,
         role: inviteRole,
       })
       // Refresh invitations
@@ -74,6 +76,9 @@ export default function OrganizationDashboardPage() {
       setShowInviteModal(false)
       setInviteEmail('')
       setInviteRole('member')
+      // Show success message
+      setSuccessMessage(`Invitation email sent to ${emailToInvite}`)
+      setTimeout(() => setSuccessMessage(null), 5000)
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Failed to send invitation')
     } finally {
@@ -167,6 +172,26 @@ export default function OrganizationDashboardPage() {
         <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-lg mb-6">
           <strong>Pending Verification:</strong> Complete Stripe Connect setup to verify your organization
           and start accepting payments.
+        </div>
+      )}
+
+      {/* Success Banner */}
+      {successMessage && (
+        <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg mb-6 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>{successMessage}</span>
+          </div>
+          <button
+            onClick={() => setSuccessMessage(null)}
+            className="text-green-600 hover:text-green-800"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
       )}
 
