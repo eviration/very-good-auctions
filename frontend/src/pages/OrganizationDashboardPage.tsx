@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { apiClient } from '../services/api'
 import type { Organization, OrganizationMember, OrganizationInvitation, UpdateOrganizationRequest } from '../types'
+import ImageDropZone from '../components/ImageDropZone'
 
 export default function OrganizationDashboardPage() {
   const { slug } = useParams<{ slug: string }>()
@@ -133,27 +134,12 @@ export default function OrganizationDashboardPage() {
     }
   }
 
-  const handleLogoFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      // Validate file type
-      if (!file.type.startsWith('image/')) {
-        alert('Please select an image file')
-        return
-      }
-      // Validate file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        alert('Image must be less than 5MB')
-        return
-      }
-      setLogoFile(file)
-      // Create preview URL
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setLogoPreview(reader.result as string)
-      }
-      reader.readAsDataURL(file)
+  const handleLogoSelect = (file: File) => {
+    setLogoFile(file)
+    if (logoPreview) {
+      URL.revokeObjectURL(logoPreview)
     }
+    setLogoPreview(URL.createObjectURL(file))
   }
 
   const handleLogoUpload = async () => {
@@ -459,77 +445,42 @@ export default function OrganizationDashboardPage() {
           <div className="mb-8 pb-6 border-b border-sage/20">
             <h3 className="text-sm font-medium text-charcoal mb-3">Organization Logo</h3>
             <div className="flex items-start gap-6">
-              {/* Current Logo or Preview */}
-              <div className="flex-shrink-0">
-                {logoPreview ? (
-                  <img
-                    src={logoPreview}
-                    alt="Logo preview"
-                    className="w-24 h-24 rounded-lg object-cover border border-sage/20"
-                  />
-                ) : organization.logoUrl ? (
-                  <img
-                    src={organization.logoUrl}
-                    alt={organization.name}
-                    className="w-24 h-24 rounded-lg object-cover border border-sage/20"
-                  />
-                ) : (
-                  <div className="w-24 h-24 rounded-lg bg-sage/10 flex items-center justify-center text-sage text-3xl font-bold border border-sage/20">
-                    {organization.name.charAt(0).toUpperCase()}
-                  </div>
-                )}
-              </div>
-
-              {/* Upload Controls */}
-              <div className="flex-1">
-                <p className="text-sm text-gray-500 mb-3">
-                  Upload a logo for your organization. Recommended size: 200x200px. Max file size: 5MB.
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {logoFile ? (
-                    <>
-                      <button
-                        onClick={handleLogoUpload}
-                        disabled={uploadingLogo}
-                        className="bg-sage text-white px-4 py-2 rounded-lg hover:bg-sage/90 disabled:opacity-50"
-                      >
-                        {uploadingLogo ? 'Uploading...' : 'Save Logo'}
-                      </button>
-                      <button
-                        onClick={() => {
-                          setLogoFile(null)
-                          setLogoPreview(null)
-                        }}
-                        disabled={uploadingLogo}
-                        className="px-4 py-2 border border-sage/30 rounded-lg hover:bg-sage/10"
-                      >
-                        Cancel
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <label className="bg-sage text-white px-4 py-2 rounded-lg hover:bg-sage/90 cursor-pointer">
-                        {organization.logoUrl ? 'Change Logo' : 'Upload Logo'}
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleLogoFileChange}
-                          className="hidden"
-                        />
-                      </label>
-                      {organization.logoUrl && (
-                        <button
-                          onClick={handleLogoDelete}
-                          disabled={uploadingLogo}
-                          className="px-4 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 disabled:opacity-50"
-                        >
-                          {uploadingLogo ? 'Removing...' : 'Remove Logo'}
-                        </button>
-                      )}
-                    </>
-                  )}
+              <ImageDropZone
+                currentImageUrl={organization.logoUrl}
+                previewUrl={logoPreview}
+                onFileSelect={handleLogoSelect}
+                onRemove={organization.logoUrl && !logoFile ? handleLogoDelete : undefined}
+                aspectRatio="square"
+                maxSizeMB={5}
+                label=""
+                hint="Recommended: 200x200px. Click, drag & drop, or paste."
+                disabled={uploadingLogo}
+                className="w-32"
+              />
+              {logoFile && (
+                <div className="flex flex-col gap-2 pt-8">
+                  <button
+                    onClick={handleLogoUpload}
+                    disabled={uploadingLogo}
+                    className="bg-sage text-white px-4 py-2 rounded-lg hover:bg-sage/90 disabled:opacity-50"
+                  >
+                    {uploadingLogo ? 'Uploading...' : 'Save Logo'}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setLogoFile(null)
+                      if (logoPreview) {
+                        URL.revokeObjectURL(logoPreview)
+                        setLogoPreview(null)
+                      }
+                    }}
+                    disabled={uploadingLogo}
+                    className="px-4 py-2 border border-sage/30 rounded-lg hover:bg-sage/10"
+                  >
+                    Cancel
+                  </button>
                 </div>
-              </div>
+              )}
             </div>
           </div>
 

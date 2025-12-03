@@ -1,7 +1,8 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { apiClient } from '../services/api'
 import type { Organization, EventTier, PricingTiers, CreateEventRequest, OrganizationType } from '../types'
+import ImageDropZone from '../components/ImageDropZone'
 
 const tierDescriptions: Record<EventTier, { name: string; description: string; color: string }> = {
   small: { name: 'Small', description: 'Perfect for small fundraisers', color: 'bg-clay-mint' },
@@ -30,7 +31,6 @@ export default function CreateEventPage() {
   // Cover image
   const [coverImageFile, setCoverImageFile] = useState<File | null>(null)
   const [coverImagePreview, setCoverImagePreview] = useState<string | null>(null)
-  const coverImageInputRef = useRef<HTMLInputElement>(null)
 
   // Form fields
   const [name, setName] = useState('')
@@ -74,22 +74,13 @@ export default function CreateEventPage() {
     setSubmissionDeadline(dayBeforeStart.toISOString().split('T')[0])
   }, [])
 
-  const handleCoverImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
-      if (!allowedTypes.includes(file.type)) {
-        setError('Invalid file type. Please upload a JPG, PNG, GIF, or WebP image.')
-        return
-      }
-      if (file.size > 10 * 1024 * 1024) {
-        setError('File too large. Maximum size is 10MB.')
-        return
-      }
-      setCoverImageFile(file)
-      setCoverImagePreview(URL.createObjectURL(file))
-      setError(null)
+  const handleCoverImageSelect = (file: File) => {
+    setCoverImageFile(file)
+    if (coverImagePreview) {
+      URL.revokeObjectURL(coverImagePreview)
     }
+    setCoverImagePreview(URL.createObjectURL(file))
+    setError(null)
   }
 
   const handleRemoveCoverImage = () => {
@@ -97,9 +88,6 @@ export default function CreateEventPage() {
     if (coverImagePreview) {
       URL.revokeObjectURL(coverImagePreview)
       setCoverImagePreview(null)
-    }
-    if (coverImageInputRef.current) {
-      coverImageInputRef.current.value = ''
     }
   }
 
@@ -328,54 +316,15 @@ export default function CreateEventPage() {
             </div>
 
             {/* Cover Image */}
-            <div>
-              <label className="block text-sm font-bold text-charcoal mb-2">
-                Cover Image
-              </label>
-              <div className="flex items-start gap-4">
-                <div className="w-32 h-20 rounded-lg border-2 border-dashed border-charcoal-light/30 flex items-center justify-center bg-clay-surface overflow-hidden">
-                  {coverImagePreview ? (
-                    <img
-                      src={coverImagePreview}
-                      alt="Cover preview"
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <svg className="w-8 h-8 text-charcoal-light/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                  )}
-                </div>
-                <div className="flex-1">
-                  <input
-                    ref={coverImageInputRef}
-                    type="file"
-                    accept="image/jpeg,image/png,image/gif,image/webp"
-                    onChange={handleCoverImageChange}
-                    className="hidden"
-                    id="cover-image-upload"
-                  />
-                  <label
-                    htmlFor="cover-image-upload"
-                    className="inline-block clay-button bg-clay-surface text-sm cursor-pointer"
-                  >
-                    {coverImagePreview ? 'Change Image' : 'Upload Cover Image'}
-                  </label>
-                  {coverImagePreview && (
-                    <button
-                      type="button"
-                      onClick={handleRemoveCoverImage}
-                      className="ml-2 text-sm text-clay-coral font-bold hover:underline"
-                    >
-                      Remove
-                    </button>
-                  )}
-                  <p className="text-xs text-charcoal-light mt-2">
-                    JPG, PNG, GIF or WebP. Max 10MB. Recommended 1200x600px.
-                  </p>
-                </div>
-              </div>
-            </div>
+            <ImageDropZone
+              previewUrl={coverImagePreview}
+              onFileSelect={handleCoverImageSelect}
+              onRemove={coverImagePreview ? handleRemoveCoverImage : undefined}
+              aspectRatio="landscape"
+              maxSizeMB={10}
+              label="Cover Image"
+              hint="Recommended 1200x600px. Click, drag & drop, or paste an image."
+            />
           </div>
 
           {/* Schedule */}
