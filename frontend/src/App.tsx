@@ -35,6 +35,7 @@ import MyWinsPage from './pages/MyWinsPage'
 import MyBidsPage from './pages/MyBidsPage'
 import MyItemsPage from './pages/MyItemsPage'
 import MyOrganizationsPage from './pages/MyOrganizationsPage'
+import TaxInformationPage from './pages/TaxInformationPage'
 
 // Auth
 import { AuthCallback } from './auth/AuthCallback'
@@ -158,6 +159,11 @@ function App() {
           <Route path="/my-organizations" element={
             <ProtectedRoute>
               <MyOrganizationsPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/tax-information" element={
+            <ProtectedRoute>
+              <TaxInformationPage />
             </ProtectedRoute>
           } />
 

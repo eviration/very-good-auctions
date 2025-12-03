@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { useAuthStore } from '../hooks/useAuthStore'
 
 export default function ProfilePage() {
@@ -6,6 +7,32 @@ export default function ProfilePage() {
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
       <h1 className="font-display text-3xl font-bold text-charcoal mb-8">Profile</h1>
+
+      {/* Settings Links */}
+      <div className="bg-warm-white rounded-2xl p-6 border border-gray-200 mb-6">
+        <h2 className="font-semibold text-charcoal mb-4">Settings</h2>
+        <div className="space-y-2">
+          <Link
+            to="/tax-information"
+            className="flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 transition-colors group"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
+                <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <div>
+                <p className="font-medium text-charcoal">Tax Information</p>
+                <p className="text-sm text-gray-500">Manage W-9 and tax documents</p>
+              </div>
+            </div>
+            <svg className="w-5 h-5 text-gray-400 group-hover:text-sage transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </Link>
+        </div>
+      </div>
 
       <div className="bg-warm-white rounded-2xl p-8 border border-gray-200">
         <div className="flex items-center gap-6 mb-8">

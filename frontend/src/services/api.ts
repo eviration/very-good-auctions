@@ -924,6 +924,86 @@ class ApiClient {
   }[]> {
     return this.request('/users/me/submitted-items')
   }
+
+  // =====================================================
+  // Tax / Compliance
+  // =====================================================
+
+  async getTaxStatus(): Promise<{
+    status: 'not_submitted' | 'pending' | 'verified' | 'expired'
+    submittedAt?: string
+    tinLastFour?: string
+    tinType?: 'ssn' | 'ein'
+    requiresUpdate: boolean
+  }> {
+    return this.request('/tax/status')
+  }
+
+  async getTaxInfo(): Promise<{
+    submitted: boolean
+    taxInfo?: {
+      id: string
+      taxFormType: string
+      legalName: string
+      businessName?: string
+      taxClassification: string
+      tinType: 'ssn' | 'ein'
+      tinLastFour: string
+      address: {
+        line1?: string
+        line2?: string
+        city?: string
+        state?: string
+        postalCode?: string
+        country: string
+      }
+      status: string
+      signatureDate: string
+      verifiedAt?: string
+    }
+  }> {
+    return this.request('/tax/info')
+  }
+
+  async getTaxRequirements(): Promise<{
+    w9Required: boolean
+    reason?: string
+    currentYearEarnings: number
+    threshold: number
+  }> {
+    return this.request('/tax/requirements')
+  }
+
+  async submitW9(data: {
+    legalName: string
+    businessName?: string
+    taxClassification: string
+    tinType: 'ssn' | 'ein'
+    tin: string
+    address: {
+      line1: string
+      line2?: string
+      city: string
+      state: string
+      postalCode: string
+    }
+    certify: boolean
+    signatureName: string
+    organizationId?: string
+  }): Promise<{
+    success: boolean
+    taxInfoId: string
+    lastFour: string
+    message: string
+  }> {
+    return this.request('/tax/w9', {
+      method: 'POST',
+      body: JSON.stringify({
+        ...data,
+        isUsPerson: true,
+      }),
+    })
+  }
 }
 
 export const apiClient = new ApiClient()
