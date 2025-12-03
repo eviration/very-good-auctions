@@ -3,6 +3,8 @@ import Stripe from 'stripe'
 import { query as dbQuery } from '../config/database.js'
 import { v4 as uuidv4 } from 'uuid'
 import { handleWinnerPaymentWebhook } from '../services/platformFees.js'
+import { handleConnectWebhook, handleTransferUpdate } from '../services/stripeConnect.js'
+import { recordChargeback, updateChargebackStatus } from '../services/payouts.js'
 
 const router = Router()
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
@@ -106,15 +108,72 @@ router.post(
 
         case 'charge.refunded': {
           const charge = event.data.object as Stripe.Charge
-          
+
           await dbQuery(
-            `UPDATE payments 
+            `UPDATE payments
              SET status = 'refunded', updated_at = GETUTCDATE()
              WHERE stripe_charge_id = @chargeId`,
             { chargeId: charge.id }
           )
 
           console.log('Charge refunded:', charge.id)
+          break
+        }
+
+        // Stripe Connect events
+        case 'account.updated':
+        case 'account.application.deauthorized':
+        case 'transfer.created': {
+          await handleConnectWebhook(event)
+          console.log('Stripe Connect event handled:', event.type)
+          break
+        }
+
+        // Transfer status updates (use the transfer.updated event or check status on transfer.created)
+        case 'transfer.reversed': {
+          // Transfer was reversed, mark as failed
+          const transfer = event.data.object as Stripe.Transfer
+          await handleTransferUpdate(transfer.id, 'failed')
+          console.log('Transfer reversed:', transfer.id)
+          break
+        }
+
+        // Dispute/Chargeback events
+        case 'charge.dispute.created': {
+          const dispute = event.data.object as Stripe.Dispute
+          const paymentIntentId = dispute.payment_intent as string
+
+          // Find the organization associated with this payment
+          const paymentResult = await dbQuery(
+            `SELECT ei.event_id, ae.organization_id
+             FROM platform_fees pf
+             JOIN auction_events ae ON pf.event_id = ae.id
+             JOIN event_items ei ON ei.event_id = ae.id
+             WHERE pf.stripe_payment_intent_id = @paymentIntentId`,
+            { paymentIntentId }
+          )
+
+          if (paymentResult.recordset.length > 0) {
+            const { event_id, organization_id } = paymentResult.recordset[0]
+            await recordChargeback(
+              dispute.id,
+              paymentIntentId,
+              organization_id,
+              event_id,
+              dispute.amount / 100, // Convert from cents
+              dispute.reason || 'Unknown'
+            )
+            console.log('Chargeback recorded:', dispute.id)
+          }
+          break
+        }
+
+        case 'charge.dispute.closed': {
+          const dispute = event.data.object as Stripe.Dispute
+          const status = dispute.status === 'won' ? 'won' :
+                         dispute.status === 'lost' ? 'lost' : 'closed'
+          await updateChargebackStatus(dispute.id, status)
+          console.log('Chargeback closed:', dispute.id, status)
           break
         }
 

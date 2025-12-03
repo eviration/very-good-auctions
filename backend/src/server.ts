@@ -13,6 +13,7 @@ import { eventItemRoutes } from './routes/eventItems.js'
 import { eventBidRoutes } from './routes/eventBids.js'
 import { platformFeeRoutes } from './routes/platformFees.js'
 import { notificationRoutes } from './routes/notifications.js'
+import { adminPayoutRoutes } from './routes/adminPayouts.js'
 import { errorHandler } from './middleware/errorHandler.js'
 import { requestLogger } from './middleware/requestLogger.js'
 import { initializeDatabase } from './config/database.js'
@@ -106,6 +107,7 @@ app.use('/api', eventItemRoutes)
 app.use('/api', eventBidRoutes)
 app.use('/api/platform-fees', platformFeeRoutes)
 app.use('/api/notifications', notificationRoutes)
+app.use('/api/admin/payouts', adminPayoutRoutes)
 
 // Error handling
 app.use(errorHandler)

@@ -9,6 +9,16 @@ import { query as dbQuery } from '../config/database.js'
 import { badRequest, notFound, forbidden } from '../middleware/errorHandler.js'
 import { sendOrganizationInvitationEmail } from '../services/email.js'
 import { uploadToBlob, deleteImage } from '../services/storage.js'
+import {
+  createOnboardingLink,
+  getAccountStatus,
+  createDashboardLink,
+  getAccountBalance,
+} from '../services/stripeConnect.js'
+import {
+  getOrganizationPayouts,
+  getOrganizationTrust,
+} from '../services/payouts.js'
 
 const router = Router()
 
@@ -999,6 +1009,168 @@ router.get(
       }))
 
       res.json(organizations)
+    } catch (error) {
+      next(error)
+    }
+  }
+)
+
+// =============================================
+// Stripe Connect Routes
+// =============================================
+
+// Start Stripe Connect onboarding
+router.post(
+  '/:id/stripe-connect',
+  authenticate,
+  param('id').isUUID(),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params
+      const userId = req.user!.id
+
+      // Check if user is owner or admin
+      const membership = await checkOrgMembership(id, userId, ['owner', 'admin'])
+      if (!membership) {
+        throw forbidden('Only owners and admins can manage Stripe Connect')
+      }
+
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000'
+      const returnUrl = `${frontendUrl}/organizations/${id}/manage?stripe=success`
+      const refreshUrl = `${frontendUrl}/organizations/${id}/manage?stripe=refresh`
+
+      const onboardingUrl = await createOnboardingLink(id, returnUrl, refreshUrl)
+
+      res.json({ url: onboardingUrl })
+    } catch (error) {
+      next(error)
+    }
+  }
+)
+
+// Get Stripe Connect status
+router.get(
+  '/:id/stripe-status',
+  authenticate,
+  param('id').isUUID(),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params
+      const userId = req.user!.id
+
+      // Check if user is a member
+      const membership = await checkOrgMembership(id, userId)
+      if (!membership) {
+        throw forbidden('Only members can view Stripe status')
+      }
+
+      const status = await getAccountStatus(id)
+
+      res.json(status)
+    } catch (error) {
+      next(error)
+    }
+  }
+)
+
+// Get Stripe Express Dashboard link
+router.get(
+  '/:id/stripe-dashboard',
+  authenticate,
+  param('id').isUUID(),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params
+      const userId = req.user!.id
+
+      // Check if user is owner or admin
+      const membership = await checkOrgMembership(id, userId, ['owner', 'admin'])
+      if (!membership) {
+        throw forbidden('Only owners and admins can access Stripe dashboard')
+      }
+
+      const url = await createDashboardLink(id)
+
+      res.json({ url })
+    } catch (error) {
+      next(error)
+    }
+  }
+)
+
+// Get Stripe account balance
+router.get(
+  '/:id/stripe-balance',
+  authenticate,
+  param('id').isUUID(),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params
+      const userId = req.user!.id
+
+      // Check if user can view financials
+      const membership = await checkOrgMembership(id, userId)
+      if (!membership || !membership.can_view_financials) {
+        throw forbidden('You do not have permission to view financial information')
+      }
+
+      const balance = await getAccountBalance(id)
+
+      res.json(balance)
+    } catch (error) {
+      next(error)
+    }
+  }
+)
+
+// =============================================
+// Payout Routes
+// =============================================
+
+// Get organization payouts
+router.get(
+  '/:id/payouts',
+  authenticate,
+  param('id').isUUID(),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params
+      const userId = req.user!.id
+
+      // Check if user can view financials
+      const membership = await checkOrgMembership(id, userId)
+      if (!membership || !membership.can_view_financials) {
+        throw forbidden('You do not have permission to view payouts')
+      }
+
+      const payouts = await getOrganizationPayouts(id)
+
+      res.json(payouts)
+    } catch (error) {
+      next(error)
+    }
+  }
+)
+
+// Get organization trust level
+router.get(
+  '/:id/trust',
+  authenticate,
+  param('id').isUUID(),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params
+      const userId = req.user!.id
+
+      // Check if user can view financials
+      const membership = await checkOrgMembership(id, userId)
+      if (!membership || !membership.can_view_financials) {
+        throw forbidden('You do not have permission to view trust information')
+      }
+
+      const trust = await getOrganizationTrust(id)
+
+      res.json(trust)
     } catch (error) {
       next(error)
     }

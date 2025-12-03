@@ -972,3 +972,253 @@ Thank you for participating! We hope to see you at future auctions.
     plainTextContent,
   })
 }
+
+// =============================================
+// Organization Payout Emails
+// =============================================
+
+// Payout processing email - sent when payout is initiated
+export async function sendPayoutProcessingEmail(params: {
+  recipientEmail: string
+  organizationName: string
+  eventName: string
+  grossAmount: number
+  platformFee: number
+  reserveAmount: number
+  netPayout: number
+}): Promise<boolean> {
+  const { recipientEmail, organizationName, eventName, grossAmount, platformFee, reserveAmount, netPayout } = params
+
+  const subject = `Payout initiated for ${eventName}`
+
+  const content = `
+    <h2 style="margin: 0 0 20px 0; color: #1a1a1a; font-size: 20px; font-weight: 600;">
+      Payout Processing
+    </h2>
+
+    <p style="margin: 0 0 20px 0; color: #4a4a4a; font-size: 16px; line-height: 1.6;">
+      Great news! The payout for your event <strong>"${eventName}"</strong> is being processed.
+    </p>
+
+    <div style="background-color: #f5f5f5; border-radius: 8px; padding: 20px; margin: 20px 0;">
+      <h3 style="margin: 0 0 15px 0; color: #1a1a1a; font-size: 16px; font-weight: 600;">Payout Breakdown</h3>
+      <table style="width: 100%; border-collapse: collapse;">
+        <tr>
+          <td style="padding: 8px 0; color: #4a4a4a; font-size: 14px;">Gross Sales</td>
+          <td style="padding: 8px 0; color: #4a4a4a; font-size: 14px; text-align: right;">$${grossAmount.toFixed(2)}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 0; color: #4a4a4a; font-size: 14px;">Platform Fee (5%)</td>
+          <td style="padding: 8px 0; color: #4a4a4a; font-size: 14px; text-align: right;">-$${platformFee.toFixed(2)}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 0; color: #4a4a4a; font-size: 14px;">Reserve (10% held for 30 days)</td>
+          <td style="padding: 8px 0; color: #4a4a4a; font-size: 14px; text-align: right;">-$${reserveAmount.toFixed(2)}</td>
+        </tr>
+        <tr style="border-top: 1px solid #ddd;">
+          <td style="padding: 12px 0 0 0; color: #1a1a1a; font-size: 16px; font-weight: 600;">Net Payout</td>
+          <td style="padding: 12px 0 0 0; color: #2e7d32; font-size: 16px; font-weight: 600; text-align: right;">$${netPayout.toFixed(2)}</td>
+        </tr>
+      </table>
+    </div>
+
+    <p style="margin: 20px 0; color: #4a4a4a; font-size: 14px; line-height: 1.6;">
+      The funds will be transferred to your connected Stripe account within 2-3 business days.
+      The 10% reserve will be released after 30 days, assuming no chargebacks.
+    </p>
+  `
+
+  const plainTextContent = `
+Payout Processing
+
+Great news! The payout for your event "${eventName}" is being processed.
+
+Payout Breakdown:
+- Gross Sales: $${grossAmount.toFixed(2)}
+- Platform Fee (5%): -$${platformFee.toFixed(2)}
+- Reserve (10% held for 30 days): -$${reserveAmount.toFixed(2)}
+- Net Payout: $${netPayout.toFixed(2)}
+
+The funds will be transferred to your connected Stripe account within 2-3 business days.
+The 10% reserve will be released after 30 days, assuming no chargebacks.
+
+© ${new Date().getFullYear()} Very Good Auctions. All rights reserved.
+`
+
+  return sendEmail({
+    to: recipientEmail,
+    subject,
+    htmlContent: emailWrapper('Payout Processing', content),
+    plainTextContent,
+  })
+}
+
+// Payout completed email - sent when funds are transferred
+export async function sendPayoutCompletedEmail(params: {
+  recipientEmail: string
+  organizationName: string
+  eventName: string
+  netPayout: number
+}): Promise<boolean> {
+  const { recipientEmail, organizationName, eventName, netPayout } = params
+
+  const subject = `Payout completed: $${netPayout.toFixed(2)} for ${eventName}`
+
+  const content = `
+    <h2 style="margin: 0 0 20px 0; color: #2e7d32; font-size: 20px; font-weight: 600;">
+      Payout Completed!
+    </h2>
+
+    <p style="margin: 0 0 20px 0; color: #4a4a4a; font-size: 16px; line-height: 1.6;">
+      The payout for <strong>"${eventName}"</strong> has been successfully transferred to your Stripe account.
+    </p>
+
+    <div style="background-color: #e8f5e9; border-radius: 8px; padding: 20px; margin: 20px 0; text-align: center;">
+      <p style="margin: 0 0 5px 0; color: #4a4a4a; font-size: 14px;">Amount Transferred</p>
+      <p style="margin: 0; color: #2e7d32; font-size: 32px; font-weight: 700;">$${netPayout.toFixed(2)}</p>
+    </div>
+
+    <p style="margin: 20px 0; color: #4a4a4a; font-size: 14px; line-height: 1.6;">
+      You can view the funds in your Stripe Express Dashboard. Remember, the 10% reserve will be released separately after 30 days.
+    </p>
+
+    <p style="margin: 20px 0 0 0; color: #4a4a4a; font-size: 14px; line-height: 1.6;">
+      Thank you for using Very Good Auctions!
+    </p>
+  `
+
+  const plainTextContent = `
+Payout Completed!
+
+The payout for "${eventName}" has been successfully transferred to your Stripe account.
+
+Amount Transferred: $${netPayout.toFixed(2)}
+
+You can view the funds in your Stripe Express Dashboard. Remember, the 10% reserve will be released separately after 30 days.
+
+Thank you for using Very Good Auctions!
+
+© ${new Date().getFullYear()} Very Good Auctions. All rights reserved.
+`
+
+  return sendEmail({
+    to: recipientEmail,
+    subject,
+    htmlContent: emailWrapper('Payout Completed', content),
+    plainTextContent,
+  })
+}
+
+// Payout held email - sent when payout requires review
+export async function sendPayoutHeldEmail(params: {
+  recipientEmail: string
+  organizationName: string
+  eventName: string
+  netPayout: number
+  reason: string
+}): Promise<boolean> {
+  const { recipientEmail, organizationName, eventName, netPayout, reason } = params
+
+  const subject = `Payout on hold for ${eventName}`
+
+  const content = `
+    <h2 style="margin: 0 0 20px 0; color: #f57c00; font-size: 20px; font-weight: 600;">
+      Payout Under Review
+    </h2>
+
+    <p style="margin: 0 0 20px 0; color: #4a4a4a; font-size: 16px; line-height: 1.6;">
+      The payout for your event <strong>"${eventName}"</strong> is currently under review.
+    </p>
+
+    <div style="background-color: #fff3e0; border-radius: 8px; padding: 20px; margin: 20px 0;">
+      <p style="margin: 0 0 10px 0; color: #4a4a4a; font-size: 14px;">
+        <strong>Amount:</strong> $${netPayout.toFixed(2)}
+      </p>
+      <p style="margin: 0; color: #4a4a4a; font-size: 14px;">
+        <strong>Reason:</strong> ${reason}
+      </p>
+    </div>
+
+    <p style="margin: 20px 0; color: #4a4a4a; font-size: 14px; line-height: 1.6;">
+      Our team will review your payout shortly. This is a standard security measure and typically resolves within 1-2 business days.
+      If we need additional information, we'll reach out to you directly.
+    </p>
+
+    <p style="margin: 20px 0 0 0; color: #888888; font-size: 14px; line-height: 1.6;">
+      If you have questions, please contact our support team.
+    </p>
+  `
+
+  const plainTextContent = `
+Payout Under Review
+
+The payout for your event "${eventName}" is currently under review.
+
+Amount: $${netPayout.toFixed(2)}
+Reason: ${reason}
+
+Our team will review your payout shortly. This is a standard security measure and typically resolves within 1-2 business days.
+If we need additional information, we'll reach out to you directly.
+
+If you have questions, please contact our support team.
+
+© ${new Date().getFullYear()} Very Good Auctions. All rights reserved.
+`
+
+  return sendEmail({
+    to: recipientEmail,
+    subject,
+    htmlContent: emailWrapper('Payout Under Review', content),
+    plainTextContent,
+  })
+}
+
+// Reserve released email - sent when the 10% reserve is released
+export async function sendReserveReleasedEmail(params: {
+  recipientEmail: string
+  organizationName: string
+  eventName: string
+  reserveAmount: number
+}): Promise<boolean> {
+  const { recipientEmail, organizationName, eventName, reserveAmount } = params
+
+  const subject = `Reserve released: $${reserveAmount.toFixed(2)} for ${eventName}`
+
+  const content = `
+    <h2 style="margin: 0 0 20px 0; color: #2e7d32; font-size: 20px; font-weight: 600;">
+      Reserve Released!
+    </h2>
+
+    <p style="margin: 0 0 20px 0; color: #4a4a4a; font-size: 16px; line-height: 1.6;">
+      The 10% reserve from your event <strong>"${eventName}"</strong> has been released to your Stripe account.
+    </p>
+
+    <div style="background-color: #e8f5e9; border-radius: 8px; padding: 20px; margin: 20px 0; text-align: center;">
+      <p style="margin: 0 0 5px 0; color: #4a4a4a; font-size: 14px;">Reserve Amount Released</p>
+      <p style="margin: 0; color: #2e7d32; font-size: 32px; font-weight: 700;">$${reserveAmount.toFixed(2)}</p>
+    </div>
+
+    <p style="margin: 20px 0 0 0; color: #4a4a4a; font-size: 14px; line-height: 1.6;">
+      You've now received the full payout for this event. Thank you for using Very Good Auctions!
+    </p>
+  `
+
+  const plainTextContent = `
+Reserve Released!
+
+The 10% reserve from your event "${eventName}" has been released to your Stripe account.
+
+Reserve Amount Released: $${reserveAmount.toFixed(2)}
+
+You've now received the full payout for this event. Thank you for using Very Good Auctions!
+
+© ${new Date().getFullYear()} Very Good Auctions. All rights reserved.
+`
+
+  return sendEmail({
+    to: recipientEmail,
+    subject,
+    htmlContent: emailWrapper('Reserve Released', content),
+    plainTextContent,
+  })
+}
