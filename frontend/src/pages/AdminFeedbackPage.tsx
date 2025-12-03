@@ -5,7 +5,7 @@ import { useAuthStore } from '../hooks/useAuthStore'
 import { Navigate } from 'react-router-dom'
 
 // Platform admin check
-const PLATFORM_ADMINS = ['prent001@gmail.com']
+const PLATFORM_ADMINS = ['nathan.prentice@gmail.com']
 
 function isPlatformAdmin(email: string | undefined): boolean {
   return email ? PLATFORM_ADMINS.includes(email.toLowerCase()) : false

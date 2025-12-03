@@ -7,7 +7,7 @@ import { badRequest, notFound, forbidden } from '../middleware/errorHandler.js'
 const router = Router()
 
 // Platform admin emails (you can add more or load from config)
-const PLATFORM_ADMINS = ['prent001@gmail.com']
+const PLATFORM_ADMINS = ['nathan.prentice@gmail.com']
 
 // Check if user is a platform admin
 function isPlatformAdmin(email: string): boolean {
