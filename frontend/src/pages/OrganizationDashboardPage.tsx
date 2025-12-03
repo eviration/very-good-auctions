@@ -24,6 +24,11 @@ export default function OrganizationDashboardPage() {
   const [saving, setSaving] = useState(false)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
+  // Logo upload state
+  const [logoFile, setLogoFile] = useState<File | null>(null)
+  const [logoPreview, setLogoPreview] = useState<string | null>(null)
+  const [uploadingLogo, setUploadingLogo] = useState(false)
+
   useEffect(() => {
     const fetchData = async () => {
       if (!slug) return
@@ -125,6 +130,68 @@ export default function OrganizationDashboardPage() {
       alert(err instanceof Error ? err.message : 'Failed to save changes')
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handleLogoFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        alert('Please select an image file')
+        return
+      }
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('Image must be less than 5MB')
+        return
+      }
+      setLogoFile(file)
+      // Create preview URL
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setLogoPreview(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const handleLogoUpload = async () => {
+    if (!organization || !logoFile) return
+
+    setUploadingLogo(true)
+    try {
+      await apiClient.uploadOrganizationLogo(organization.id, logoFile)
+      // Refresh org data to get new logo URL
+      const org = await apiClient.getOrganization(slug!)
+      setOrganization(org)
+      setLogoFile(null)
+      setLogoPreview(null)
+      setSuccessMessage('Logo uploaded successfully')
+      setTimeout(() => setSuccessMessage(null), 5000)
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to upload logo')
+    } finally {
+      setUploadingLogo(false)
+    }
+  }
+
+  const handleLogoDelete = async () => {
+    if (!organization) return
+    if (!confirm('Remove the organization logo?')) return
+
+    setUploadingLogo(true)
+    try {
+      await apiClient.deleteOrganizationLogo(organization.id)
+      // Refresh org data
+      const org = await apiClient.getOrganization(slug!)
+      setOrganization(org)
+      setSuccessMessage('Logo removed successfully')
+      setTimeout(() => setSuccessMessage(null), 5000)
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to remove logo')
+    } finally {
+      setUploadingLogo(false)
     }
   }
 
@@ -386,6 +453,84 @@ export default function OrganizationDashboardPage() {
                 </button>
               </div>
             )}
+          </div>
+
+          {/* Logo Upload Section */}
+          <div className="mb-8 pb-6 border-b border-sage/20">
+            <h3 className="text-sm font-medium text-charcoal mb-3">Organization Logo</h3>
+            <div className="flex items-start gap-6">
+              {/* Current Logo or Preview */}
+              <div className="flex-shrink-0">
+                {logoPreview ? (
+                  <img
+                    src={logoPreview}
+                    alt="Logo preview"
+                    className="w-24 h-24 rounded-lg object-cover border border-sage/20"
+                  />
+                ) : organization.logoUrl ? (
+                  <img
+                    src={organization.logoUrl}
+                    alt={organization.name}
+                    className="w-24 h-24 rounded-lg object-cover border border-sage/20"
+                  />
+                ) : (
+                  <div className="w-24 h-24 rounded-lg bg-sage/10 flex items-center justify-center text-sage text-3xl font-bold border border-sage/20">
+                    {organization.name.charAt(0).toUpperCase()}
+                  </div>
+                )}
+              </div>
+
+              {/* Upload Controls */}
+              <div className="flex-1">
+                <p className="text-sm text-gray-500 mb-3">
+                  Upload a logo for your organization. Recommended size: 200x200px. Max file size: 5MB.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {logoFile ? (
+                    <>
+                      <button
+                        onClick={handleLogoUpload}
+                        disabled={uploadingLogo}
+                        className="bg-sage text-white px-4 py-2 rounded-lg hover:bg-sage/90 disabled:opacity-50"
+                      >
+                        {uploadingLogo ? 'Uploading...' : 'Save Logo'}
+                      </button>
+                      <button
+                        onClick={() => {
+                          setLogoFile(null)
+                          setLogoPreview(null)
+                        }}
+                        disabled={uploadingLogo}
+                        className="px-4 py-2 border border-sage/30 rounded-lg hover:bg-sage/10"
+                      >
+                        Cancel
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <label className="bg-sage text-white px-4 py-2 rounded-lg hover:bg-sage/90 cursor-pointer">
+                        {organization.logoUrl ? 'Change Logo' : 'Upload Logo'}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleLogoFileChange}
+                          className="hidden"
+                        />
+                      </label>
+                      {organization.logoUrl && (
+                        <button
+                          onClick={handleLogoDelete}
+                          disabled={uploadingLogo}
+                          className="px-4 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 disabled:opacity-50"
+                        >
+                          {uploadingLogo ? 'Removing...' : 'Remove Logo'}
+                        </button>
+                      )}
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
 
           {editMode ? (
