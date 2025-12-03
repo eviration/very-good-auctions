@@ -2,6 +2,8 @@ import { query as dbQuery } from '../config/database.js'
 import { v4 as uuidv4 } from 'uuid'
 import { transferToOrganization } from './stripeConnect.js'
 import { PLATFORM_FEE_PERCENT } from './platformFees.js'
+import { getOrganizationTaxInfo } from './taxForms.js'
+import { logComplianceEvent } from './complianceAudit.js'
 
 // Payout configuration
 export const PAYOUT_CONFIG = {
@@ -438,6 +440,37 @@ export async function processEligiblePayouts(): Promise<{
         )
         results.held++
         continue
+      }
+
+      // Check W-9/tax compliance for payouts over $600
+      if (payout.net_payout >= 600) {
+        const taxInfo = await getOrganizationTaxInfo(payout.organization_id)
+        if (!taxInfo || taxInfo.status !== 'verified') {
+          // Hold for W-9 requirement
+          await dbQuery(
+            `UPDATE organization_payouts
+             SET status = 'held',
+                 requires_review = 1,
+                 flags = JSON_MODIFY(ISNULL(flags, '[]'), 'append $', 'w9_required')
+             WHERE id = @payoutId`,
+            { payoutId: payout.id }
+          )
+
+          // Log compliance event
+          await logComplianceEvent({
+            eventType: 'payout_blocked_w9_required',
+            organizationId: payout.organization_id,
+            details: {
+              payoutId: payout.id,
+              eventId: payout.event_id,
+              amount: payout.net_payout,
+              taxInfoStatus: taxInfo?.status || 'not_submitted',
+            },
+          })
+
+          results.held++
+          continue
+        }
       }
 
       // Check Stripe Connect status
