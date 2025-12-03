@@ -997,7 +997,7 @@ export async function sendPayoutProcessingEmail(params: {
     </h2>
 
     <p style="margin: 0 0 20px 0; color: #4a4a4a; font-size: 16px; line-height: 1.6;">
-      Great news! The payout for your event <strong>"${eventName}"</strong> is being processed.
+      Great news! The payout for <strong>${organizationName}</strong>'s event <strong>"${eventName}"</strong> is being processed.
     </p>
 
     <div style="background-color: #f5f5f5; border-radius: 8px; padding: 20px; margin: 20px 0;">
@@ -1070,7 +1070,7 @@ export async function sendPayoutCompletedEmail(params: {
     </h2>
 
     <p style="margin: 0 0 20px 0; color: #4a4a4a; font-size: 16px; line-height: 1.6;">
-      The payout for <strong>"${eventName}"</strong> has been successfully transferred to your Stripe account.
+      The payout for <strong>${organizationName}</strong>'s event <strong>"${eventName}"</strong> has been successfully transferred to your Stripe account.
     </p>
 
     <div style="background-color: #e8f5e9; border-radius: 8px; padding: 20px; margin: 20px 0; text-align: center;">
@@ -1127,7 +1127,7 @@ export async function sendPayoutHeldEmail(params: {
     </h2>
 
     <p style="margin: 0 0 20px 0; color: #4a4a4a; font-size: 16px; line-height: 1.6;">
-      The payout for your event <strong>"${eventName}"</strong> is currently under review.
+      The payout for <strong>${organizationName}</strong>'s event <strong>"${eventName}"</strong> is currently under review.
     </p>
 
     <div style="background-color: #fff3e0; border-radius: 8px; padding: 20px; margin: 20px 0;">
@@ -1190,7 +1190,7 @@ export async function sendReserveReleasedEmail(params: {
     </h2>
 
     <p style="margin: 0 0 20px 0; color: #4a4a4a; font-size: 16px; line-height: 1.6;">
-      The 10% reserve from your event <strong>"${eventName}"</strong> has been released to your Stripe account.
+      The 10% reserve from <strong>${organizationName}</strong>'s event <strong>"${eventName}"</strong> has been released to your Stripe account.
     </p>
 
     <div style="background-color: #e8f5e9; border-radius: 8px; padding: 20px; margin: 20px 0; text-align: center;">
