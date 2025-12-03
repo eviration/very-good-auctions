@@ -26,6 +26,13 @@ import type {
   CurrentBidInfo,
   PricingTiers,
   EventStatus,
+  Feedback,
+  FeedbackResponse,
+  CreateFeedbackRequest,
+  FeedbackStats,
+  FeedbackStatus,
+  FeedbackType,
+  FeedbackPriority,
 } from '../types'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
@@ -1003,6 +1010,100 @@ class ApiClient {
         isUsPerson: true,
       }),
     })
+  }
+
+  // =====================================================
+  // Feedback
+  // =====================================================
+
+  async submitFeedback(data: CreateFeedbackRequest): Promise<Feedback> {
+    return this.request('/feedback', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async getMyFeedback(params?: {
+    limit?: number
+    offset?: number
+    status?: FeedbackStatus
+  }): Promise<{ data: Feedback[]; pagination: { limit: number; offset: number; total: number } }> {
+    const searchParams = new URLSearchParams()
+    if (params?.limit) searchParams.append('limit', params.limit.toString())
+    if (params?.offset) searchParams.append('offset', params.offset.toString())
+    if (params?.status) searchParams.append('status', params.status)
+    const query = searchParams.toString()
+    return this.request(`/feedback/my${query ? `?${query}` : ''}`)
+  }
+
+  async getFeedback(id: string): Promise<Feedback> {
+    return this.request(`/feedback/${id}`)
+  }
+
+  async addFeedbackResponse(feedbackId: string, message: string): Promise<FeedbackResponse> {
+    return this.request(`/feedback/${feedbackId}/responses`, {
+      method: 'POST',
+      body: JSON.stringify({ message }),
+    })
+  }
+
+  async voteFeedback(feedbackId: string): Promise<{ success: boolean; voteCount: number }> {
+    return this.request(`/feedback/${feedbackId}/vote`, {
+      method: 'POST',
+    })
+  }
+
+  async unvoteFeedback(feedbackId: string): Promise<{ success: boolean; voteCount: number }> {
+    return this.request(`/feedback/${feedbackId}/vote`, {
+      method: 'DELETE',
+    })
+  }
+
+  // Admin feedback endpoints
+  async getAllFeedback(params?: {
+    limit?: number
+    offset?: number
+    status?: FeedbackStatus
+    type?: FeedbackType
+    priority?: FeedbackPriority
+    search?: string
+  }): Promise<{ data: Feedback[]; pagination: { limit: number; offset: number; total: number } }> {
+    const searchParams = new URLSearchParams()
+    if (params?.limit) searchParams.append('limit', params.limit.toString())
+    if (params?.offset) searchParams.append('offset', params.offset.toString())
+    if (params?.status) searchParams.append('status', params.status)
+    if (params?.type) searchParams.append('type', params.type)
+    if (params?.priority) searchParams.append('priority', params.priority)
+    if (params?.search) searchParams.append('search', params.search)
+    const query = searchParams.toString()
+    return this.request(`/feedback/admin/all${query ? `?${query}` : ''}`)
+  }
+
+  async updateFeedback(
+    feedbackId: string,
+    data: {
+      status?: FeedbackStatus
+      priority?: FeedbackPriority
+      category?: string
+      tags?: string
+      resolutionNotes?: string
+    }
+  ): Promise<Feedback> {
+    return this.request(`/feedback/admin/${feedbackId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async addInternalNote(feedbackId: string, message: string): Promise<FeedbackResponse> {
+    return this.request(`/feedback/admin/${feedbackId}/internal-note`, {
+      method: 'POST',
+      body: JSON.stringify({ message }),
+    })
+  }
+
+  async getFeedbackStats(): Promise<FeedbackStats> {
+    return this.request('/feedback/admin/stats')
   }
 }
 

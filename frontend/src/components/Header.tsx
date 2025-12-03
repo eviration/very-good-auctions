@@ -26,6 +26,7 @@ export default function Header() {
     { path: '/my-items', label: 'My Items' },
     { path: '/my-wins', label: 'My Wins' },
     { path: '/my-organizations', label: 'My Organizations' },
+    { path: '/feedback', label: 'Send Feedback' },
   ]
 
   // Close account menu when clicking outside

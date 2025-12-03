@@ -448,3 +448,80 @@ export interface PricingTiers {
   large: { fee: number; maxItems: number }
   unlimited: { fee: number; maxItems: number | null }
 }
+
+// Feedback types
+export type FeedbackType = 'bug' | 'feature' | 'improvement' | 'question' | 'other'
+
+export type FeedbackPriority = 'low' | 'medium' | 'high' | 'critical'
+
+export type FeedbackStatus =
+  | 'new'
+  | 'under_review'
+  | 'planned'
+  | 'in_progress'
+  | 'completed'
+  | 'wont_fix'
+  | 'duplicate'
+
+export interface Feedback {
+  id: string
+  user_id: string
+  user_email: string
+  user_name: string
+  organization_id?: string
+  event_id?: string
+  feedback_type: FeedbackType
+  title: string
+  description: string
+  priority: FeedbackPriority
+  category?: string
+  tags?: string
+  status: FeedbackStatus
+  assigned_to?: string
+  resolution_notes?: string
+  resolved_at?: string
+  resolved_by?: string
+  vote_count?: number
+  has_voted?: number
+  response_count?: number
+  organization_name?: string
+  event_name?: string
+  created_at: string
+  updated_at: string
+  responses?: FeedbackResponse[]
+}
+
+export interface FeedbackResponse {
+  id: string
+  feedback_id: string
+  responder_id: string
+  responder_name: string
+  is_admin: boolean
+  message: string
+  is_internal?: boolean
+  created_at: string
+  updated_at?: string
+}
+
+export interface CreateFeedbackRequest {
+  feedbackType: FeedbackType
+  title: string
+  description: string
+  organizationId?: string
+  eventId?: string
+  category?: string
+}
+
+export interface FeedbackStats {
+  total: number
+  new_count: number
+  under_review_count: number
+  planned_count: number
+  in_progress_count: number
+  completed_count: number
+  bug_count: number
+  feature_count: number
+  improvement_count: number
+  critical_count: number
+  high_priority_count: number
+}
