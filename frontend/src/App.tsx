@@ -1,7 +1,7 @@
 import { Routes, Route } from 'react-router-dom'
 import { useEffect, useRef } from 'react'
 import { useMsal } from '@azure/msal-react'
-import { InteractionRequiredAuthError, BrowserAuthError } from '@azure/msal-browser'
+import { InteractionRequiredAuthError } from '@azure/msal-browser'
 import { useAuthStore } from './hooks/useAuthStore'
 import { signalRService } from './services/signalr'
 import { apiClient } from './services/api'
@@ -76,26 +76,26 @@ function App() {
           return response.idToken
         } catch (error) {
           console.error('Failed to acquire token silently:', error)
-          // If interaction is required (session expired), try popup first (less disruptive)
+          // If interaction is required (session expired), sign out the user
+          // so they see the login button and can re-authenticate
           if (error instanceof InteractionRequiredAuthError) {
+            console.log('Session expired, signing out user...')
+            // Clear local MSAL cache to force re-login
+            // Use logoutPopup to avoid navigating away from the current page
             try {
-              // Try popup first - it blocks and returns a token
-              const popupResponse = await instance.acquireTokenPopup(tokenRequest)
-              return popupResponse.idToken
-            } catch (popupError) {
-              console.error('Token popup failed:', popupError)
-              // Check for interaction_in_progress error - means another auth is happening
-              if (popupError instanceof BrowserAuthError &&
-                  popupError.errorCode === 'interaction_in_progress') {
-                // Wait a bit and return null - the other request will handle it
-                return null
+              await instance.logoutPopup({
+                account: accounts[0],
+                mainWindowRedirectUri: window.location.origin,
+              })
+            } catch (logoutError) {
+              console.error('Logout popup failed, trying redirect:', logoutError)
+              // If popup is blocked, clear accounts manually
+              const allAccounts = instance.getAllAccounts()
+              for (const acct of allAccounts) {
+                instance.setActiveAccount(null)
               }
-              // If popup fails (e.g., blocked), fall back to redirect
-              try {
-                await instance.acquireTokenRedirect(tokenRequest)
-              } catch (redirectError) {
-                console.error('Token redirect failed:', redirectError)
-              }
+              // Force page reload to clear state
+              window.location.reload()
             }
           }
           return null
