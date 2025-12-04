@@ -347,24 +347,12 @@ export async function requiresW9ForPayout(userId: string): Promise<{
   currentEarnings: number
 }> {
   // Check current year's completed payouts/earnings for this user
-  // This would typically be from individual_payouts or platform_fees tables
-  // For now, we'll check completed payments where this user is a seller
+  // TODO: Implement proper payout tracking when payment system is built
+  // For now, we don't track individual seller earnings yet, so return $0
 
-  const currentYear = new Date().getFullYear()
-
-  // Get total earnings for the year from auction wins where user was seller
-  const earningsResult = await dbQuery(
-    `SELECT COALESCE(SUM(pf.seller_amount), 0) as total_earnings
-     FROM platform_fees pf
-     INNER JOIN event_items ei ON pf.item_id = ei.id
-     INNER JOIN auctions a ON ei.auction_id = a.id
-     WHERE a.seller_id = @userId
-       AND pf.status = 'completed'
-       AND YEAR(pf.created_at) = @year`,
-    { userId, year: currentYear }
-  )
-
-  const totalEarnings = earningsResult.recordset[0]?.total_earnings || 0
+  // For now, return 0 earnings since payout system is not yet implemented
+  // When payout tracking is added, this should query the actual earnings
+  const totalEarnings = 0
 
   // IRS threshold
   const threshold = 600
