@@ -65,13 +65,21 @@ function App() {
         // The backend validates this token and extracts user identity
         return response.idToken
       } catch (error) {
-        console.error('Failed to acquire token:', error)
-        // If interaction is required (session expired), trigger re-login
+        console.error('Failed to acquire token silently:', error)
+        // If interaction is required (session expired), try popup first (less disruptive)
         if (error instanceof InteractionRequiredAuthError) {
           try {
-            await instance.acquireTokenRedirect(tokenRequest)
-          } catch (redirectError) {
-            console.error('Token redirect failed:', redirectError)
+            // Try popup first - it blocks and returns a token
+            const popupResponse = await instance.acquireTokenPopup(tokenRequest)
+            return popupResponse.idToken
+          } catch (popupError) {
+            console.error('Token popup failed, trying redirect:', popupError)
+            // If popup fails (e.g., blocked), fall back to redirect
+            try {
+              await instance.acquireTokenRedirect(tokenRequest)
+            } catch (redirectError) {
+              console.error('Token redirect failed:', redirectError)
+            }
           }
         }
         return null
