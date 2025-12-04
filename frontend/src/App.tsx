@@ -45,9 +45,13 @@ import ManageAdminsPage from './pages/ManageAdminsPage'
 import { AuthCallback } from './auth/AuthCallback'
 import { ProtectedRoute } from './auth/ProtectedRoute'
 
+console.log('=== App.tsx loaded - version 2024-12-04-A ===')
+
 function App() {
   const { instance, accounts } = useMsal()
   const { setUser, clearUser } = useAuthStore()
+
+  console.log('App component rendering, accounts:', accounts.length, accounts)
 
   // Use ref to track in-flight token requests and prevent race conditions
   const tokenPromiseRef = useRef<Promise<string | null> | null>(null)

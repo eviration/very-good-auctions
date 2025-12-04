@@ -16,6 +16,8 @@ import {
   TaxClassification,
   TINType,
 } from '../services/taxForms.js'
+import { authenticate } from '../middleware/auth.js'
+
 const router = Router()
 
 // =============================================================================
@@ -107,7 +109,7 @@ router.get(
  * POST /api/agreements/accept
  * Accept an agreement
  */
-router.post('/agreements/accept', async (req: Request, res: Response, _next: NextFunction) => {
+router.post('/agreements/accept', authenticate, async (req: Request, res: Response, _next: NextFunction) => {
   try {
     const userId = req.user?.id
 
@@ -160,7 +162,7 @@ router.post('/agreements/accept', async (req: Request, res: Response, _next: Nex
  * GET /api/my/agreements
  * Get user's accepted agreements
  */
-router.get('/my/agreements', async (req: Request, res: Response, _next: NextFunction) => {
+router.get('/my/agreements', authenticate, async (req: Request, res: Response, _next: NextFunction) => {
   try {
     const userId = req.user?.id
 
@@ -190,7 +192,7 @@ router.get('/my/agreements', async (req: Request, res: Response, _next: NextFunc
  * GET /api/my/agreements/pending
  * Get agreements user needs to accept
  */
-router.get('/my/agreements/pending', async (req: Request, res: Response, _next: NextFunction) => {
+router.get('/my/agreements/pending', authenticate, async (req: Request, res: Response, _next: NextFunction) => {
   try {
     const userId = req.user?.id
 
@@ -227,6 +229,7 @@ router.get('/my/agreements/pending', async (req: Request, res: Response, _next: 
  */
 router.get(
   '/my/agreements/check/:type',
+  authenticate,
   async (req: Request, res: Response, _next: NextFunction) => {
     try {
       const userId = req.user?.id
@@ -255,7 +258,7 @@ router.get(
  * POST /api/tax/w9
  * Submit W-9 form
  */
-router.post('/tax/w9', async (req: Request, res: Response, _next: NextFunction) => {
+router.post('/tax/w9', authenticate, async (req: Request, res: Response, _next: NextFunction) => {
   try {
     const userId = req.user?.id
 
@@ -329,7 +332,7 @@ router.post('/tax/w9', async (req: Request, res: Response, _next: NextFunction) 
  * GET /api/tax/status
  * Get user's tax status
  */
-router.get('/tax/status', async (req: Request, res: Response, _next: NextFunction) => {
+router.get('/tax/status', authenticate, async (req: Request, res: Response, _next: NextFunction) => {
   try {
     const userId = req.user?.id
 
@@ -357,7 +360,7 @@ router.get('/tax/status', async (req: Request, res: Response, _next: NextFunctio
  * GET /api/tax/info
  * Get user's tax information (without encrypted TIN)
  */
-router.get('/tax/info', async (req: Request, res: Response, _next: NextFunction) => {
+router.get('/tax/info', authenticate, async (req: Request, res: Response, _next: NextFunction) => {
   try {
     const userId = req.user?.id
 
@@ -399,7 +402,7 @@ router.get('/tax/info', async (req: Request, res: Response, _next: NextFunction)
  * GET /api/tax/requirements
  * Check if W-9 is required for payout
  */
-router.get('/tax/requirements', async (req: Request, res: Response, _next: NextFunction) => {
+router.get('/tax/requirements', authenticate, async (req: Request, res: Response, _next: NextFunction) => {
   try {
     const userId = req.user?.id
 
