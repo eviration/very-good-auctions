@@ -38,6 +38,7 @@ import MyOrganizationsPage from './pages/MyOrganizationsPage'
 import TaxInformationPage from './pages/TaxInformationPage'
 import FeedbackPage from './pages/FeedbackPage'
 import AdminFeedbackPage from './pages/AdminFeedbackPage'
+import ManageAdminsPage from './pages/ManageAdminsPage'
 
 // Auth
 import { AuthCallback } from './auth/AuthCallback'
@@ -172,6 +173,11 @@ function App() {
           <Route path="/admin/feedback" element={
             <ProtectedRoute>
               <AdminFeedbackPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/manage-admins" element={
+            <ProtectedRoute>
+              <ManageAdminsPage />
             </ProtectedRoute>
           } />
 

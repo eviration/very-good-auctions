@@ -3,15 +3,17 @@ import { body, param, query, validationResult } from 'express-validator'
 import { authenticate } from '../middleware/auth.js'
 import { query as dbQuery } from '../config/database.js'
 import { badRequest, notFound, forbidden } from '../middleware/errorHandler.js'
+import { requirePlatformAdmin } from './admin.js'
 
 const router = Router()
 
-// Platform admin emails (you can add more or load from config)
-const PLATFORM_ADMINS = ['nathan.prentice@gmail.com']
-
-// Check if user is a platform admin
-function isPlatformAdmin(email: string): boolean {
-  return PLATFORM_ADMINS.includes(email.toLowerCase())
+// Helper function to check if a user is a platform admin from the database
+async function checkIsPlatformAdmin(userId: string): Promise<boolean> {
+  const result = await dbQuery(
+    'SELECT is_platform_admin FROM users WHERE id = @userId',
+    { userId }
+  )
+  return result.recordset.length > 0 && result.recordset[0].is_platform_admin === true
 }
 
 // Submit feedback
@@ -149,7 +151,7 @@ router.get(
 
       const user = req.user!
       const feedbackId = req.params.id
-      const isAdmin = isPlatformAdmin(user.email)
+      const isAdmin = await checkIsPlatformAdmin(user.id)
 
       // Get the feedback
       const feedbackResult = await dbQuery(
@@ -217,7 +219,7 @@ router.post(
       const user = req.user!
       const feedbackId = req.params.id
       const { message } = req.body
-      const isAdmin = isPlatformAdmin(user.email)
+      const isAdmin = await checkIsPlatformAdmin(user.id)
 
       // Check if feedback exists and user has access
       const feedbackResult = await dbQuery(
@@ -356,14 +358,6 @@ router.delete(
 // ============================================
 // ADMIN ROUTES (Platform admins only)
 // ============================================
-
-// Middleware to check platform admin
-const requirePlatformAdmin = (req: Request, res: Response, next: NextFunction) => {
-  if (!isPlatformAdmin(req.user!.email)) {
-    return next(forbidden('Platform admin access required'))
-  }
-  next()
-}
 
 // Get all feedback (admin only)
 router.get(

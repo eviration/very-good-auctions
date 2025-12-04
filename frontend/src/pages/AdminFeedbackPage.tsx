@@ -4,13 +4,6 @@ import type { Feedback, FeedbackStats, FeedbackStatus, FeedbackPriority, Feedbac
 import { useAuthStore } from '../hooks/useAuthStore'
 import { Navigate } from 'react-router-dom'
 
-// Platform admin check
-const PLATFORM_ADMINS = ['nathan.prentice@gmail.com']
-
-function isPlatformAdmin(email: string | undefined): boolean {
-  return email ? PLATFORM_ADMINS.includes(email.toLowerCase()) : false
-}
-
 const STATUS_OPTIONS: { value: FeedbackStatus; label: string; color: string }[] = [
   { value: 'new', label: 'New', color: 'bg-blue-100 text-blue-800' },
   { value: 'under_review', label: 'Under Review', color: 'bg-yellow-100 text-yellow-800' },
@@ -44,6 +37,10 @@ export default function AdminFeedbackPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  // Admin status check
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null)
+  const [adminCheckLoading, setAdminCheckLoading] = useState(true)
+
   // Filters
   const [statusFilter, setStatusFilter] = useState<FeedbackStatus | 'all'>('all')
   const [typeFilter, setTypeFilter] = useState<FeedbackType | 'all'>('all')
@@ -55,14 +52,31 @@ export default function AdminFeedbackPage() {
   const [isInternalNote, setIsInternalNote] = useState(false)
   const [submitting, setSubmitting] = useState(false)
 
-  // Check admin access
-  if (!isPlatformAdmin(user?.email)) {
-    return <Navigate to="/" replace />
-  }
+  // Check admin access on mount
+  useEffect(() => {
+    async function checkAdmin() {
+      if (!user) {
+        setIsAdmin(false)
+        setAdminCheckLoading(false)
+        return
+      }
+      try {
+        const result = await apiClient.checkPlatformAdminStatus()
+        setIsAdmin(result.isPlatformAdmin)
+      } catch {
+        setIsAdmin(false)
+      } finally {
+        setAdminCheckLoading(false)
+      }
+    }
+    checkAdmin()
+  }, [user])
 
   useEffect(() => {
-    fetchData()
-  }, [statusFilter, typeFilter, priorityFilter])
+    if (isAdmin) {
+      fetchData()
+    }
+  }, [statusFilter, typeFilter, priorityFilter, isAdmin])
 
   const fetchData = async () => {
     try {
@@ -188,6 +202,22 @@ export default function AdminFeedbackPage() {
         {labels[type]}
       </span>
     )
+  }
+
+  // Show loading while checking admin status
+  if (adminCheckLoading) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-gray-500">Checking permissions...</div>
+        </div>
+      </div>
+    )
+  }
+
+  // Redirect if not admin
+  if (!isAdmin) {
+    return <Navigate to="/" replace />
   }
 
   if (loading && feedbackList.length === 0) {

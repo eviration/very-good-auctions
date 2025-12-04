@@ -1105,6 +1105,78 @@ class ApiClient {
   async getFeedbackStats(): Promise<FeedbackStats> {
     return this.request('/feedback/admin/stats')
   }
+
+  // Admin management endpoints
+  async checkPlatformAdminStatus(): Promise<{ isPlatformAdmin: boolean }> {
+    return this.request('/admin/me')
+  }
+
+  async getPlatformAdmins(): Promise<{
+    admins: Array<{
+      id: string
+      email: string
+      displayName: string
+      isPlatformAdmin: boolean
+      createdAt: string
+    }>
+  }> {
+    return this.request('/admin/users')
+  }
+
+  async searchUsers(query: string): Promise<{
+    users: Array<{
+      id: string
+      email: string
+      displayName: string
+      isPlatformAdmin: boolean
+    }>
+  }> {
+    return this.request(`/admin/users/search?q=${encodeURIComponent(query)}`)
+  }
+
+  async grantAdminAccess(
+    userId: string,
+    reason?: string
+  ): Promise<{
+    success: boolean
+    message: string
+    user: { id: string; email: string; displayName: string; isPlatformAdmin: boolean }
+  }> {
+    return this.request(`/admin/users/${userId}/grant`, {
+      method: 'POST',
+      body: JSON.stringify({ reason }),
+    })
+  }
+
+  async revokeAdminAccess(
+    userId: string,
+    reason?: string
+  ): Promise<{ success: boolean; message: string }> {
+    return this.request(`/admin/users/${userId}/revoke`, {
+      method: 'POST',
+      body: JSON.stringify({ reason }),
+    })
+  }
+
+  async getAdminAuditLog(params?: { limit?: number; offset?: number }): Promise<{
+    entries: Array<{
+      id: string
+      action: string
+      targetUserId: string
+      targetEmail: string
+      performedByUserId: string
+      performedByEmail: string
+      reason: string | null
+      createdAt: string
+    }>
+    pagination: { limit: number; offset: number; total: number }
+  }> {
+    const queryParams = new URLSearchParams()
+    if (params?.limit) queryParams.set('limit', String(params.limit))
+    if (params?.offset) queryParams.set('offset', String(params.offset))
+    const queryString = queryParams.toString()
+    return this.request(`/admin/audit-log${queryString ? `?${queryString}` : ''}`)
+  }
 }
 
 export const apiClient = new ApiClient()

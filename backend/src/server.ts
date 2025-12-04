@@ -16,6 +16,7 @@ import { notificationRoutes } from './routes/notifications.js'
 import { adminPayoutRoutes } from './routes/adminPayouts.js'
 import { complianceRoutes } from './routes/compliance.js'
 import { feedbackRoutes } from './routes/feedback.js'
+import { adminRoutes } from './routes/admin.js'
 import { errorHandler } from './middleware/errorHandler.js'
 import { requestLogger } from './middleware/requestLogger.js'
 import { initializeDatabase } from './config/database.js'
@@ -112,6 +113,7 @@ app.use('/api/notifications', notificationRoutes)
 app.use('/api/admin/payouts', adminPayoutRoutes)
 app.use('/api', complianceRoutes)
 app.use('/api/feedback', feedbackRoutes)
+app.use('/api/admin', adminRoutes)
 
 // Error handling
 app.use(errorHandler)
