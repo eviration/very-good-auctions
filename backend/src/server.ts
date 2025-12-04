@@ -19,6 +19,7 @@ import { feedbackRoutes } from './routes/feedback.js'
 import { adminRoutes } from './routes/admin.js'
 import { errorHandler } from './middleware/errorHandler.js'
 import { requestLogger } from './middleware/requestLogger.js'
+import { generalLimiter, adminLimiter, paymentLimiter, sensitiveLimiter } from './middleware/rateLimit.js'
 import { initializeDatabase } from './config/database.js'
 import { initializeSignalR } from './services/signalr.js'
 import { sendEmailWithDetails } from './services/email.js'
@@ -44,6 +45,9 @@ app.use(express.urlencoded({ extended: true }))
 
 // Request logging
 app.use(requestLogger)
+
+// Apply general rate limiting to all API routes
+app.use('/api', generalLimiter)
 
 // Health check
 app.get('/health', (req, res) => {
@@ -98,11 +102,11 @@ app.post('/api/debug/test-email', async (req, res) => {
   }
 })
 
-// API Routes
+// API Routes with appropriate rate limiting
 app.use('/api/users', userRoutes)
-app.use('/api/payments', paymentRoutes)
+app.use('/api/payments', paymentLimiter, paymentRoutes) // Stricter limit for payments
 app.use('/api/categories', categoryRoutes)
-app.use('/api/webhooks', webhookRoutes)
+app.use('/api/webhooks', webhookRoutes) // Webhooks have their own verification
 app.use('/api/organizations', organizationRoutes)
 app.use('/api/invitations', invitationRoutes)
 app.use('/api/events', eventRoutes)
@@ -110,10 +114,10 @@ app.use('/api', eventItemRoutes)
 app.use('/api', eventBidRoutes)
 app.use('/api/platform-fees', platformFeeRoutes)
 app.use('/api/notifications', notificationRoutes)
-app.use('/api/admin/payouts', adminPayoutRoutes)
-app.use('/api', complianceRoutes)
+app.use('/api/admin/payouts', adminLimiter, adminPayoutRoutes) // Admin rate limit
+app.use('/api', sensitiveLimiter, complianceRoutes) // Very strict for tax/compliance
 app.use('/api/feedback', feedbackRoutes)
-app.use('/api/admin', adminRoutes)
+app.use('/api/admin', adminLimiter, adminRoutes) // Admin rate limit
 
 // Error handling
 app.use(errorHandler)
