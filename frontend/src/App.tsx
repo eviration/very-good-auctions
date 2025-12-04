@@ -57,8 +57,11 @@ function App() {
 
   // Configure API client with token provider
   useEffect(() => {
+    console.log('Setting up token provider, accounts:', accounts.length)
     apiClient.setTokenProvider(async () => {
+      console.log('Token provider called, accounts:', accounts.length)
       if (accounts.length === 0) {
+        console.log('No accounts - returning null')
         return null
       }
 
