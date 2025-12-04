@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom'
 import { useEffect } from 'react'
 import { useMsal } from '@azure/msal-react'
+import { InteractionRequiredAuthError } from '@azure/msal-browser'
 import { useAuthStore } from './hooks/useAuthStore'
 import { signalRService } from './services/signalr'
 import { apiClient } from './services/api'
@@ -65,6 +66,14 @@ function App() {
         return response.idToken
       } catch (error) {
         console.error('Failed to acquire token:', error)
+        // If interaction is required (session expired), trigger re-login
+        if (error instanceof InteractionRequiredAuthError) {
+          try {
+            await instance.acquireTokenRedirect(tokenRequest)
+          } catch (redirectError) {
+            console.error('Token redirect failed:', redirectError)
+          }
+        }
         return null
       }
     })
