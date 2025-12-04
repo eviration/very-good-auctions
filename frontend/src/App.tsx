@@ -62,9 +62,9 @@ function App() {
         return null
       }
 
-      // If we're already redirecting to login, don't make API calls
+      // If we're already redirecting to login, throw to prevent API calls
       if (isRedirectingRef.current) {
-        return null
+        throw new Error('Authentication in progress')
       }
 
       // If there's already a token request in flight, wait for it
@@ -115,8 +115,11 @@ function App() {
                 isRedirectingRef.current = false
               })
             }, 100)
+            // Throw to prevent API call from proceeding without auth
+            throw new Error('Session expired - redirecting to login')
           }
-          return null
+          // For non-auth errors, throw to surface the issue
+          throw error
         } finally {
           // Clear the ref after completion
           tokenPromiseRef.current = null
