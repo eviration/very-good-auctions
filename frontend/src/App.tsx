@@ -1,7 +1,7 @@
 import { Routes, Route } from 'react-router-dom'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useMsal } from '@azure/msal-react'
-import { InteractionRequiredAuthError } from '@azure/msal-browser'
+import { InteractionRequiredAuthError, BrowserAuthError } from '@azure/msal-browser'
 import { useAuthStore } from './hooks/useAuthStore'
 import { signalRService } from './services/signalr'
 import { apiClient } from './services/api'
@@ -49,6 +49,9 @@ function App() {
   const { instance, accounts } = useMsal()
   const { setUser, clearUser } = useAuthStore()
 
+  // Use ref to track in-flight token requests and prevent race conditions
+  const tokenPromiseRef = useRef<Promise<string | null> | null>(null)
+
   // Configure API client with token provider
   useEffect(() => {
     apiClient.setTokenProvider(async () => {
@@ -56,34 +59,54 @@ function App() {
         return null
       }
 
-      try {
-        const response = await instance.acquireTokenSilent({
-          ...tokenRequest,
-          account: accounts[0],
-        })
-        // Use idToken for Entra External ID (CIAM)
-        // The backend validates this token and extracts user identity
-        return response.idToken
-      } catch (error) {
-        console.error('Failed to acquire token silently:', error)
-        // If interaction is required (session expired), try popup first (less disruptive)
-        if (error instanceof InteractionRequiredAuthError) {
-          try {
-            // Try popup first - it blocks and returns a token
-            const popupResponse = await instance.acquireTokenPopup(tokenRequest)
-            return popupResponse.idToken
-          } catch (popupError) {
-            console.error('Token popup failed, trying redirect:', popupError)
-            // If popup fails (e.g., blocked), fall back to redirect
+      // If there's already a token request in flight, wait for it
+      // This prevents multiple concurrent popup/redirect attempts
+      if (tokenPromiseRef.current) {
+        return tokenPromiseRef.current
+      }
+
+      const acquireToken = async (): Promise<string | null> => {
+        try {
+          const response = await instance.acquireTokenSilent({
+            ...tokenRequest,
+            account: accounts[0],
+          })
+          // Use idToken for Entra External ID (CIAM)
+          // The backend validates this token and extracts user identity
+          return response.idToken
+        } catch (error) {
+          console.error('Failed to acquire token silently:', error)
+          // If interaction is required (session expired), try popup first (less disruptive)
+          if (error instanceof InteractionRequiredAuthError) {
             try {
-              await instance.acquireTokenRedirect(tokenRequest)
-            } catch (redirectError) {
-              console.error('Token redirect failed:', redirectError)
+              // Try popup first - it blocks and returns a token
+              const popupResponse = await instance.acquireTokenPopup(tokenRequest)
+              return popupResponse.idToken
+            } catch (popupError) {
+              console.error('Token popup failed:', popupError)
+              // Check for interaction_in_progress error - means another auth is happening
+              if (popupError instanceof BrowserAuthError &&
+                  popupError.errorCode === 'interaction_in_progress') {
+                // Wait a bit and return null - the other request will handle it
+                return null
+              }
+              // If popup fails (e.g., blocked), fall back to redirect
+              try {
+                await instance.acquireTokenRedirect(tokenRequest)
+              } catch (redirectError) {
+                console.error('Token redirect failed:', redirectError)
+              }
             }
           }
+          return null
         }
-        return null
       }
+
+      // Store the promise and clear it when done
+      tokenPromiseRef.current = acquireToken()
+      const result = await tokenPromiseRef.current
+      tokenPromiseRef.current = null
+      return result
     })
   }, [instance, accounts])
 
