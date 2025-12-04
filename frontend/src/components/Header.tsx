@@ -17,19 +17,35 @@ export default function Header() {
   // Check admin status when user is authenticated
   useEffect(() => {
     if (isAuthenticated && user) {
-      // Add a small delay to ensure token provider is ready after login
-      // This prevents 401 errors on the initial load race condition
-      const checkAdmin = () => {
-        apiClient.checkPlatformAdminStatus()
-          .then(result => setIsAdmin(result.isPlatformAdmin))
-          .catch(() => setIsAdmin(false))
+      let cancelled = false
+
+      // Retry with exponential backoff to handle race condition with token provider
+      const checkAdminWithRetry = async (attempt = 0) => {
+        if (cancelled) return
+
+        try {
+          const result = await apiClient.checkPlatformAdminStatus()
+          if (!cancelled) {
+            setIsAdmin(result.isPlatformAdmin)
+          }
+        } catch (error) {
+          // Retry up to 3 times with increasing delays (500ms, 1000ms, 2000ms)
+          if (attempt < 3 && !cancelled) {
+            const delay = 500 * Math.pow(2, attempt)
+            setTimeout(() => checkAdminWithRetry(attempt + 1), delay)
+          } else if (!cancelled) {
+            setIsAdmin(false)
+          }
+        }
       }
 
-      // Check immediately, but also retry after a short delay in case of race condition
-      checkAdmin()
-      const timeoutId = setTimeout(checkAdmin, 500)
+      // Start checking after a brief initial delay to let token provider initialize
+      const timeoutId = setTimeout(() => checkAdminWithRetry(0), 100)
 
-      return () => clearTimeout(timeoutId)
+      return () => {
+        cancelled = true
+        clearTimeout(timeoutId)
+      }
     } else {
       setIsAdmin(false)
     }
