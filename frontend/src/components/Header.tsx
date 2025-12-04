@@ -2,6 +2,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../auth/useAuth'
 import { useState, useRef, useEffect } from 'react'
 import NotificationBell from './NotificationBell'
+import { apiClient } from '../services/api'
 
 export default function Header() {
   const { isAuthenticated, user, login, logout, isLoading } = useAuth()
@@ -9,8 +10,20 @@ export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [accountMenuOpen, setAccountMenuOpen] = useState(false)
   const accountMenuRef = useRef<HTMLDivElement>(null)
+  const [isAdmin, setIsAdmin] = useState(false)
 
   const isActive = (path: string) => location.pathname === path
+
+  // Check admin status when user is authenticated
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      apiClient.checkPlatformAdminStatus()
+        .then(result => setIsAdmin(result.isPlatformAdmin))
+        .catch(() => setIsAdmin(false))
+    } else {
+      setIsAdmin(false)
+    }
+  }, [isAuthenticated, user])
 
   // Main nav links - same for everyone
   const navLinks = [
@@ -162,6 +175,23 @@ export default function Header() {
                       ))}
 
                       <div className="my-3 border-t-2 border-white/60" />
+
+                      {/* Admin Link - only for admins */}
+                      {isAdmin && (
+                        <>
+                          <Link
+                            to="/admin"
+                            className={`block px-4 py-3 rounded-clay font-bold text-sm transition-all ${
+                              location.pathname.startsWith('/admin')
+                                ? 'bg-clay-butter shadow-clay-sm text-charcoal'
+                                : 'text-charcoal hover:bg-clay-butter/50'
+                            }`}
+                          >
+                            Admin Dashboard
+                          </Link>
+                          <div className="my-3 border-t-2 border-white/60" />
+                        </>
+                      )}
 
                       {/* Sign Out */}
                       <button

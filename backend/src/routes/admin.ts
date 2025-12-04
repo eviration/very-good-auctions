@@ -3,6 +3,12 @@ import { body, param, validationResult } from 'express-validator'
 import { authenticate } from '../middleware/auth.js'
 import { query as dbQuery } from '../config/database.js'
 import { badRequest, notFound, forbidden } from '../middleware/errorHandler.js'
+import {
+  getPendingTaxInfoSubmissions,
+  verifyTaxInfo,
+  TaxInformation,
+} from '../services/taxForms.js'
+import { logComplianceEvent } from '../services/complianceAudit.js'
 
 const router = Router()
 
@@ -296,6 +302,205 @@ router.get(
           offset,
           total: countResult.recordset[0].total,
         }
+      })
+    } catch (error) {
+      next(error)
+    }
+  }
+)
+
+// =============================================================================
+// Tax / W-9 Admin Routes
+// =============================================================================
+
+// Get pending W-9 submissions
+router.get(
+  '/tax/pending',
+  authenticate,
+  requirePlatformAdmin,
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const limit = Math.min(parseInt(req.query.limit as string) || 50, 100)
+      const offset = parseInt(req.query.offset as string) || 0
+
+      const result = await getPendingTaxInfoSubmissions({ limit, offset })
+
+      res.json({
+        submissions: result.submissions.map((s: TaxInformation) => ({
+          id: s.id,
+          userId: s.userId,
+          organizationId: s.organizationId,
+          taxFormType: s.taxFormType,
+          legalName: s.legalName,
+          businessName: s.businessName,
+          taxClassification: s.taxClassification,
+          tinType: s.tinType,
+          tinLastFour: s.tinLastFour,
+          address: s.address,
+          status: s.status,
+          signatureName: s.signatureName,
+          signatureDate: s.signatureDate,
+          createdAt: s.createdAt,
+        })),
+        pagination: {
+          limit,
+          offset,
+          total: result.total,
+        },
+      })
+    } catch (error) {
+      next(error)
+    }
+  }
+)
+
+// Get all W-9 submissions (with filters)
+router.get(
+  '/tax/all',
+  authenticate,
+  requirePlatformAdmin,
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const limit = Math.min(parseInt(req.query.limit as string) || 50, 100)
+      const offset = parseInt(req.query.offset as string) || 0
+      const status = req.query.status as string | undefined
+      const search = req.query.search as string | undefined
+
+      let whereClause = '1=1'
+      const params: Record<string, unknown> = { limit, offset }
+
+      if (status && ['pending', 'verified', 'invalid', 'expired'].includes(status)) {
+        whereClause += ' AND status = @status'
+        params.status = status
+      }
+
+      if (search) {
+        whereClause += ' AND (legal_name LIKE @search OR business_name LIKE @search OR tin_last_four LIKE @searchExact)'
+        params.search = `%${search}%`
+        params.searchExact = search
+      }
+
+      const countResult = await dbQuery(
+        `SELECT COUNT(*) as total FROM tax_information WHERE ${whereClause}`,
+        params
+      )
+
+      const result = await dbQuery(
+        `SELECT id, user_id, organization_id, tax_form_type, legal_name, business_name,
+                tax_classification, tin_type, tin_last_four,
+                address_line1, address_line2, city, state, postal_code, country,
+                is_us_person, is_exempt_payee, exempt_payee_code,
+                signature_name, signature_date, status, verified_at, verified_by,
+                created_at, expires_at
+         FROM tax_information
+         WHERE ${whereClause}
+         ORDER BY created_at DESC
+         OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY`,
+        params
+      )
+
+      res.json({
+        submissions: result.recordset.map((row: Record<string, unknown>) => ({
+          id: row.id,
+          userId: row.user_id,
+          organizationId: row.organization_id,
+          taxFormType: row.tax_form_type,
+          legalName: row.legal_name,
+          businessName: row.business_name,
+          taxClassification: row.tax_classification,
+          tinType: row.tin_type,
+          tinLastFour: row.tin_last_four,
+          address: {
+            line1: row.address_line1,
+            line2: row.address_line2,
+            city: row.city,
+            state: row.state,
+            postalCode: row.postal_code,
+            country: row.country || 'USA',
+          },
+          status: row.status,
+          signatureName: row.signature_name,
+          signatureDate: row.signature_date,
+          verifiedAt: row.verified_at,
+          verifiedBy: row.verified_by,
+          createdAt: row.created_at,
+          expiresAt: row.expires_at,
+        })),
+        pagination: {
+          limit,
+          offset,
+          total: countResult.recordset[0].total,
+        },
+      })
+    } catch (error) {
+      next(error)
+    }
+  }
+)
+
+// Get W-9 stats
+router.get(
+  '/tax/stats',
+  authenticate,
+  requirePlatformAdmin,
+  async (_req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await dbQuery(`
+        SELECT
+          COUNT(*) as total,
+          SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending,
+          SUM(CASE WHEN status = 'verified' THEN 1 ELSE 0 END) as verified,
+          SUM(CASE WHEN status = 'invalid' THEN 1 ELSE 0 END) as invalid,
+          SUM(CASE WHEN status = 'expired' THEN 1 ELSE 0 END) as expired
+        FROM tax_information
+      `)
+
+      const stats = result.recordset[0]
+      res.json({
+        total: stats.total || 0,
+        pending: stats.pending || 0,
+        verified: stats.verified || 0,
+        invalid: stats.invalid || 0,
+        expired: stats.expired || 0,
+      })
+    } catch (error) {
+      next(error)
+    }
+  }
+)
+
+// Verify/reject a W-9 submission
+router.post(
+  '/tax/:taxInfoId/verify',
+  authenticate,
+  requirePlatformAdmin,
+  [
+    param('taxInfoId').notEmpty().withMessage('Tax info ID is required'),
+    body('status').isIn(['verified', 'invalid']).withMessage('Status must be verified or invalid'),
+    body('notes').optional().isString().isLength({ max: 1000 }),
+  ],
+  async (req: Request, res: Response, next: NextFunction) => {
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) {
+      return next(badRequest(errors.array()[0].msg))
+    }
+
+    try {
+      const { taxInfoId } = req.params
+      const { status, notes } = req.body
+
+      await verifyTaxInfo(taxInfoId, req.user!.id, status, notes)
+
+      // Log admin action
+      await logComplianceEvent({
+        eventType: status === 'verified' ? 'tax_info_verified' : 'tax_info_rejected',
+        userId: req.user!.id,
+        details: { taxInfoId, status, notes, verifiedByAdmin: true },
+      })
+
+      res.json({
+        success: true,
+        message: `W-9 ${status === 'verified' ? 'verified' : 'rejected'} successfully`,
       })
     } catch (error) {
       next(error)

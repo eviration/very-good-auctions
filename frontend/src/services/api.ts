@@ -1177,6 +1177,110 @@ class ApiClient {
     const queryString = queryParams.toString()
     return this.request(`/admin/audit-log${queryString ? `?${queryString}` : ''}`)
   }
+
+  // =====================================================
+  // Admin Tax / W-9 Endpoints
+  // =====================================================
+
+  async getAdminTaxStats(): Promise<{
+    total: number
+    pending: number
+    verified: number
+    invalid: number
+    expired: number
+  }> {
+    return this.request('/admin/tax/stats')
+  }
+
+  async getAdminTaxSubmissions(params?: {
+    limit?: number
+    offset?: number
+    status?: 'pending' | 'verified' | 'invalid' | 'expired'
+    search?: string
+  }): Promise<{
+    submissions: Array<{
+      id: string
+      userId?: string
+      organizationId?: string
+      taxFormType: string
+      legalName: string
+      businessName?: string
+      taxClassification: string
+      tinType: 'ssn' | 'ein'
+      tinLastFour: string
+      address: {
+        line1?: string
+        line2?: string
+        city?: string
+        state?: string
+        postalCode?: string
+        country: string
+      }
+      status: 'pending' | 'verified' | 'invalid' | 'expired'
+      signatureName: string
+      signatureDate: string
+      verifiedAt?: string
+      verifiedBy?: string
+      createdAt: string
+      expiresAt?: string
+    }>
+    pagination: { limit: number; offset: number; total: number }
+  }> {
+    const queryParams = new URLSearchParams()
+    if (params?.limit) queryParams.set('limit', String(params.limit))
+    if (params?.offset) queryParams.set('offset', String(params.offset))
+    if (params?.status) queryParams.set('status', params.status)
+    if (params?.search) queryParams.set('search', params.search)
+    const queryString = queryParams.toString()
+    return this.request(`/admin/tax/all${queryString ? `?${queryString}` : ''}`)
+  }
+
+  async getPendingTaxSubmissions(params?: {
+    limit?: number
+    offset?: number
+  }): Promise<{
+    submissions: Array<{
+      id: string
+      userId?: string
+      organizationId?: string
+      taxFormType: string
+      legalName: string
+      businessName?: string
+      taxClassification: string
+      tinType: 'ssn' | 'ein'
+      tinLastFour: string
+      address: {
+        line1?: string
+        line2?: string
+        city?: string
+        state?: string
+        postalCode?: string
+        country: string
+      }
+      status: 'pending'
+      signatureName: string
+      signatureDate: string
+      createdAt: string
+    }>
+    pagination: { limit: number; offset: number; total: number }
+  }> {
+    const queryParams = new URLSearchParams()
+    if (params?.limit) queryParams.set('limit', String(params.limit))
+    if (params?.offset) queryParams.set('offset', String(params.offset))
+    const queryString = queryParams.toString()
+    return this.request(`/admin/tax/pending${queryString ? `?${queryString}` : ''}`)
+  }
+
+  async verifyTaxSubmission(
+    taxInfoId: string,
+    status: 'verified' | 'invalid',
+    notes?: string
+  ): Promise<{ success: boolean; message: string }> {
+    return this.request(`/admin/tax/${taxInfoId}/verify`, {
+      method: 'POST',
+      body: JSON.stringify({ status, notes }),
+    })
+  }
 }
 
 export const apiClient = new ApiClient()
