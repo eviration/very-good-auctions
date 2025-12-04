@@ -77,10 +77,15 @@ function App() {
       // This prevents race conditions between multiple callers
       const tokenPromise = (async (): Promise<string | null> => {
         try {
+          console.log('Attempting to acquire token silently...')
           const response = await instance.acquireTokenSilent({
             ...tokenRequest,
             account: accounts[0],
           })
+          console.log('Token acquired successfully')
+          console.log('Token type:', response.idToken ? 'idToken present' : 'NO idToken')
+          console.log('Access token:', response.accessToken ? 'accessToken present' : 'NO accessToken')
+          console.log('Token expiry:', response.expiresOn)
           // Use idToken for Entra External ID (CIAM)
           // The backend validates this token and extracts user identity
           return response.idToken
