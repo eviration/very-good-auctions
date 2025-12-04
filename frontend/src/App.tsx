@@ -52,6 +52,9 @@ function App() {
   // Use ref to track in-flight token requests and prevent race conditions
   const tokenPromiseRef = useRef<Promise<string | null> | null>(null)
 
+  // Track if we're currently redirecting to prevent multiple redirects
+  const isRedirectingRef = useRef(false)
+
   // Configure API client with token provider
   useEffect(() => {
     apiClient.setTokenProvider(async () => {
@@ -59,8 +62,13 @@ function App() {
         return null
       }
 
+      // If we're already redirecting to login, don't make API calls
+      if (isRedirectingRef.current) {
+        return null
+      }
+
       // If there's already a token request in flight, wait for it
-      // This prevents multiple concurrent popup/redirect attempts
+      // This prevents multiple concurrent token acquisition attempts
       if (tokenPromiseRef.current) {
         return tokenPromiseRef.current
       }
@@ -80,16 +88,20 @@ function App() {
           console.error('Failed to acquire token silently:', error)
           // If interaction is required (session expired), redirect to login
           if (error instanceof InteractionRequiredAuthError) {
-            console.log('Session expired, redirecting to login...')
-            // Use loginRedirect - it will navigate away and return with a fresh token
-            // This is more reliable than popup which can be blocked
-            try {
-              await instance.loginRedirect({
-                ...tokenRequest,
-                prompt: 'login', // Force login even if session exists
-              })
-            } catch (redirectError) {
-              console.error('Login redirect failed:', redirectError)
+            // Prevent multiple redirects
+            if (!isRedirectingRef.current) {
+              isRedirectingRef.current = true
+              console.log('Session expired, redirecting to login...')
+              // Small delay to let current render complete, then redirect
+              setTimeout(() => {
+                instance.loginRedirect({
+                  ...tokenRequest,
+                  prompt: 'login',
+                }).catch(err => {
+                  console.error('Login redirect failed:', err)
+                  isRedirectingRef.current = false
+                })
+              }, 100)
             }
           }
           return null
