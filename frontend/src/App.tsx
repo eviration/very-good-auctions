@@ -1,7 +1,7 @@
 import { Routes, Route } from 'react-router-dom'
 import { useEffect, useRef } from 'react'
 import { useMsal } from '@azure/msal-react'
-import { InteractionRequiredAuthError } from '@azure/msal-browser'
+import { InteractionRequiredAuthError, AuthError } from '@azure/msal-browser'
 import { useAuthStore } from './hooks/useAuthStore'
 import { signalRService } from './services/signalr'
 import { apiClient } from './services/api'
@@ -86,23 +86,35 @@ function App() {
           return response.idToken
         } catch (error) {
           console.error('Failed to acquire token silently:', error)
-          // If interaction is required (session expired), redirect to login
-          if (error instanceof InteractionRequiredAuthError) {
-            // Prevent multiple redirects
-            if (!isRedirectingRef.current) {
-              isRedirectingRef.current = true
-              console.log('Session expired, redirecting to login...')
-              // Small delay to let current render complete, then redirect
-              setTimeout(() => {
-                instance.loginRedirect({
-                  ...tokenRequest,
-                  prompt: 'login',
-                }).catch(err => {
-                  console.error('Login redirect failed:', err)
-                  isRedirectingRef.current = false
-                })
-              }, 100)
-            }
+          console.error('Error type:', error?.constructor?.name)
+          console.error('Error details:', error instanceof AuthError ? {
+            errorCode: (error as AuthError).errorCode,
+            errorMessage: (error as AuthError).errorMessage,
+          } : 'Not an AuthError')
+
+          // Check for any auth-related error that requires re-login
+          const isAuthError = error instanceof InteractionRequiredAuthError ||
+            error instanceof AuthError ||
+            (error instanceof Error && (
+              error.message?.includes('interaction_required') ||
+              error.message?.includes('login_required') ||
+              error.message?.includes('consent_required') ||
+              error.message?.includes('AADSTS')
+            ))
+
+          if (isAuthError && !isRedirectingRef.current) {
+            isRedirectingRef.current = true
+            console.log('Auth error detected, redirecting to login...')
+            // Small delay to let current render complete, then redirect
+            setTimeout(() => {
+              instance.loginRedirect({
+                ...tokenRequest,
+                prompt: 'login',
+              }).catch(err => {
+                console.error('Login redirect failed:', err)
+                isRedirectingRef.current = false
+              })
+            }, 100)
           }
           return null
         } finally {
