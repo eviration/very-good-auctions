@@ -84,10 +84,14 @@ async function runMigrations() {
         
         for (const batch of batches) {
           if (batch.trim()) {
-            await pool.request().query(batch)
+            const result = await pool.request().query(batch)
+            // Log query results for debugging
+            if (result.recordset && result.recordset.length > 0) {
+              console.log('Query result:', JSON.stringify(result.recordset, null, 2))
+            }
           }
         }
-        
+
         await pool.request()
           .input('name', sql.NVarChar, file)
           .query('INSERT INTO _migrations (name) VALUES (@name)')
