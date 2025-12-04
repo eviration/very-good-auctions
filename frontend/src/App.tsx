@@ -65,7 +65,9 @@ function App() {
         return tokenPromiseRef.current
       }
 
-      const acquireToken = async (): Promise<string | null> => {
+      // Create the promise FIRST, then set the ref SYNCHRONOUSLY
+      // This prevents race conditions between multiple callers
+      const tokenPromise = (async (): Promise<string | null> => {
         try {
           const response = await instance.acquireTokenSilent({
             ...tokenRequest,
@@ -76,37 +78,30 @@ function App() {
           return response.idToken
         } catch (error) {
           console.error('Failed to acquire token silently:', error)
-          // If interaction is required (session expired), sign out the user
-          // so they see the login button and can re-authenticate
+          // If interaction is required (session expired), redirect to login
           if (error instanceof InteractionRequiredAuthError) {
-            console.log('Session expired, signing out user...')
-            // Clear local MSAL cache to force re-login
-            // Use logoutPopup to avoid navigating away from the current page
+            console.log('Session expired, redirecting to login...')
+            // Use loginRedirect - it will navigate away and return with a fresh token
+            // This is more reliable than popup which can be blocked
             try {
-              await instance.logoutPopup({
-                account: accounts[0],
-                mainWindowRedirectUri: window.location.origin,
+              await instance.loginRedirect({
+                ...tokenRequest,
+                prompt: 'login', // Force login even if session exists
               })
-            } catch (logoutError) {
-              console.error('Logout popup failed, trying redirect:', logoutError)
-              // If popup is blocked, clear accounts manually
-              const allAccounts = instance.getAllAccounts()
-              for (const acct of allAccounts) {
-                instance.setActiveAccount(null)
-              }
-              // Force page reload to clear state
-              window.location.reload()
+            } catch (redirectError) {
+              console.error('Login redirect failed:', redirectError)
             }
           }
           return null
+        } finally {
+          // Clear the ref after completion
+          tokenPromiseRef.current = null
         }
-      }
+      })()
 
-      // Store the promise and clear it when done
-      tokenPromiseRef.current = acquireToken()
-      const result = await tokenPromiseRef.current
-      tokenPromiseRef.current = null
-      return result
+      // Set ref SYNCHRONOUSLY before any await
+      tokenPromiseRef.current = tokenPromise
+      return tokenPromise
     })
   }, [instance, accounts])
 
