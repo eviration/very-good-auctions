@@ -16,7 +16,6 @@ declare global {
 }
 
 // Microsoft Entra External ID configuration
-const tenantName = process.env.ENTRA_TENANT_NAME || ''
 const tenantId = process.env.ENTRA_TENANT_ID || ''
 const clientId = process.env.ENTRA_CLIENT_ID || ''
 
