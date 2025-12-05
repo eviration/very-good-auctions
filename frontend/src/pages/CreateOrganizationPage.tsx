@@ -2,22 +2,80 @@ import { useState, useRef } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { apiClient } from '../services/api'
 import type { OrganizationType, CreateOrganizationRequest } from '../types'
+import { WizardStep, WizardInput, WizardTextarea, WizardOptionCard, WizardOptionGrid, WizardSuccess } from '../components/wizard'
 
-const ORG_TYPE_OPTIONS: { value: OrganizationType; label: string; description: string }[] = [
-  { value: 'nonprofit', label: 'Nonprofit', description: 'Registered 501(c)(3) or equivalent' },
-  { value: 'school', label: 'School', description: 'K-12, college, or university' },
-  { value: 'religious', label: 'Religious', description: 'Church, temple, mosque, or other religious org' },
-  { value: 'club', label: 'Club', description: 'Social club, sports team, or community group' },
-  { value: 'company', label: 'Company', description: 'Business running charity auctions' },
-  { value: 'other', label: 'Other', description: 'Other type of organization' },
+const ORG_TYPE_OPTIONS: { value: OrganizationType; label: string; description: string; icon: React.ReactNode }[] = [
+  {
+    value: 'nonprofit',
+    label: 'Nonprofit',
+    description: 'Registered 501(c)(3) or equivalent',
+    icon: (
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+      </svg>
+    )
+  },
+  {
+    value: 'school',
+    label: 'School',
+    description: 'K-12, college, or university',
+    icon: (
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+      </svg>
+    )
+  },
+  {
+    value: 'religious',
+    label: 'Religious',
+    description: 'Church, temple, mosque, or other',
+    icon: (
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+      </svg>
+    )
+  },
+  {
+    value: 'club',
+    label: 'Club',
+    description: 'Social club, sports team, or group',
+    icon: (
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+      </svg>
+    )
+  },
+  {
+    value: 'company',
+    label: 'Company',
+    description: 'Business running charity auctions',
+    icon: (
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+      </svg>
+    )
+  },
+  {
+    value: 'other',
+    label: 'Other',
+    description: 'Other type of organization',
+    icon: (
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    )
+  },
 ]
 
 export default function CreateOrganizationPage() {
   const navigate = useNavigate()
+  const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [logoFile, setLogoFile] = useState<File | null>(null)
   const [logoPreview, setLogoPreview] = useState<string | null>(null)
+  const [createdOrg, setCreatedOrg] = useState<{ id: string; slug: string; name: string } | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [formData, setFormData] = useState<CreateOrganizationRequest>({
@@ -33,13 +91,11 @@ export default function CreateOrganizationPage() {
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
-      // Validate file type
       const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
       if (!allowedTypes.includes(file.type)) {
         setError('Invalid file type. Please upload a JPG, PNG, GIF, or WebP image.')
         return
       }
-      // Validate file size (5MB limit)
       if (file.size > 5 * 1024 * 1024) {
         setError('File too large. Maximum size is 5MB.')
         return
@@ -61,25 +117,23 @@ export default function CreateOrganizationPage() {
     }
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = async () => {
     setLoading(true)
     setError(null)
 
     try {
       const org = await apiClient.createOrganization(formData)
 
-      // Upload logo if one was selected
       if (logoFile) {
         try {
           await apiClient.uploadOrganizationLogo(org.id, logoFile)
         } catch (logoErr) {
           console.error('Failed to upload logo:', logoErr)
-          // Continue anyway - org was created successfully
         }
       }
 
-      navigate(`/organizations/${org.slug}/manage`)
+      setCreatedOrg({ id: org.id, slug: org.slug, name: org.name })
+      setStep(6) // Success step
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create organization')
     } finally {
@@ -94,232 +148,469 @@ export default function CreateOrganizationPage() {
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
-  return (
-    <div className="max-w-2xl mx-auto px-4 py-8">
-      <div className="mb-8">
-        <Link to="/organizations" className="text-sage hover:underline">
-          &larr; Back to Organizations
+  // Validation for each step
+  const isStep1Valid = formData.name.length >= 2
+  const isStep2Valid = formData.orgType !== undefined
+  const isStep3Valid = formData.contactEmail.includes('@')
+  const isStep4Valid = true // Tax info is always skippable
+  const isStep5Valid = true // Review is always valid
+
+  // Dynamic encouragement messages
+  const getStep1Encouragement = () => {
+    if (formData.name.length >= 2) {
+      return `"${formData.name}" - what a great name! This is going to be wonderful.`
+    }
+    return ''
+  }
+
+  const getStep2Encouragement = () => {
+    const selectedType = ORG_TYPE_OPTIONS.find(o => o.value === formData.orgType)
+    if (selectedType) {
+      const messages: Record<OrganizationType, string> = {
+        nonprofit: "Nonprofits are the heart of community giving. You're doing amazing work!",
+        school: "Schools create lasting impact. Your students will love this!",
+        religious: "Faith communities bring people together beautifully for good causes.",
+        club: "Clubs and groups have such passionate supporters. This will be a hit!",
+        company: "Companies giving back make a real difference. How wonderful!",
+        other: "Every organization has a unique story to tell. We're excited to help!"
+      }
+      return messages[formData.orgType]
+    }
+    return ''
+  }
+
+  const getStep3Encouragement = () => {
+    if (formData.contactEmail && formData.contactEmail.includes('@')) {
+      return "Perfect! We'll keep you updated on everything important."
+    }
+    return ''
+  }
+
+  // Step 6: Success
+  if (step === 6 && createdOrg) {
+    return (
+      <WizardSuccess
+        title="You Did It!"
+        message={`${createdOrg.name} is all set up and ready to make a difference. We're so excited to help you raise funds for your cause!`}
+        icon={
+          <svg className="w-12 h-12 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+          </svg>
+        }
+      >
+        <Link
+          to={`/organizations/${createdOrg.slug}/manage`}
+          className="clay-button clay-button-primary w-full text-center"
+        >
+          Go to Your Organization Dashboard
         </Link>
-        <h1 className="text-3xl font-bold text-charcoal mt-4">Create Organization</h1>
-        <p className="text-gray-600 mt-1">
-          Set up your organization to start running fundraiser auctions
-        </p>
-      </div>
+        <Link
+          to={`/events/create?org=${createdOrg.id}`}
+          className="clay-button w-full text-center"
+        >
+          Create Your First Auction Event
+        </Link>
+      </WizardSuccess>
+    )
+  }
 
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
-          {error}
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Basic Info */}
-        <div className="bg-white rounded-lg shadow-sm border border-sage/20 p-6">
-          <h2 className="text-lg font-semibold text-charcoal mb-4">Basic Information</h2>
-
-          <div className="space-y-4">
-            {/* Logo Upload */}
-            <div>
-              <label className="block text-sm font-medium text-charcoal mb-2">
-                Organization Logo
-              </label>
-              <div className="flex items-start gap-4">
-                <div className="w-24 h-24 rounded-lg border-2 border-dashed border-sage/30 flex items-center justify-center bg-sage/5 overflow-hidden">
-                  {logoPreview ? (
-                    <img
-                      src={logoPreview}
-                      alt="Logo preview"
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <svg className="w-8 h-8 text-sage/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                  )}
-                </div>
-                <div className="flex-1">
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/jpeg,image/png,image/gif,image/webp"
-                    onChange={handleLogoChange}
-                    className="hidden"
-                    id="logo-upload"
-                  />
-                  <label
-                    htmlFor="logo-upload"
-                    className="inline-block px-4 py-2 border border-sage/30 rounded-lg text-sm font-medium text-charcoal hover:bg-sage/10 cursor-pointer transition-colors"
-                  >
-                    {logoPreview ? 'Change Logo' : 'Upload Logo'}
-                  </label>
-                  {logoPreview && (
-                    <button
-                      type="button"
-                      onClick={handleRemoveLogo}
-                      className="ml-2 px-4 py-2 text-sm text-red-600 hover:text-red-700"
-                    >
-                      Remove
-                    </button>
-                  )}
-                  <p className="text-xs text-gray-500 mt-1">
-                    JPG, PNG, GIF or WebP. Max 5MB.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-charcoal mb-1">
-                Organization Name <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                required
-                value={formData.name}
-                onChange={(e) => updateField('name', e.target.value)}
-                className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-sage/50"
-                placeholder="e.g., Springfield Animal Shelter"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-charcoal mb-1">
-                Description
-              </label>
-              <textarea
-                rows={4}
-                value={formData.description || ''}
-                onChange={(e) => updateField('description', e.target.value)}
-                className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-sage/50"
-                placeholder="Tell people about your organization and mission..."
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-charcoal mb-2">
-                Organization Type <span className="text-red-500">*</span>
-              </label>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {ORG_TYPE_OPTIONS.map((option) => (
-                  <label
-                    key={option.value}
-                    className={`relative flex items-start p-4 border rounded-lg cursor-pointer transition-colors ${
-                      formData.orgType === option.value
-                        ? 'border-sage bg-sage/5'
-                        : 'border-sage/30 hover:border-sage'
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="orgType"
-                      value={option.value}
-                      checked={formData.orgType === option.value}
-                      onChange={(e) => updateField('orgType', e.target.value as OrganizationType)}
-                      className="sr-only"
-                    />
-                    <div>
-                      <span className="font-medium text-charcoal">{option.label}</span>
-                      <p className="text-sm text-gray-500">{option.description}</p>
-                    </div>
-                    {formData.orgType === option.value && (
-                      <span className="absolute top-2 right-2 text-sage">
-                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                        </svg>
-                      </span>
-                    )}
-                  </label>
-                ))}
-              </div>
-            </div>
+  // Step 1: Organization Name & Logo
+  if (step === 1) {
+    return (
+      <WizardStep
+        stepNumber={1}
+        totalSteps={5}
+        title="Let's get to know you!"
+        subtitle="First things first - what's your organization called?"
+        onNext={() => setStep(2)}
+        onBack={() => navigate('/organizations')}
+        isValid={isStep1Valid}
+        encouragement={getStep1Encouragement()}
+        icon={
+          <svg className="w-8 h-8 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+          </svg>
+        }
+      >
+        {error && (
+          <div className="bg-clay-coral/20 border border-clay-coral text-charcoal px-4 py-3 rounded-clay mb-6">
+            {error}
           </div>
-        </div>
+        )}
 
-        {/* Contact Info */}
-        <div className="bg-white rounded-lg shadow-sm border border-sage/20 p-6">
-          <h2 className="text-lg font-semibold text-charcoal mb-4">Contact Information</h2>
+        <WizardInput
+          label="Organization Name"
+          hint="This is how people will find you"
+          value={formData.name}
+          onChange={(e) => updateField('name', e.target.value)}
+          placeholder="e.g., Springfield Animal Shelter"
+          success={formData.name.length >= 2}
+          successMessage="That's a lovely name!"
+          required
+        />
 
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-charcoal mb-1">
-                Contact Email <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="email"
-                required
-                value={formData.contactEmail}
-                onChange={(e) => updateField('contactEmail', e.target.value)}
-                className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-sage/50"
-                placeholder="contact@yourorg.org"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-charcoal mb-1">
-                Phone Number
-              </label>
-              <input
-                type="tel"
-                value={formData.contactPhone || ''}
-                onChange={(e) => updateField('contactPhone', e.target.value)}
-                className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-sage/50"
-                placeholder="(555) 123-4567"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-charcoal mb-1">
-                Website
-              </label>
-              <input
-                type="url"
-                value={formData.websiteUrl || ''}
-                onChange={(e) => updateField('websiteUrl', e.target.value)}
-                className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-sage/50"
-                placeholder="https://yourorg.org"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Tax Info (optional) */}
-        <div className="bg-white rounded-lg shadow-sm border border-sage/20 p-6">
-          <h2 className="text-lg font-semibold text-charcoal mb-4">Tax Information (Optional)</h2>
-          <p className="text-sm text-gray-500 mb-4">
-            Providing your EIN/Tax ID helps verify your nonprofit status
+        <div className="mt-6">
+          <label className="block text-sm font-bold text-charcoal mb-2">
+            Organization Logo (optional)
+          </label>
+          <p className="text-sm text-charcoal-light mb-3">
+            A logo helps people recognize you - but you can always add this later!
           </p>
+          <div className="flex items-start gap-4">
+            <div className="w-24 h-24 rounded-clay border-2 border-dashed border-charcoal/20 flex items-center justify-center bg-clay-surface overflow-hidden shadow-clay">
+              {logoPreview ? (
+                <img
+                  src={logoPreview}
+                  alt="Logo preview"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <svg className="w-8 h-8 text-charcoal/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              )}
+            </div>
+            <div className="flex-1">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/gif,image/webp"
+                onChange={handleLogoChange}
+                className="hidden"
+                id="logo-upload"
+              />
+              <label
+                htmlFor="logo-upload"
+                className="inline-block clay-button cursor-pointer"
+              >
+                {logoPreview ? 'Change Logo' : 'Upload Logo'}
+              </label>
+              {logoPreview && (
+                <button
+                  type="button"
+                  onClick={handleRemoveLogo}
+                  className="ml-2 text-sm text-charcoal-light hover:text-charcoal"
+                >
+                  Remove
+                </button>
+              )}
+              <p className="text-xs text-charcoal-light mt-2">
+                JPG, PNG, GIF or WebP. Max 5MB.
+              </p>
+            </div>
+          </div>
+        </div>
+      </WizardStep>
+    )
+  }
 
-          <div>
-            <label className="block text-sm font-medium text-charcoal mb-1">
-              EIN / Tax ID
-            </label>
-            <input
-              type="text"
-              value={formData.taxId || ''}
-              onChange={(e) => updateField('taxId', e.target.value)}
-              className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-sage/50"
-              placeholder="XX-XXXXXXX"
+  // Step 2: Organization Type
+  if (step === 2) {
+    return (
+      <WizardStep
+        stepNumber={2}
+        totalSteps={5}
+        title="What type of organization are you?"
+        subtitle="This helps us tailor the experience for you"
+        onNext={() => setStep(3)}
+        onBack={() => setStep(1)}
+        isValid={isStep2Valid}
+        encouragement={getStep2Encouragement()}
+        icon={
+          <svg className="w-8 h-8 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+          </svg>
+        }
+      >
+        <WizardOptionGrid columns={2}>
+          {ORG_TYPE_OPTIONS.map((option) => (
+            <WizardOptionCard
+              key={option.value}
+              title={option.label}
+              description={option.description}
+              icon={option.icon}
+              selected={formData.orgType === option.value}
+              onClick={() => updateField('orgType', option.value)}
             />
+          ))}
+        </WizardOptionGrid>
+      </WizardStep>
+    )
+  }
+
+  // Step 3: Contact Information
+  if (step === 3) {
+    return (
+      <WizardStep
+        stepNumber={3}
+        totalSteps={5}
+        title="How can people reach you?"
+        subtitle="Your contact info so supporters and bidders can get in touch"
+        onNext={() => setStep(4)}
+        onBack={() => setStep(2)}
+        isValid={isStep3Valid}
+        encouragement={getStep3Encouragement()}
+        icon={
+          <svg className="w-8 h-8 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg>
+        }
+      >
+        {error && (
+          <div className="bg-clay-coral/20 border border-clay-coral text-charcoal px-4 py-3 rounded-clay mb-6">
+            {error}
+          </div>
+        )}
+
+        <div className="space-y-4">
+          <WizardInput
+            label="Contact Email"
+            hint="This is where we'll send important updates"
+            value={formData.contactEmail}
+            onChange={(e) => updateField('contactEmail', e.target.value)}
+            placeholder="contact@yourorg.org"
+            type="email"
+            success={formData.contactEmail.includes('@')}
+            required
+          />
+
+          <WizardInput
+            label="Phone Number"
+            hint="Optional, but helpful for urgent matters"
+            value={formData.contactPhone || ''}
+            onChange={(e) => updateField('contactPhone', e.target.value)}
+            placeholder="(555) 123-4567"
+            type="tel"
+          />
+
+          <WizardInput
+            label="Website"
+            hint="If you have one - helps build trust with bidders"
+            value={formData.websiteUrl || ''}
+            onChange={(e) => updateField('websiteUrl', e.target.value)}
+            placeholder="https://yourorg.org"
+            type="url"
+          />
+        </div>
+      </WizardStep>
+    )
+  }
+
+  // Step 4: Tax Information - THE MOST IMPORTANT FRIENDLY STEP
+  if (step === 4) {
+    return (
+      <WizardStep
+        stepNumber={4}
+        totalSteps={5}
+        title="One quick thing about taxes..."
+        subtitle="Don't worry - this is simpler than it sounds!"
+        onNext={() => setStep(5)}
+        onBack={() => setStep(3)}
+        onSkip={() => setStep(5)}
+        isValid={isStep4Valid}
+        encouragement={formData.taxId ? "You're doing great! Having this on file makes everything official." : ''}
+        icon={
+          <svg className="w-8 h-8 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+        }
+      >
+        {/* Reassuring intro card */}
+        <div className="clay-card bg-clay-sky/30 p-6 mb-6">
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 rounded-full bg-clay-sky flex items-center justify-center flex-shrink-0">
+              <svg className="w-6 h-6 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="font-bold text-charcoal mb-1">Why do we ask for this?</h3>
+              <p className="text-charcoal-light text-sm">
+                Your EIN (Employer Identification Number) helps donors know their contributions are going to a legitimate organization.
+                It's like a social security number for your organization - completely safe to share and helps build trust!
+              </p>
+            </div>
           </div>
         </div>
 
-        {/* Submit */}
-        <div className="flex justify-end gap-4 pt-4 pb-8">
-          <Link
-            to="/organizations"
-            className="px-6 py-3 border border-sage/30 rounded-lg hover:bg-sage/10 transition-colors text-charcoal"
-          >
-            Cancel
-          </Link>
-          <button
-            type="submit"
-            disabled={loading}
-            className="bg-sage text-white px-8 py-3 rounded-lg hover:bg-sage/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-          >
-            {loading ? 'Creating...' : 'Create Organization'}
-          </button>
+        {/* The actual input with lots of support */}
+        <div className="space-y-4">
+          <WizardInput
+            label="EIN / Tax ID Number"
+            hint="Usually formatted as XX-XXXXXXX (9 digits total)"
+            value={formData.taxId || ''}
+            onChange={(e) => updateField('taxId', e.target.value)}
+            placeholder="XX-XXXXXXX"
+            success={Boolean(formData.taxId && formData.taxId.length >= 9)}
+            successMessage="Thank you for providing this! Your donors will appreciate it."
+          />
         </div>
-      </form>
-    </div>
-  )
+
+        {/* Helpful tips */}
+        <div className="mt-6 space-y-3">
+          <div className="flex items-start gap-3 text-sm">
+            <div className="w-6 h-6 rounded-full bg-clay-mint flex items-center justify-center flex-shrink-0 mt-0.5">
+              <svg className="w-3.5 h-3.5 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <p className="text-charcoal-light">
+              <span className="font-medium text-charcoal">Not sure where to find it?</span> Check your IRS determination letter,
+              annual tax filing (Form 990), or ask your bookkeeper or treasurer.
+            </p>
+          </div>
+
+          <div className="flex items-start gap-3 text-sm">
+            <div className="w-6 h-6 rounded-full bg-clay-mint flex items-center justify-center flex-shrink-0 mt-0.5">
+              <svg className="w-3.5 h-3.5 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <p className="text-charcoal-light">
+              <span className="font-medium text-charcoal">Don't have one yet?</span> That's totally okay!
+              You can skip this for now and add it later from your organization settings.
+            </p>
+          </div>
+
+          <div className="flex items-start gap-3 text-sm">
+            <div className="w-6 h-6 rounded-full bg-clay-mint flex items-center justify-center flex-shrink-0 mt-0.5">
+              <svg className="w-3.5 h-3.5 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <p className="text-charcoal-light">
+              <span className="font-medium text-charcoal">Is this secure?</span> Absolutely! Your information is encrypted
+              and we only use it to verify your organization and display on receipts.
+            </p>
+          </div>
+        </div>
+
+        {/* Extra reassurance */}
+        <div className="mt-8 p-4 bg-clay-surface rounded-clay border border-charcoal/10">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-clay-lavender flex items-center justify-center flex-shrink-0">
+              <svg className="w-5 h-5 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            </div>
+            <p className="text-sm text-charcoal-light">
+              <span className="font-medium text-charcoal">Remember:</span> This step is completely optional.
+              Many successful auctions run without it. You can always add this information later when you're ready.
+            </p>
+          </div>
+        </div>
+      </WizardStep>
+    )
+  }
+
+  // Step 5: Review & Description
+  if (step === 5) {
+    return (
+      <WizardStep
+        stepNumber={5}
+        totalSteps={5}
+        title="Almost there! Let's review"
+        subtitle="Add a description and make sure everything looks good"
+        onNext={handleSubmit}
+        onBack={() => setStep(4)}
+        isValid={isStep5Valid}
+        isLoading={loading}
+        encouragement="You're just one click away from creating something amazing!"
+        icon={
+          <svg className="w-8 h-8 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        }
+      >
+        {error && (
+          <div className="bg-clay-coral/20 border border-clay-coral text-charcoal px-4 py-3 rounded-clay mb-6">
+            {error}
+          </div>
+        )}
+
+        {/* Description textarea */}
+        <WizardTextarea
+          label="Tell people about your organization"
+          hint="Share your mission and what makes you special - this appears on your organization's page"
+          value={formData.description || ''}
+          onChange={(e) => updateField('description', e.target.value)}
+          placeholder="We're dedicated to helping... Our mission is... We believe in..."
+          rows={4}
+        />
+
+        {/* Review summary */}
+        <div className="mt-6 clay-card p-6 bg-clay-surface">
+          <h3 className="font-bold text-charcoal mb-4 flex items-center gap-2">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Here's what you're creating:
+          </h3>
+
+          <div className="space-y-3">
+            <div className="flex items-start gap-3">
+              {logoPreview ? (
+                <img src={logoPreview} alt="Logo" className="w-12 h-12 rounded-clay object-cover shadow-clay" />
+              ) : (
+                <div className="w-12 h-12 rounded-clay bg-clay-mint flex items-center justify-center shadow-clay">
+                  <span className="text-lg font-bold text-charcoal">
+                    {formData.name.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+              )}
+              <div>
+                <p className="font-bold text-charcoal">{formData.name}</p>
+                <p className="text-sm text-charcoal-light capitalize">{formData.orgType}</p>
+              </div>
+            </div>
+
+            <div className="pt-3 border-t border-charcoal/10 space-y-2">
+              <div className="flex items-center gap-2 text-sm">
+                <svg className="w-4 h-4 text-charcoal-light" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                <span className="text-charcoal">{formData.contactEmail}</span>
+              </div>
+
+              {formData.contactPhone && (
+                <div className="flex items-center gap-2 text-sm">
+                  <svg className="w-4 h-4 text-charcoal-light" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                  </svg>
+                  <span className="text-charcoal">{formData.contactPhone}</span>
+                </div>
+              )}
+
+              {formData.websiteUrl && (
+                <div className="flex items-center gap-2 text-sm">
+                  <svg className="w-4 h-4 text-charcoal-light" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                  </svg>
+                  <span className="text-charcoal">{formData.websiteUrl}</span>
+                </div>
+              )}
+
+              {formData.taxId && (
+                <div className="flex items-center gap-2 text-sm">
+                  <svg className="w-4 h-4 text-charcoal-light" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <span className="text-charcoal">EIN: {formData.taxId}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Final encouragement */}
+        <div className="mt-6 text-center">
+          <p className="text-charcoal-light text-sm">
+            Ready to start making a difference? Click "Continue" to create your organization!
+          </p>
+        </div>
+      </WizardStep>
+    )
+  }
+
+  return null
 }
