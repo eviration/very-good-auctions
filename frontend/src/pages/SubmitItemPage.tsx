@@ -1,9 +1,20 @@
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
+import { useParams, useNavigate, useSearchParams, Link } from 'react-router-dom'
 import { useMsal } from '@azure/msal-react'
 import { apiClient } from '../services/api'
 import type { AuctionEvent, SubmitItemRequest } from '../types'
 import { loginRequest } from '../auth/authConfig'
+import { WizardStep, WizardInput, WizardTextarea, WizardOptionCard, WizardOptionGrid, WizardSuccess } from '../components/wizard'
+
+const TOTAL_STEPS = 4
+
+const CONDITIONS = [
+  { value: 'new', label: 'Brand New', description: 'Never used, in original packaging' },
+  { value: 'like-new', label: 'Like New', description: 'Used once or twice, looks perfect' },
+  { value: 'excellent', label: 'Excellent', description: 'Light use, no visible wear' },
+  { value: 'good', label: 'Good', description: 'Normal use, minor wear' },
+  { value: 'fair', label: 'Fair', description: 'Noticeable wear, still functional' },
+]
 
 export default function SubmitItemPage() {
   const { slug } = useParams<{ slug: string }>()
@@ -16,6 +27,8 @@ export default function SubmitItemPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [currentStep, setCurrentStep] = useState(1)
+  const [submittedItem, setSubmittedItem] = useState<{ title: string } | null>(null)
 
   const [accessCode, setAccessCode] = useState(searchParams.get('code') || '')
   const [accessVerified, setAccessVerified] = useState(false)
@@ -94,8 +107,7 @@ export default function SubmitItemPage() {
     setImagePreviews((prev) => prev.filter((_, i) => i !== index))
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = async () => {
     if (!event) return
 
     setIsSubmitting(true)
@@ -123,24 +135,30 @@ export default function SubmitItemPage() {
           )
         } catch (imgError) {
           console.error('Image upload failed:', imgError)
-          // Don't fail the whole submission
         }
       }
 
-      navigate(`/events/${slug}/submit/success`, {
-        state: { itemTitle: title },
-      })
+      setSubmittedItem({ title })
+      setCurrentStep(TOTAL_STEPS + 1) // Success step
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to submit item')
       setIsSubmitting(false)
     }
   }
 
+  const nextStep = () => setCurrentStep((s) => Math.min(s + 1, TOTAL_STEPS))
+  const prevStep = () => setCurrentStep((s) => Math.max(s - 1, 1))
+
+  // Validation
+  const isStep1Valid = title.trim().length > 0
+  const isStep2Valid = true // Condition is optional
+  const isStep3Valid = true // Images are optional
+
   if (loading) {
     return (
-      <div className="max-w-2xl mx-auto px-4 py-8">
-        <div className="flex justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sage"></div>
+      <div className="min-h-screen bg-clay-bg flex items-center justify-center">
+        <div className="w-16 h-16 rounded-clay bg-clay-mint shadow-clay flex items-center justify-center animate-pulse">
+          <div className="w-8 h-8 border-3 border-charcoal border-t-transparent rounded-full animate-spin" />
         </div>
       </div>
     )
@@ -148,9 +166,15 @@ export default function SubmitItemPage() {
 
   if (error && !event) {
     return (
-      <div className="max-w-2xl mx-auto px-4 py-8">
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-          {error}
+      <div className="min-h-screen bg-clay-bg flex items-center justify-center p-4">
+        <div className="clay-card p-8 text-center max-w-md">
+          <div className="w-16 h-16 rounded-full bg-clay-coral/20 flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-clay-coral" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h1 className="font-display text-2xl font-black text-charcoal mb-2">Oops!</h1>
+          <p className="text-charcoal-light">{error}</p>
         </div>
       </div>
     )
@@ -158,9 +182,10 @@ export default function SubmitItemPage() {
 
   if (!event) {
     return (
-      <div className="max-w-2xl mx-auto px-4 py-8">
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-          Event not found
+      <div className="min-h-screen bg-clay-bg flex items-center justify-center p-4">
+        <div className="clay-card p-8 text-center max-w-md">
+          <h1 className="font-display text-2xl font-black text-charcoal mb-2">Event Not Found</h1>
+          <p className="text-charcoal-light">We couldn't find the auction you're looking for.</p>
         </div>
       </div>
     )
@@ -172,32 +197,26 @@ export default function SubmitItemPage() {
 
   if (deadlinePassed || eventEnded) {
     return (
-      <div className="max-w-2xl mx-auto px-4 py-16 text-center">
-        <svg
-          className="w-16 h-16 text-gray-400 mx-auto mb-4"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={1.5}
-            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-          />
-        </svg>
-        <h1 className="text-2xl font-bold text-charcoal mb-2">Submissions Closed</h1>
-        <p className="text-gray-600 mb-6">
-          {eventEnded
-            ? 'This auction has ended.'
-            : 'The submission deadline for this event has passed.'}
-        </p>
-        <a
-          href={`/events/${slug}`}
-          className="inline-block px-6 py-3 bg-sage text-white font-semibold rounded-xl hover:bg-sage/90"
-        >
-          View Auction
-        </a>
+      <div className="min-h-screen bg-clay-bg flex items-center justify-center p-4">
+        <div className="clay-card p-8 md:p-12 text-center max-w-md">
+          <div className="w-20 h-20 rounded-full bg-clay-butter flex items-center justify-center mx-auto mb-6">
+            <svg className="w-10 h-10 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h1 className="font-display text-3xl font-black text-charcoal mb-3">Submissions Closed</h1>
+          <p className="text-charcoal-light text-lg mb-8">
+            {eventEnded
+              ? 'This auction has ended.'
+              : 'The submission deadline for this event has passed.'}
+          </p>
+          <Link
+            to={`/events/${slug}`}
+            className="clay-button bg-clay-mint text-charcoal font-bold px-6 py-3"
+          >
+            View Auction
+          </Link>
+        </div>
       </div>
     )
   }
@@ -205,29 +224,21 @@ export default function SubmitItemPage() {
   // Access code required
   if (event.accessCode && !accessVerified) {
     return (
-      <div className="max-w-md mx-auto px-4 py-16">
-        <div className="bg-white rounded-xl border border-sage/20 p-8 text-center">
-          <svg
-            className="w-16 h-16 text-sage mx-auto mb-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={1.5}
-              d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-            />
-          </svg>
-          <h1 className="text-2xl font-bold text-charcoal mb-2">Submit an Item</h1>
-          <p className="text-gray-600 mb-6">
-            Enter the access code to submit an item to <strong>{event.name}</strong>
+      <div className="min-h-screen bg-clay-bg flex items-center justify-center p-4">
+        <div className="clay-card p-8 md:p-12 text-center max-w-md">
+          <div className="w-20 h-20 rounded-full bg-clay-lavender flex items-center justify-center mx-auto mb-6">
+            <svg className="w-10 h-10 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+          </div>
+          <h1 className="font-display text-3xl font-black text-charcoal mb-3">Enter Access Code</h1>
+          <p className="text-charcoal-light text-lg mb-8">
+            This auction requires an access code to submit items to <strong>{event.name}</strong>
           </p>
 
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
-              {error}
+            <div className="mb-6 p-4 rounded-clay bg-clay-coral/20 border-2 border-clay-coral/50">
+              <p className="text-clay-coral font-bold">{error}</p>
             </div>
           )}
 
@@ -236,13 +247,13 @@ export default function SubmitItemPage() {
               type="text"
               value={accessCode}
               onChange={(e) => setAccessCode(e.target.value.toUpperCase())}
-              placeholder="Enter access code"
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-sage focus:ring-0 text-center font-mono text-lg uppercase"
+              placeholder="Enter code"
+              className="clay-input w-full text-center text-xl font-mono uppercase py-4"
             />
             <button
               onClick={handleVerifyAccess}
               disabled={!accessCode || verifyingAccess}
-              className="w-full py-3 bg-sage text-white font-semibold rounded-xl hover:bg-sage/90 disabled:opacity-50"
+              className="clay-button bg-clay-mint text-charcoal font-bold w-full py-4 text-lg disabled:opacity-50"
             >
               {verifyingAccess ? 'Verifying...' : 'Continue'}
             </button>
@@ -255,242 +266,328 @@ export default function SubmitItemPage() {
   // Not logged in
   if (!isAuthenticated) {
     return (
-      <div className="max-w-md mx-auto px-4 py-16">
-        <div className="bg-white rounded-xl border border-sage/20 p-8 text-center">
-          <svg
-            className="w-16 h-16 text-sage mx-auto mb-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={1.5}
-              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-            />
-          </svg>
-          <h1 className="text-2xl font-bold text-charcoal mb-2">Sign In Required</h1>
-          <p className="text-gray-600 mb-6">
-            Please sign in to submit an item to <strong>{event.name}</strong>
+      <div className="min-h-screen bg-clay-bg flex items-center justify-center p-4">
+        <div className="clay-card p-8 md:p-12 text-center max-w-md">
+          <div className="w-20 h-20 rounded-full bg-clay-sky flex items-center justify-center mx-auto mb-6">
+            <svg className="w-10 h-10 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+          </div>
+          <h1 className="font-display text-3xl font-black text-charcoal mb-3">Sign In to Continue</h1>
+          <p className="text-charcoal-light text-lg mb-8">
+            You need to sign in to submit an item to <strong>{event.name}</strong>
           </p>
           <button
             onClick={handleLogin}
-            className="w-full py-3 bg-sage text-white font-semibold rounded-xl hover:bg-sage/90"
+            className="clay-button bg-clay-mint text-charcoal font-bold w-full py-4 text-lg"
           >
-            Sign In to Continue
+            Sign In
           </button>
         </div>
       </div>
     )
   }
 
-  return (
-    <div className="max-w-2xl mx-auto px-4 py-8">
-      <div className="mb-8">
-        <a href={`/events/${slug}`} className="text-sage hover:underline">
-          &larr; Back to {event.name}
-        </a>
-        <h1 className="font-display text-3xl font-bold text-charcoal mt-2">
-          Submit an Item
-        </h1>
-        <p className="text-gray-600 mt-1">
-          Donate an item to <strong>{event.name}</strong>
-        </p>
-      </div>
+  // Success screen
+  if (submittedItem) {
+    return (
+      <WizardSuccess
+        title="Item submitted!"
+        message={`"${submittedItem.title}" has been submitted to ${event.name}. The organizer will review it before it appears in the auction.`}
+      >
+        <Link
+          to={`/events/${slug}`}
+          className="clay-button bg-clay-mint text-charcoal font-bold px-8 py-4 text-lg inline-flex items-center gap-2"
+        >
+          View Auction
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+          </svg>
+        </Link>
+        <button
+          onClick={() => {
+            setCurrentStep(1)
+            setTitle('')
+            setDescription('')
+            setCondition('')
+            setStartingPrice('')
+            setBuyNowPrice('')
+            setSelectedImages([])
+            setImagePreviews([])
+            setSubmittedItem(null)
+          }}
+          className="block text-charcoal-light font-bold hover:text-charcoal transition-colors mt-4 mx-auto"
+        >
+          Submit another item
+        </button>
+      </WizardSuccess>
+    )
+  }
 
-      {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600">
-          {error}
-        </div>
-      )}
+  // Step 1: Item Details
+  if (currentStep === 1) {
+    return (
+      <WizardStep
+        stepNumber={1}
+        totalSteps={TOTAL_STEPS}
+        title="What are you donating?"
+        subtitle={`Help raise funds for ${event.name}`}
+        onNext={nextStep}
+        showBack={false}
+        isValid={isStep1Valid}
+        encouragement={title ? `"${title}" sounds like a great item!` : undefined}
+        icon={
+          <svg className="w-10 h-10 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+          </svg>
+        }
+      >
+        <WizardInput
+          label="What is the item called?"
+          hint="Be descriptive so bidders know what they're getting"
+          placeholder="e.g., Vintage Record Collection, Handmade Quilt"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          required
+          success={title.length > 0}
+          successMessage="Great name!"
+        />
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="bg-white rounded-xl border border-sage/20 p-6 space-y-4">
-          <h2 className="text-lg font-semibold text-charcoal">Item Details</h2>
+        <WizardTextarea
+          label="Tell us more about it (optional)"
+          hint="Include details like brand, size, history, or why it's special"
+          placeholder="This is a collection of 50 vinyl records from the 1960s and 70s, all in excellent condition..."
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+        />
+      </WizardStep>
+    )
+  }
 
-          <div>
-            <label className="block text-sm font-medium text-charcoal mb-2">
-              Item Title <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              required
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-sage focus:ring-0"
-              placeholder="e.g., Vintage Record Collection"
+  // Step 2: Condition
+  if (currentStep === 2) {
+    return (
+      <WizardStep
+        stepNumber={2}
+        totalSteps={TOTAL_STEPS}
+        title="What condition is it in?"
+        subtitle="Help bidders know what to expect"
+        onNext={nextStep}
+        onBack={prevStep}
+        isValid={isStep2Valid}
+        showSkip={!condition}
+        onSkip={nextStep}
+        encouragement={condition ? "Thanks for being honest about the condition!" : undefined}
+        icon={
+          <svg className="w-10 h-10 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        }
+      >
+        <WizardOptionGrid columns={1}>
+          {CONDITIONS.map((c) => (
+            <WizardOptionCard
+              key={c.value}
+              title={c.label}
+              description={c.description}
+              selected={condition === c.value}
+              onClick={() => setCondition(c.value)}
             />
-          </div>
+          ))}
+        </WizardOptionGrid>
+      </WizardStep>
+    )
+  }
 
-          <div>
-            <label className="block text-sm font-medium text-charcoal mb-2">
-              Description
-            </label>
-            <textarea
-              rows={4}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-sage focus:ring-0"
-              placeholder="Describe your item in detail..."
-            />
-          </div>
+  // Step 3: Photos
+  if (currentStep === 3) {
+    return (
+      <WizardStep
+        stepNumber={3}
+        totalSteps={TOTAL_STEPS}
+        title="Add some photos"
+        subtitle="Good photos help items sell for more!"
+        onNext={nextStep}
+        onBack={prevStep}
+        isValid={isStep3Valid}
+        showSkip={selectedImages.length === 0}
+        onSkip={nextStep}
+        encouragement={selectedImages.length > 0 ? `${selectedImages.length} photo${selectedImages.length !== 1 ? 's' : ''} added - looking good!` : undefined}
+        icon={
+          <svg className="w-10 h-10 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+        }
+      >
+        {imagePreviews.length > 0 ? (
+          <div className="space-y-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {imagePreviews.map((preview, index) => (
+                <div key={index} className="relative group aspect-square">
+                  <img
+                    src={preview}
+                    alt={`Preview ${index + 1}`}
+                    className="w-full h-full object-cover rounded-clay shadow-clay-sm"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeImage(index)}
+                    className="absolute top-2 right-2 w-8 h-8 bg-clay-coral text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-clay-sm"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                  {index === 0 && (
+                    <div className="absolute bottom-2 left-2 px-2 py-1 bg-clay-mint rounded-clay-pill text-xs font-bold text-charcoal shadow-clay-sm">
+                      Primary
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
 
-          <div>
-            <label className="block text-sm font-medium text-charcoal mb-2">
-              Condition
-            </label>
-            <select
-              value={condition}
-              onChange={(e) => setCondition(e.target.value)}
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-sage focus:ring-0"
-            >
-              <option value="">Select condition</option>
-              <option value="new">New</option>
-              <option value="like-new">Like New</option>
-              <option value="excellent">Excellent</option>
-              <option value="good">Good</option>
-              <option value="fair">Fair</option>
-            </select>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl border border-sage/20 p-6 space-y-4">
-          <h2 className="text-lg font-semibold text-charcoal">Pricing (Optional)</h2>
-          <p className="text-sm text-gray-500">
-            Suggest a starting price or leave blank for the organizer to decide
-          </p>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-charcoal mb-2">
-                Suggested Starting Price
+            {selectedImages.length < 20 && (
+              <label className="block clay-card p-6 text-center cursor-pointer hover:shadow-clay-lg transition-shadow">
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="hidden"
+                />
+                <span className="text-charcoal font-bold">+ Add more photos</span>
+                <span className="text-charcoal-light ml-2">({20 - selectedImages.length} remaining)</span>
               </label>
+            )}
+          </div>
+        ) : (
+          <label className="block clay-card p-12 text-center cursor-pointer hover:shadow-clay-lg transition-shadow">
+            <input
+              type="file"
+              multiple
+              accept="image/*"
+              onChange={handleImageChange}
+              className="hidden"
+            />
+            <div className="w-16 h-16 rounded-full bg-clay-surface mx-auto mb-4 flex items-center justify-center">
+              <svg className="w-8 h-8 text-charcoal-light" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <p className="text-charcoal font-bold text-lg mb-1">Click to upload photos</p>
+            <p className="text-charcoal-light">PNG, JPG, GIF up to 10MB each (max 20 photos)</p>
+          </label>
+        )}
+      </WizardStep>
+    )
+  }
+
+  // Step 4: Pricing & Review
+  if (currentStep === 4) {
+    return (
+      <WizardStep
+        stepNumber={4}
+        totalSteps={TOTAL_STEPS}
+        title="Ready to submit?"
+        subtitle="Suggest a starting price or let the organizer decide"
+        onNext={handleSubmit}
+        onBack={prevStep}
+        nextLabel="Submit Item"
+        isValid={!error}
+        isLoading={isSubmitting}
+        icon={
+          <svg className="w-10 h-10 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+        }
+      >
+        {error && (
+          <div className="p-4 rounded-clay bg-clay-coral/20 border-2 border-clay-coral/50">
+            <p className="text-clay-coral font-bold">{error}</p>
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <label className="text-charcoal font-bold text-lg">Suggested starting price</label>
+            <p className="text-charcoal-light text-sm">Optional - organizer may adjust</p>
+            <div className="relative">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-charcoal-light font-bold text-lg">$</span>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={startingPrice}
+                onChange={(e) => setStartingPrice(e.target.value)}
+                className="clay-input w-full text-lg py-4 pl-8"
+                placeholder="0"
+              />
+            </div>
+          </div>
+
+          {event.buyNowEnabled && (
+            <div className="space-y-2">
+              <label className="text-charcoal font-bold text-lg">Buy Now price</label>
+              <p className="text-charcoal-light text-sm">Optional instant purchase price</p>
               <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-charcoal-light font-bold text-lg">$</span>
                 <input
                   type="number"
                   min="0"
                   step="0.01"
-                  value={startingPrice}
-                  onChange={(e) => setStartingPrice(e.target.value)}
-                  className="w-full pl-8 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-sage focus:ring-0"
+                  value={buyNowPrice}
+                  onChange={(e) => setBuyNowPrice(e.target.value)}
+                  className="clay-input w-full text-lg py-4 pl-8"
                   placeholder="0"
                 />
               </div>
             </div>
-            {event.buyNowEnabled && (
-              <div>
-                <label className="block text-sm font-medium text-charcoal mb-2">
-                  Buy Now Price
-                </label>
-                <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">$</span>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={buyNowPrice}
-                    onChange={(e) => setBuyNowPrice(e.target.value)}
-                    className="w-full pl-8 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-sage focus:ring-0"
-                    placeholder="0"
-                  />
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl border border-sage/20 p-6">
-          <h2 className="text-lg font-semibold text-charcoal mb-4">Photos</h2>
-          <p className="text-sm text-gray-500 mb-4">
-            Add up to 20 photos of your item. Good photos help items sell for more!
-          </p>
-
-          {imagePreviews.length > 0 ? (
-            <div className="space-y-4">
-              <div className="grid grid-cols-3 gap-4">
-                {imagePreviews.map((preview, index) => (
-                  <div key={index} className="relative group aspect-square">
-                    <img
-                      src={preview}
-                      alt={`Preview ${index + 1}`}
-                      className="w-full h-full object-cover rounded-xl border-2 border-gray-200"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeImage(index)}
-                      className="absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-full
-                                 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                    {index === 0 && (
-                      <div className="absolute bottom-2 left-2 bg-sage text-white text-xs px-2 py-1 rounded">
-                        Primary
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-              {selectedImages.length < 20 && (
-                <label className="block border-2 border-dashed border-gray-200 rounded-xl p-4 text-center cursor-pointer hover:border-sage/50">
-                  <input
-                    type="file"
-                    multiple
-                    accept="image/*"
-                    onChange={handleImageChange}
-                    className="hidden"
-                  />
-                  <span className="text-sage font-medium">+ Add more photos</span>
-                  <span className="text-gray-500 text-sm ml-2">
-                    ({20 - selectedImages.length} remaining)
-                  </span>
-                </label>
-              )}
-            </div>
-          ) : (
-            <label className="block border-2 border-dashed border-gray-200 rounded-xl p-8 text-center cursor-pointer hover:border-sage/50">
-              <input
-                type="file"
-                multiple
-                accept="image/*"
-                onChange={handleImageChange}
-                className="hidden"
-              />
-              <svg
-                className="w-12 h-12 text-gray-400 mx-auto mb-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                />
-              </svg>
-              <p className="text-gray-600">Click to upload photos</p>
-              <p className="text-xs text-gray-500 mt-1">PNG, JPG, GIF up to 10MB each</p>
-            </label>
           )}
         </div>
 
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="w-full py-4 bg-sage text-white font-semibold rounded-xl hover:bg-sage/90 disabled:opacity-50 transition-colors"
-        >
-          {isSubmitting ? 'Submitting...' : 'Submit Item'}
-        </button>
+        <div className="mt-8 space-y-4">
+          <h3 className="font-bold text-charcoal text-lg">Review your submission</h3>
 
-        <p className="text-sm text-gray-500 text-center">
-          Your submission will be reviewed by the event organizer before appearing in the auction.
-        </p>
-      </form>
-    </div>
-  )
+          <div className="clay-card p-5">
+            <h4 className="font-bold text-charcoal-light text-sm uppercase tracking-wider mb-2">Item</h4>
+            <p className="font-bold text-charcoal text-xl">{title}</p>
+            {condition && (
+              <p className="text-charcoal-light mt-1">
+                Condition: {CONDITIONS.find((c) => c.value === condition)?.label || condition}
+              </p>
+            )}
+          </div>
+
+          {selectedImages.length > 0 && (
+            <div className="clay-card p-5">
+              <h4 className="font-bold text-charcoal-light text-sm uppercase tracking-wider mb-3">Photos</h4>
+              <div className="flex gap-2 overflow-x-auto pb-2">
+                {imagePreviews.slice(0, 5).map((preview, index) => (
+                  <img
+                    key={index}
+                    src={preview}
+                    alt={`Preview ${index + 1}`}
+                    className="w-16 h-16 object-cover rounded-clay shadow-clay-sm flex-shrink-0"
+                  />
+                ))}
+                {selectedImages.length > 5 && (
+                  <div className="w-16 h-16 rounded-clay bg-clay-surface flex items-center justify-center flex-shrink-0">
+                    <span className="font-bold text-charcoal-light">+{selectedImages.length - 5}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          <p className="text-charcoal-light text-center text-sm">
+            Your submission will be reviewed by the organizer before appearing in the auction.
+          </p>
+        </div>
+      </WizardStep>
+    )
+  }
+
+  return null
 }
