@@ -76,6 +76,8 @@ export default function CreateOrganizationPage() {
   const [logoFile, setLogoFile] = useState<File | null>(null)
   const [logoPreview, setLogoPreview] = useState<string | null>(null)
   const [createdOrg, setCreatedOrg] = useState<{ id: string; slug: string; name: string } | null>(null)
+  const [stripeLoading, setStripeLoading] = useState(false)
+  const [stripeError, setStripeError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [formData, setFormData] = useState<CreateOrganizationRequest>({
@@ -186,8 +188,150 @@ export default function CreateOrganizationPage() {
     return ''
   }
 
-  // Step 6: Success
+  const handleStripeConnect = async () => {
+    if (!createdOrg) return
+    setStripeLoading(true)
+    setStripeError(null)
+    try {
+      const { url } = await apiClient.startStripeConnect(createdOrg.id)
+      // Redirect to Stripe onboarding
+      window.location.href = url
+    } catch (err) {
+      setStripeError(err instanceof Error ? err.message : 'Failed to start Stripe setup')
+      setStripeLoading(false)
+    }
+  }
+
+  // Step 6: Set Up Payments (Stripe Connect)
   if (step === 6 && createdOrg) {
+    return (
+      <WizardStep
+        stepNumber={6}
+        totalSteps={6}
+        title="Let's set up payments!"
+        subtitle="Connect with Stripe to start accepting donations and auction payments"
+        onNext={() => setStep(7)}
+        onBack={() => setStep(5)}
+        onSkip={() => setStep(7)}
+        isValid={true}
+        encouragement="You're almost there! This is the last important step."
+        icon={
+          <svg className="w-8 h-8 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+          </svg>
+        }
+      >
+        {stripeError && (
+          <div className="bg-clay-coral/20 border border-clay-coral text-charcoal px-4 py-3 rounded-clay mb-6">
+            {stripeError}
+          </div>
+        )}
+
+        {/* Friendly explanation card */}
+        <div className="clay-card bg-clay-sky/30 p-6 mb-6">
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 rounded-full bg-clay-sky flex items-center justify-center flex-shrink-0">
+              <svg className="w-6 h-6 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="font-bold text-charcoal mb-1">Why do we need this?</h3>
+              <p className="text-charcoal-light text-sm">
+                To accept payments from your auction bidders and send you the funds, we use Stripe - the same secure payment system used by Amazon, Google, and millions of businesses.
+                It takes just a few minutes to set up!
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* What you'll need */}
+        <div className="space-y-3 mb-6">
+          <h3 className="font-bold text-charcoal">What you'll need:</h3>
+
+          <div className="flex items-start gap-3 text-sm">
+            <div className="w-6 h-6 rounded-full bg-clay-mint flex items-center justify-center flex-shrink-0 mt-0.5">
+              <svg className="w-3.5 h-3.5 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <p className="text-charcoal-light">
+              <span className="font-medium text-charcoal">Basic organization info</span> - Name, address, and contact details
+            </p>
+          </div>
+
+          <div className="flex items-start gap-3 text-sm">
+            <div className="w-6 h-6 rounded-full bg-clay-mint flex items-center justify-center flex-shrink-0 mt-0.5">
+              <svg className="w-3.5 h-3.5 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <p className="text-charcoal-light">
+              <span className="font-medium text-charcoal">Bank account details</span> - Where you'd like funds deposited
+            </p>
+          </div>
+
+          <div className="flex items-start gap-3 text-sm">
+            <div className="w-6 h-6 rounded-full bg-clay-mint flex items-center justify-center flex-shrink-0 mt-0.5">
+              <svg className="w-3.5 h-3.5 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <p className="text-charcoal-light">
+              <span className="font-medium text-charcoal">A few minutes</span> - The setup is quick and secure
+            </p>
+          </div>
+        </div>
+
+        {/* Main CTA button */}
+        <button
+          onClick={handleStripeConnect}
+          disabled={stripeLoading}
+          className="w-full clay-button bg-clay-mint text-charcoal font-bold text-lg py-4 flex items-center justify-center gap-3 hover:shadow-clay-lg transition-all disabled:opacity-50"
+        >
+          {stripeLoading ? (
+            <>
+              <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              <span>Connecting to Stripe...</span>
+            </>
+          ) : (
+            <>
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              <span>Set Up Payments with Stripe</span>
+            </>
+          )}
+        </button>
+
+        {/* Reassurance */}
+        <div className="mt-6 p-4 bg-clay-surface rounded-clay border border-charcoal/10">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-clay-lavender flex items-center justify-center flex-shrink-0">
+              <svg className="w-5 h-5 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            </div>
+            <p className="text-sm text-charcoal-light">
+              <span className="font-medium text-charcoal">100% secure:</span> You'll be taken to Stripe's official website.
+              We never see your banking details - they're encrypted and stored securely by Stripe.
+            </p>
+          </div>
+        </div>
+
+        {/* Skip option reminder */}
+        <p className="mt-6 text-center text-charcoal-light text-sm">
+          Not ready yet? You can skip this and set up payments later from your dashboard.
+        </p>
+      </WizardStep>
+    )
+  }
+
+  // Step 7: Success
+  if (step === 7 && createdOrg) {
     return (
       <WizardSuccess
         title="You Did It!"

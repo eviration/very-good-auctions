@@ -347,6 +347,32 @@ class ApiClient {
     return this.request('/organizations/my/list')
   }
 
+  // Stripe Connect
+  async startStripeConnect(orgId: string): Promise<{ url: string }> {
+    return this.request(`/organizations/${orgId}/stripe-connect`, {
+      method: 'POST',
+    })
+  }
+
+  async getStripeConnectStatus(orgId: string): Promise<{
+    accountId: string | null
+    onboardingComplete: boolean
+    chargesEnabled: boolean
+    payoutsEnabled: boolean
+    detailsSubmitted: boolean
+    requirements?: {
+      currentlyDue: string[]
+      eventuallyDue: string[]
+      pastDue: string[]
+    }
+  }> {
+    return this.request(`/organizations/${orgId}/stripe-status`)
+  }
+
+  async getStripeDashboardLink(orgId: string): Promise<{ url: string }> {
+    return this.request(`/organizations/${orgId}/stripe-dashboard`)
+  }
+
   // Organization Members
   async getOrganizationMembers(orgId: string): Promise<OrganizationMember[]> {
     return this.request(`/organizations/${orgId}/members`)
