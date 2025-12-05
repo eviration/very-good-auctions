@@ -1035,9 +1035,19 @@ router.post(
         throw forbidden('Only owners and admins can manage Stripe Connect')
       }
 
+      // Fetch organization slug for the return URL
+      const orgResult = await dbQuery(
+        'SELECT slug FROM organizations WHERE id = @id',
+        { id }
+      )
+      if (orgResult.recordset.length === 0) {
+        throw notFound('Organization not found')
+      }
+      const orgSlug = orgResult.recordset[0].slug
+
       const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000'
-      const returnUrl = `${frontendUrl}/organizations/${id}/manage?stripe=success`
-      const refreshUrl = `${frontendUrl}/organizations/${id}/manage?stripe=refresh`
+      const returnUrl = `${frontendUrl}/organizations/${orgSlug}/manage?stripe=success`
+      const refreshUrl = `${frontendUrl}/organizations/${orgSlug}/manage?stripe=refresh`
 
       const onboardingUrl = await createOnboardingLink(id, returnUrl, refreshUrl)
 
