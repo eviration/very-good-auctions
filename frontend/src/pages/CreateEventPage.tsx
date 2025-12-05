@@ -616,6 +616,93 @@ export default function CreateEventPage() {
 
   // Step 6: Review & Create
   if (currentStep === 6) {
+    // Determine which section has the error based on error message keywords
+    const getErrorSection = (errorMsg: string | null): 'name' | 'org' | 'schedule' | 'settings' | 'tier' | null => {
+      if (!errorMsg) return null
+      const lowerError = errorMsg.toLowerCase()
+      if (lowerError.includes('name')) return 'name'
+      if (lowerError.includes('organization')) return 'org'
+      if (lowerError.includes('deadline') || lowerError.includes('start') || lowerError.includes('end') || lowerError.includes('date') || lowerError.includes('time')) return 'schedule'
+      if (lowerError.includes('bid') || lowerError.includes('increment') || lowerError.includes('auction type')) return 'settings'
+      if (lowerError.includes('tier') || lowerError.includes('plan')) return 'tier'
+      return null
+    }
+
+    const errorSection = getErrorSection(error)
+
+    // Helper to determine step number for each section
+    const sectionToStep: Record<string, number> = {
+      name: 2,
+      org: 1,
+      schedule: 3,
+      settings: 4,
+      tier: 5,
+    }
+
+    // Clickable review card component
+    const ReviewCard = ({
+      section,
+      title,
+      children
+    }: {
+      section: 'name' | 'org' | 'schedule' | 'settings' | 'tier'
+      title: string
+      children: React.ReactNode
+    }) => {
+      const hasError = errorSection === section
+      const stepNumber = sectionToStep[section]
+
+      return (
+        <button
+          type="button"
+          onClick={() => {
+            setError(null) // Clear error when navigating away
+            setCurrentStep(stepNumber)
+          }}
+          className={`w-full text-left clay-card p-5 transition-all group ${
+            hasError
+              ? 'ring-2 ring-clay-coral bg-clay-coral/10 hover:bg-clay-coral/20'
+              : 'hover:shadow-clay-lg hover:scale-[1.01]'
+          }`}
+        >
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <h3 className={`font-bold text-sm uppercase tracking-wider mb-2 ${
+                hasError ? 'text-clay-coral' : 'text-charcoal-light'
+              }`}>
+                {title}
+                {hasError && (
+                  <span className="ml-2 inline-flex items-center">
+                    <svg className="w-4 h-4 text-clay-coral" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                  </span>
+                )}
+              </h3>
+              {children}
+            </div>
+            <div className={`ml-4 p-2 rounded-full transition-colors ${
+              hasError
+                ? 'bg-clay-coral/20 text-clay-coral'
+                : 'bg-clay-surface text-charcoal-light group-hover:bg-clay-mint group-hover:text-charcoal'
+            }`}>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+              </svg>
+            </div>
+          </div>
+          {hasError && (
+            <p className="mt-2 text-sm text-clay-coral font-medium flex items-center gap-1">
+              <span>Click to fix this issue</span>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </p>
+          )}
+        </button>
+      )
+    }
+
     return (
       <WizardStep
         stepNumber={6}
@@ -625,7 +712,7 @@ export default function CreateEventPage() {
         onNext={handleSubmit}
         onBack={prevStep}
         nextLabel="Create Auction"
-        isValid={!error}
+        isValid={true}
         isLoading={isSubmitting}
         icon={
           <svg className="w-10 h-10 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -634,46 +721,58 @@ export default function CreateEventPage() {
         }
       >
         {error && (
-          <div className="p-4 rounded-clay bg-clay-coral/20 border-2 border-clay-coral/50">
-            <p className="text-clay-coral font-bold">{error}</p>
+          <div className="p-4 rounded-clay bg-clay-coral/20 border-2 border-clay-coral/50 mb-2">
+            <div className="flex items-start gap-3">
+              <svg className="w-6 h-6 text-clay-coral flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <div>
+                <p className="text-clay-coral font-bold">{error}</p>
+                {errorSection && (
+                  <p className="text-charcoal-light text-sm mt-1">
+                    Click the highlighted section below to fix this.
+                  </p>
+                )}
+              </div>
+            </div>
           </div>
         )}
 
         <div className="space-y-4">
-          <div className="clay-card p-5">
-            <h3 className="font-bold text-charcoal-light text-sm uppercase tracking-wider mb-2">Event Name</h3>
+          <ReviewCard section="name" title="Event Name">
             <p className="font-bold text-charcoal text-xl">{eventName}</p>
-          </div>
+          </ReviewCard>
 
           {(createNewOrg && newOrgName) || selectedOrgId ? (
-            <div className="clay-card p-5">
-              <h3 className="font-bold text-charcoal-light text-sm uppercase tracking-wider mb-2">Organization</h3>
+            <ReviewCard section="org" title="Organization">
               <p className="font-bold text-charcoal text-xl">
                 {createNewOrg ? newOrgName : myOrganizations.find((o) => o.id === selectedOrgId)?.name}
               </p>
-            </div>
+            </ReviewCard>
           ) : null}
 
-          <div className="clay-card p-5">
-            <h3 className="font-bold text-charcoal-light text-sm uppercase tracking-wider mb-2">Schedule</h3>
+          <ReviewCard section="schedule" title="Schedule">
             <p className="text-charcoal">
               <span className="font-bold">{new Date(startDate).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</span> at {startTime}
               <span className="text-charcoal-light"> to </span>
               <span className="font-bold">{new Date(endDate).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</span> at {endTime}
             </p>
-          </div>
+            {submissionDeadline && (
+              <p className="text-charcoal-light text-sm mt-1">
+                Submission deadline: {new Date(submissionDeadline).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+              </p>
+            )}
+          </ReviewCard>
 
-          <div className="clay-card p-5">
-            <h3 className="font-bold text-charcoal-light text-sm uppercase tracking-wider mb-2">Auction Type</h3>
+          <ReviewCard section="settings" title="Auction Type">
             <p className="font-bold text-charcoal text-xl capitalize">{auctionType}</p>
             <p className="text-charcoal-light">
               {incrementType === 'fixed' ? `$${incrementValue}` : `${incrementValue}%`} bid increments
               {buyNowEnabled && ' • Buy Now enabled'}
             </p>
-          </div>
+          </ReviewCard>
 
-          <div className="clay-card p-5">
-            <h3 className="font-bold text-charcoal-light text-sm uppercase tracking-wider mb-2">Plan</h3>
+          <ReviewCard section="tier" title="Plan">
             <div className="flex items-center justify-between">
               <p className="font-bold text-charcoal text-xl">{tierInfo[tier].name}</p>
               {pricingTiers?.[tier] && (
@@ -682,8 +781,12 @@ export default function CreateEventPage() {
                 </span>
               )}
             </div>
-          </div>
+          </ReviewCard>
         </div>
+
+        <p className="text-center text-charcoal-light text-sm mt-4">
+          Click any section above to make changes
+        </p>
       </WizardStep>
     )
   }
