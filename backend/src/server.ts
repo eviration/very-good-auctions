@@ -19,7 +19,7 @@ import { feedbackRoutes } from './routes/feedback.js'
 import { adminRoutes } from './routes/admin.js'
 import { errorHandler } from './middleware/errorHandler.js'
 import { requestLogger } from './middleware/requestLogger.js'
-import { generalLimiter, adminLimiter, paymentLimiter, sensitiveLimiter } from './middleware/rateLimit.js'
+import { generalLimiter, adminLimiter, paymentLimiter } from './middleware/rateLimit.js'
 import { initializeDatabase } from './config/database.js'
 import { initializeSignalR } from './services/signalr.js'
 import { sendEmailWithDetails } from './services/email.js'
@@ -115,7 +115,7 @@ app.use('/api', eventBidRoutes)
 app.use('/api/platform-fees', platformFeeRoutes)
 app.use('/api/notifications', notificationRoutes)
 app.use('/api/admin/payouts', adminLimiter, adminPayoutRoutes) // Admin rate limit
-app.use('/api', sensitiveLimiter, complianceRoutes) // Very strict for tax/compliance
+app.use('/api', complianceRoutes) // Compliance routes (tax, agreements) - protected by auth and general limiter
 app.use('/api/feedback', feedbackRoutes)
 app.use('/api/admin', adminLimiter, adminRoutes) // Admin rate limit
 

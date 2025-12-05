@@ -28,7 +28,15 @@ export default function Header() {
           if (!cancelled) {
             setIsAdmin(result.isPlatformAdmin)
           }
-        } catch (error) {
+        } catch (error: unknown) {
+          // Don't retry on 429 (rate limit) or 403 (forbidden) - these are final
+          const apiError = error as { status?: number }
+          if (apiError.status === 429 || apiError.status === 403) {
+            if (!cancelled) {
+              setIsAdmin(false)
+            }
+            return
+          }
           // Retry up to 3 times with increasing delays (500ms, 1000ms, 2000ms)
           if (attempt < 3 && !cancelled) {
             const delay = 500 * Math.pow(2, attempt)
