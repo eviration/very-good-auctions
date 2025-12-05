@@ -21,11 +21,12 @@ const tenantId = process.env.ENTRA_TENANT_ID || ''
 const clientId = process.env.ENTRA_CLIENT_ID || ''
 
 // JWKS URI for Entra External ID (CIAM)
-// Format: https://{tenant-subdomain}.ciamlogin.com/{tenant-id}/discovery/v2.0/keys
-const jwksUri = `https://${tenantName}.ciamlogin.com/${tenantId}/discovery/v2.0/keys`
+// Format: https://{tenant-id}.ciamlogin.com/{tenant-id}/discovery/v2.0/keys
+const jwksUri = `https://${tenantId}.ciamlogin.com/${tenantId}/discovery/v2.0/keys`
 
 // Expected issuer for Entra External ID (CIAM)
-const expectedIssuer = `https://${tenantName}.ciamlogin.com/${tenantId}/v2.0`
+// Note: CIAM uses tenant ID as subdomain, not tenant name
+const expectedIssuer = `https://${tenantId}.ciamlogin.com/${tenantId}/v2.0`
 
 // JWKS client for fetching public keys
 const client = jwksClient({
