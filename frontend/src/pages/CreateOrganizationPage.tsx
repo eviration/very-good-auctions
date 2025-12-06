@@ -209,12 +209,12 @@ export default function CreateOrganizationPage() {
         stepNumber={6}
         totalSteps={6}
         title="Let's set up payments!"
-        subtitle="Connect with Stripe to start accepting donations and auction payments"
+        subtitle="Here's everything you need to know before connecting with Stripe"
         onNext={() => setStep(7)}
         onBack={() => setStep(5)}
         onSkip={() => setStep(7)}
         isValid={true}
-        encouragement="You're almost there! This is the last important step."
+        encouragement="Gather your info first, then breeze through in about 5 minutes!"
         icon={
           <svg className="w-8 h-8 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
@@ -228,59 +228,102 @@ export default function CreateOrganizationPage() {
         )}
 
         {/* Friendly explanation card */}
-        <div className="clay-card bg-clay-sky/30 p-6 mb-6">
+        <div className="clay-card bg-clay-sky/30 p-5 mb-6">
           <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-full bg-clay-sky flex items-center justify-center flex-shrink-0">
-              <svg className="w-6 h-6 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-10 h-10 rounded-full bg-clay-sky flex items-center justify-center flex-shrink-0">
+              <svg className="w-5 h-5 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
             <div>
-              <h3 className="font-bold text-charcoal mb-1">Why do we need this?</h3>
+              <h3 className="font-bold text-charcoal mb-1">Why Stripe?</h3>
               <p className="text-charcoal-light text-sm">
-                To accept payments from your auction bidders and send you the funds, we use Stripe - the same secure payment system used by Amazon, Google, and millions of businesses.
-                It takes just a few minutes to set up!
+                Stripe is the same secure payment system used by Amazon, Google, and millions of businesses.
+                They handle all the security so you can focus on your fundraising!
               </p>
             </div>
           </div>
         </div>
 
-        {/* What you'll need */}
-        <div className="space-y-3 mb-6">
-          <h3 className="font-bold text-charcoal">What you'll need:</h3>
+        {/* Detailed checklist of what Stripe will ask */}
+        <div className="clay-card p-5 mb-6">
+          <h3 className="font-bold text-charcoal mb-4 flex items-center gap-2">
+            <svg className="w-5 h-5 text-clay-mint" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+            </svg>
+            Gather this info before you start:
+          </h3>
 
-          <div className="flex items-start gap-3 text-sm">
-            <div className="w-6 h-6 rounded-full bg-clay-mint flex items-center justify-center flex-shrink-0 mt-0.5">
-              <svg className="w-3.5 h-3.5 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-              </svg>
+          <div className="space-y-4">
+            {/* Organization Details */}
+            <div className="border-b border-charcoal/10 pb-4">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-6 h-6 rounded-full bg-clay-butter flex items-center justify-center text-xs font-bold text-charcoal">1</div>
+                <h4 className="font-medium text-charcoal">Organization Details</h4>
+              </div>
+              <ul className="ml-8 text-sm text-charcoal-light space-y-1">
+                <li>Legal business name (as registered)</li>
+                <li>Business address</li>
+                <li>Phone number</li>
+                <li>EIN/Tax ID {formData.taxId && <span className="text-clay-mint font-medium">(you already provided this!)</span>}</li>
+              </ul>
             </div>
-            <p className="text-charcoal-light">
-              <span className="font-medium text-charcoal">Basic organization info</span> - Name, address, and contact details
-            </p>
-          </div>
 
-          <div className="flex items-start gap-3 text-sm">
-            <div className="w-6 h-6 rounded-full bg-clay-mint flex items-center justify-center flex-shrink-0 mt-0.5">
-              <svg className="w-3.5 h-3.5 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-              </svg>
+            {/* Representative Info */}
+            <div className="border-b border-charcoal/10 pb-4">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-6 h-6 rounded-full bg-clay-butter flex items-center justify-center text-xs font-bold text-charcoal">2</div>
+                <h4 className="font-medium text-charcoal">Your Personal Info (as the representative)</h4>
+              </div>
+              <ul className="ml-8 text-sm text-charcoal-light space-y-1">
+                <li>Full legal name</li>
+                <li>Date of birth</li>
+                <li>Last 4 digits of SSN (for identity verification)</li>
+                <li>Home address</li>
+              </ul>
             </div>
-            <p className="text-charcoal-light">
-              <span className="font-medium text-charcoal">Bank account details</span> - Where you'd like funds deposited
-            </p>
-          </div>
 
-          <div className="flex items-start gap-3 text-sm">
-            <div className="w-6 h-6 rounded-full bg-clay-mint flex items-center justify-center flex-shrink-0 mt-0.5">
-              <svg className="w-3.5 h-3.5 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-              </svg>
+            {/* Bank Account */}
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-6 h-6 rounded-full bg-clay-butter flex items-center justify-center text-xs font-bold text-charcoal">3</div>
+                <h4 className="font-medium text-charcoal">Bank Account for Deposits</h4>
+              </div>
+              <ul className="ml-8 text-sm text-charcoal-light space-y-1">
+                <li>Bank account number</li>
+                <li>Routing number</li>
+                <li className="text-charcoal-light/70 italic">Tip: Use a checkbook or your bank's online portal to find these</li>
+              </ul>
             </div>
-            <p className="text-charcoal-light">
-              <span className="font-medium text-charcoal">A few minutes</span> - The setup is quick and secure
-            </p>
           </div>
+        </div>
+
+        {/* Pro Tips */}
+        <div className="clay-card bg-clay-mint/20 p-5 mb-6">
+          <h3 className="font-bold text-charcoal mb-3 flex items-center gap-2">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+            </svg>
+            Tips for a smooth setup:
+          </h3>
+          <ul className="text-sm text-charcoal-light space-y-2">
+            <li className="flex items-start gap-2">
+              <span className="text-charcoal font-bold">•</span>
+              <span><strong className="text-charcoal">For "Business Type":</strong> Select "Non-profit" or "Company" depending on your status</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-charcoal font-bold">•</span>
+              <span><strong className="text-charcoal">For "Industry":</strong> Choose "Charities" or "Fundraising"</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-charcoal font-bold">•</span>
+              <span><strong className="text-charcoal">Website URL:</strong> You can use your organization's website or social media page</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-charcoal font-bold">•</span>
+              <span><strong className="text-charcoal">Product description:</strong> Something like "Online charity auctions and fundraising events"</span>
+            </li>
+          </ul>
         </div>
 
         {/* Main CTA button */}
@@ -302,28 +345,28 @@ export default function CreateOrganizationPage() {
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
-              <span>Set Up Payments with Stripe</span>
+              <span>I'm Ready - Set Up Payments</span>
             </>
           )}
         </button>
 
-        {/* Reassurance */}
-        <div className="mt-6 p-4 bg-clay-surface rounded-clay border border-charcoal/10">
+        {/* Security reassurance */}
+        <div className="mt-5 p-4 bg-clay-surface rounded-clay border border-charcoal/10">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-clay-lavender flex items-center justify-center flex-shrink-0">
-              <svg className="w-5 h-5 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-9 h-9 rounded-full bg-clay-lavender flex items-center justify-center flex-shrink-0">
+              <svg className="w-4 h-4 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
               </svg>
             </div>
             <p className="text-sm text-charcoal-light">
-              <span className="font-medium text-charcoal">100% secure:</span> You'll be taken to Stripe's official website.
-              We never see your banking details - they're encrypted and stored securely by Stripe.
+              <span className="font-medium text-charcoal">100% secure:</span> You'll be on Stripe's official website.
+              We never see your banking details.
             </p>
           </div>
         </div>
 
-        {/* Skip option reminder */}
-        <p className="mt-6 text-center text-charcoal-light text-sm">
+        {/* Skip option */}
+        <p className="mt-5 text-center text-charcoal-light text-sm">
           Not ready yet? You can skip this and set up payments later from your dashboard.
         </p>
       </WizardStep>
