@@ -30,6 +30,9 @@ export default function OrganizationDashboardPage() {
   const [logoPreview, setLogoPreview] = useState<string | null>(null)
   const [uploadingLogo, setUploadingLogo] = useState(false)
 
+  // Stripe Connect state
+  const [stripeLoading, setStripeLoading] = useState(false)
+
   useEffect(() => {
     const fetchData = async () => {
       if (!slug) return
@@ -64,6 +67,18 @@ export default function OrganizationDashboardPage() {
 
     fetchData()
   }, [slug, navigate])
+
+  const handleStripeConnect = async () => {
+    if (!organization) return
+    setStripeLoading(true)
+    try {
+      const { url } = await apiClient.startStripeConnect(organization.id)
+      window.location.href = url
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to start Stripe setup')
+      setStripeLoading(false)
+    }
+  }
 
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -222,9 +237,33 @@ export default function OrganizationDashboardPage() {
 
       {/* Status Banner */}
       {organization.status === 'pending' && (
-        <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-lg mb-6">
-          <strong>Pending Verification:</strong> Complete Stripe Connect setup to verify your organization
-          and start accepting payments.
+        <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-lg mb-6 flex items-center justify-between flex-wrap gap-3">
+          <div>
+            <strong>Pending Verification:</strong> Complete Stripe Connect setup to verify your organization
+            and start accepting payments.
+          </div>
+          <button
+            onClick={handleStripeConnect}
+            disabled={stripeLoading}
+            className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg font-medium text-sm flex items-center gap-2 disabled:opacity-50 transition-colors"
+          >
+            {stripeLoading ? (
+              <>
+                <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                <span>Connecting...</span>
+              </>
+            ) : (
+              <>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                <span>Complete Setup</span>
+              </>
+            )}
+          </button>
         </div>
       )}
 
