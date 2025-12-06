@@ -181,11 +181,30 @@ router.post(
       // Ensure user exists in database
       await ensureUserExists(userId, req.user!.email, req.user!.name)
 
-      // If organization event, check permissions
+      // If organization event, check permissions and Stripe Connect status
       if (organizationId) {
         const membership = await checkOrgMembership(organizationId, userId, ['owner', 'admin'])
         if (!membership) {
           throw forbidden('Only organization owners and admins can create events')
+        }
+
+        // Check if organization has completed Stripe Connect verification
+        const orgResult = await dbQuery(
+          `SELECT stripe_charges_enabled, stripe_payouts_enabled, name
+           FROM organizations WHERE id = @orgId`,
+          { orgId: organizationId }
+        )
+
+        if (orgResult.recordset.length === 0) {
+          throw notFound('Organization not found')
+        }
+
+        const org = orgResult.recordset[0]
+        if (!org.stripe_charges_enabled || !org.stripe_payouts_enabled) {
+          throw badRequest(
+            `Cannot create an auction for "${org.name}" until Stripe Connect setup is complete. ` +
+            'Please complete the payment verification process in your organization settings.'
+          )
         }
       }
 
