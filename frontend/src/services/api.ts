@@ -295,6 +295,28 @@ class ApiClient {
     })
   }
 
+  async getOrganizationDeletionSummary(id: string): Promise<{
+    canDelete: boolean
+    blockers: string[]
+    organization: {
+      name: string
+      createdAt: string
+      hasStripeAccount: boolean
+    }
+    willDelete: {
+      events: number
+      items: number
+      members: number
+    }
+    financial: {
+      totalRaised: number
+      totalPaidOut: number
+      completedPayouts: number
+    }
+  }> {
+    return this.request(`/organizations/${id}/deletion-summary`)
+  }
+
   async deleteOrganization(id: string): Promise<void> {
     return this.request(`/organizations/${id}`, {
       method: 'DELETE',

@@ -295,6 +295,62 @@ export async function getAccountBalance(
 }
 
 /**
+ * Disconnect a Stripe Connect account from the platform
+ * This revokes our access to their account but doesn't delete their Stripe account
+ */
+export async function disconnectConnectAccount(
+  organizationId: string
+): Promise<{ success: boolean; message: string }> {
+  // Get the organization's Stripe account ID
+  const result = await dbQuery(
+    `SELECT stripe_account_id, name FROM organizations WHERE id = @organizationId`,
+    { organizationId }
+  )
+
+  if (result.recordset.length === 0) {
+    return { success: false, message: 'Organization not found' }
+  }
+
+  const { stripe_account_id: accountId, name } = result.recordset[0]
+
+  if (!accountId) {
+    // No Stripe account connected, nothing to disconnect
+    return { success: true, message: 'No Stripe account connected' }
+  }
+
+  try {
+    // Revoke our OAuth access to the connected account
+    // This will trigger an account.application.deauthorized webhook
+    await stripe.oauth.deauthorize({
+      client_id: process.env.STRIPE_CLIENT_ID || '',
+      stripe_user_id: accountId,
+    })
+
+    // Also update our database immediately (webhook will also do this)
+    await dbQuery(
+      `UPDATE organizations
+       SET stripe_account_id = NULL,
+           stripe_onboarding_complete = 0,
+           stripe_charges_enabled = 0,
+           stripe_payouts_enabled = 0,
+           updated_at = GETUTCDATE()
+       WHERE id = @organizationId`,
+      { organizationId }
+    )
+
+    console.log(`Disconnected Stripe Connect account ${accountId} for organization ${name}`)
+    return { success: true, message: 'Stripe account disconnected successfully' }
+  } catch (err) {
+    console.error('Failed to disconnect Stripe account:', err)
+    // If the account is already disconnected or doesn't exist, that's fine
+    if ((err as { code?: string }).code === 'invalid_grant') {
+      return { success: true, message: 'Stripe account was already disconnected' }
+    }
+    return { success: false, message: 'Failed to disconnect Stripe account' }
+  }
+}
+
+/**
  * Handle Stripe Connect webhook events
  */
 export async function handleConnectWebhook(

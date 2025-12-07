@@ -33,6 +33,19 @@ export default function OrganizationDashboardPage() {
   // Stripe Connect state
   const [stripeLoading, setStripeLoading] = useState(false)
 
+  // Delete modal state
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [deletionSummary, setDeletionSummary] = useState<{
+    canDelete: boolean
+    blockers: string[]
+    organization: { name: string; createdAt: string; hasStripeAccount: boolean }
+    willDelete: { events: number; items: number; members: number }
+    financial: { totalRaised: number; totalPaidOut: number; completedPayouts: number }
+  } | null>(null)
+  const [loadingDeletionSummary, setLoadingDeletionSummary] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [deleteConfirmText, setDeleteConfirmText] = useState('')
+
   useEffect(() => {
     const fetchData = async () => {
       if (!slug) return
@@ -600,16 +613,22 @@ export default function OrganizationDashboardPage() {
             <div className="mt-8 pt-6 border-t border-red-200">
               <h3 className="text-lg font-semibold text-red-600 mb-2">Danger Zone</h3>
               <p className="text-sm text-gray-500 mb-4">
-                Deleting this organization will remove all members and cannot be undone.
+                Deleting this organization will remove all events, items, members, and financial records.
               </p>
               <button
                 onClick={async () => {
-                  if (!confirm(`Are you sure you want to delete "${organization.name}"? This cannot be undone.`)) return
+                  setShowDeleteModal(true)
+                  setLoadingDeletionSummary(true)
+                  setDeletionSummary(null)
+                  setDeleteConfirmText('')
                   try {
-                    await apiClient.deleteOrganization(organization.id)
-                    navigate('/my-organizations')
+                    const summary = await apiClient.getOrganizationDeletionSummary(organization.id)
+                    setDeletionSummary(summary)
                   } catch (err) {
-                    alert(err instanceof Error ? err.message : 'Failed to delete organization')
+                    alert(err instanceof Error ? err.message : 'Failed to load deletion summary')
+                    setShowDeleteModal(false)
+                  } finally {
+                    setLoadingDeletionSummary(false)
                   }
                 }}
                 className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700"
@@ -668,6 +687,140 @@ export default function OrganizationDashboardPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <h2 className="text-xl font-bold text-red-600 mb-4">Delete Organization</h2>
+
+              {loadingDeletionSummary ? (
+                <div className="flex justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
+                </div>
+              ) : deletionSummary ? (
+                <div className="space-y-6">
+                  {/* Blockers */}
+                  {deletionSummary.blockers.length > 0 && (
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                      <h3 className="font-semibold text-red-800 mb-2">Cannot Delete</h3>
+                      <p className="text-sm text-red-700 mb-3">
+                        The following issues must be resolved before deletion:
+                      </p>
+                      <ul className="list-disc list-inside space-y-1 text-sm text-red-700">
+                        {deletionSummary.blockers.map((blocker, i) => (
+                          <li key={i}>{blocker}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* What will be deleted */}
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <h3 className="font-semibold text-charcoal mb-3">What will be permanently deleted:</h3>
+                    <ul className="space-y-2 text-sm text-gray-700">
+                      <li className="flex justify-between">
+                        <span>Events</span>
+                        <span className="font-medium">{deletionSummary.willDelete.events}</span>
+                      </li>
+                      <li className="flex justify-between">
+                        <span>Auction Items</span>
+                        <span className="font-medium">{deletionSummary.willDelete.items}</span>
+                      </li>
+                      <li className="flex justify-between">
+                        <span>Team Members</span>
+                        <span className="font-medium">{deletionSummary.willDelete.members}</span>
+                      </li>
+                      {deletionSummary.organization.hasStripeAccount && (
+                        <li className="flex justify-between">
+                          <span>Stripe Connect Account</span>
+                          <span className="font-medium text-amber-600">Will be disconnected</span>
+                        </li>
+                      )}
+                    </ul>
+                  </div>
+
+                  {/* Financial Summary */}
+                  {(deletionSummary.financial.totalRaised > 0 || deletionSummary.financial.completedPayouts > 0) && (
+                    <div className="bg-blue-50 rounded-lg p-4">
+                      <h3 className="font-semibold text-charcoal mb-3">Financial History:</h3>
+                      <ul className="space-y-2 text-sm text-gray-700">
+                        <li className="flex justify-between">
+                          <span>Total Raised</span>
+                          <span className="font-medium">${deletionSummary.financial.totalRaised.toFixed(2)}</span>
+                        </li>
+                        <li className="flex justify-between">
+                          <span>Total Paid Out</span>
+                          <span className="font-medium">${deletionSummary.financial.totalPaidOut.toFixed(2)}</span>
+                        </li>
+                        <li className="flex justify-between">
+                          <span>Completed Payouts</span>
+                          <span className="font-medium">{deletionSummary.financial.completedPayouts}</span>
+                        </li>
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Confirmation input */}
+                  {deletionSummary.canDelete && (
+                    <div>
+                      <label className="block text-sm font-medium text-charcoal mb-2">
+                        Type <span className="font-bold text-red-600">{deletionSummary.organization.name}</span> to confirm:
+                      </label>
+                      <input
+                        type="text"
+                        value={deleteConfirmText}
+                        onChange={(e) => setDeleteConfirmText(e.target.value)}
+                        className="w-full px-4 py-2 border border-red-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+                        placeholder="Organization name"
+                      />
+                    </div>
+                  )}
+                </div>
+              ) : null}
+
+              {/* Actions */}
+              <div className="flex justify-end gap-4 mt-6 pt-4 border-t">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowDeleteModal(false)
+                    setDeletionSummary(null)
+                    setDeleteConfirmText('')
+                  }}
+                  disabled={deleting}
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                {deletionSummary?.canDelete && (
+                  <button
+                    onClick={async () => {
+                      if (deleteConfirmText !== deletionSummary.organization.name) {
+                        alert('Please type the organization name exactly to confirm.')
+                        return
+                      }
+                      setDeleting(true)
+                      try {
+                        await apiClient.deleteOrganization(organization!.id)
+                        navigate('/my-organizations')
+                      } catch (err) {
+                        alert(err instanceof Error ? err.message : 'Failed to delete organization')
+                        setDeleting(false)
+                      }
+                    }}
+                    disabled={deleting || deleteConfirmText !== deletionSummary.organization.name}
+                    className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {deleting ? 'Deleting...' : 'Delete Forever'}
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       )}

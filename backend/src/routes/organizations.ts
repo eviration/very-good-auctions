@@ -14,6 +14,7 @@ import {
   getAccountStatus,
   createDashboardLink,
   getAccountBalance,
+  disconnectConnectAccount,
 } from '../services/stripeConnect.js'
 import {
   getOrganizationPayouts,
@@ -426,6 +427,151 @@ router.put(
   }
 )
 
+// Get deletion summary (owner only) - shows what will be deleted and any blockers
+router.get(
+  '/:id/deletion-summary',
+  authenticate,
+  param('id').isUUID(),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params
+      const userId = req.user!.id
+
+      // Check if user is owner
+      const membership = await checkOrgMembership(id, userId, ['owner'])
+      if (!membership) {
+        throw forbidden('Only owners can view deletion summary')
+      }
+
+      // Get organization details
+      const orgResult = await dbQuery(
+        `SELECT name, stripe_account_id, created_at FROM organizations WHERE id = @id`,
+        { id }
+      )
+
+      if (orgResult.recordset.length === 0) {
+        throw notFound('Organization not found')
+      }
+
+      const org = orgResult.recordset[0]
+
+      // Check for active/scheduled events
+      const activeEventsResult = await dbQuery(
+        `SELECT COUNT(*) as count FROM auction_events
+         WHERE organization_id = @id AND status IN ('active', 'scheduled')`,
+        { id }
+      )
+      const activeEventsCount = activeEventsResult.recordset[0].count
+
+      // Check for pending payouts
+      const pendingPayoutsResult = await dbQuery(
+        `SELECT COUNT(*) as count, COALESCE(SUM(net_payout), 0) as total
+         FROM organization_payouts
+         WHERE organization_id = @id AND status IN ('pending', 'eligible', 'processing')`,
+        { id }
+      )
+      const pendingPayouts = {
+        count: pendingPayoutsResult.recordset[0].count,
+        total: pendingPayoutsResult.recordset[0].total,
+      }
+
+      // Check for held reserves
+      const heldReservesResult = await dbQuery(
+        `SELECT COUNT(*) as count, COALESCE(SUM(amount), 0) as total
+         FROM payout_reserves
+         WHERE organization_id = @id AND status = 'held'`,
+        { id }
+      )
+      const heldReserves = {
+        count: heldReservesResult.recordset[0].count,
+        total: heldReservesResult.recordset[0].total,
+      }
+
+      // Check for open chargebacks
+      const openChargebacksResult = await dbQuery(
+        `SELECT COUNT(*) as count, COALESCE(SUM(amount), 0) as total
+         FROM chargebacks
+         WHERE organization_id = @id AND status = 'open'`,
+        { id }
+      )
+      const openChargebacks = {
+        count: openChargebacksResult.recordset[0].count,
+        total: openChargebacksResult.recordset[0].total,
+      }
+
+      // Get summary of what will be deleted
+      const eventsResult = await dbQuery(
+        `SELECT COUNT(*) as count FROM auction_events WHERE organization_id = @id`,
+        { id }
+      )
+      const totalEvents = eventsResult.recordset[0].count
+
+      const itemsResult = await dbQuery(
+        `SELECT COUNT(*) as count FROM event_items ei
+         JOIN auction_events ae ON ei.event_id = ae.id
+         WHERE ae.organization_id = @id`,
+        { id }
+      )
+      const totalItems = itemsResult.recordset[0].count
+
+      const membersResult = await dbQuery(
+        `SELECT COUNT(*) as count FROM organization_members WHERE organization_id = @id`,
+        { id }
+      )
+      const totalMembers = membersResult.recordset[0].count
+
+      // Get financial summary
+      const financialResult = await dbQuery(
+        `SELECT
+           COALESCE(SUM(gross_amount), 0) as total_raised,
+           COALESCE(SUM(CASE WHEN status = 'completed' THEN net_payout ELSE 0 END), 0) as total_paid_out,
+           COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed_payouts
+         FROM organization_payouts
+         WHERE organization_id = @id`,
+        { id }
+      )
+      const financial = {
+        totalRaised: financialResult.recordset[0].total_raised,
+        totalPaidOut: financialResult.recordset[0].total_paid_out,
+        completedPayouts: financialResult.recordset[0].completed_payouts,
+      }
+
+      // Determine blockers
+      const blockers: string[] = []
+      if (activeEventsCount > 0) {
+        blockers.push(`${activeEventsCount} active or scheduled event(s) must be cancelled or completed first`)
+      }
+      if (pendingPayouts.count > 0) {
+        blockers.push(`${pendingPayouts.count} pending payout(s) totaling $${pendingPayouts.total.toFixed(2)} must be processed first`)
+      }
+      if (heldReserves.count > 0) {
+        blockers.push(`${heldReserves.count} held reserve(s) totaling $${heldReserves.total.toFixed(2)} must be released first (30 days after payout)`)
+      }
+      if (openChargebacks.count > 0) {
+        blockers.push(`${openChargebacks.count} open chargeback(s) totaling $${openChargebacks.total.toFixed(2)} must be resolved first`)
+      }
+
+      res.json({
+        canDelete: blockers.length === 0,
+        blockers,
+        organization: {
+          name: org.name,
+          createdAt: org.created_at,
+          hasStripeAccount: !!org.stripe_account_id,
+        },
+        willDelete: {
+          events: totalEvents,
+          items: totalItems,
+          members: totalMembers,
+        },
+        financial,
+      })
+    } catch (error) {
+      next(error)
+    }
+  }
+)
+
 // Delete organization (owner only)
 router.delete(
   '/:id',
@@ -442,11 +588,74 @@ router.delete(
         throw forbidden('Only owners can delete organization')
       }
 
-      // Delete organization (cascades to members and invitations)
-      await dbQuery(
-        'DELETE FROM organizations WHERE id = @id',
+      // Get organization details
+      const orgResult = await dbQuery(
+        `SELECT name, stripe_account_id FROM organizations WHERE id = @id`,
         { id }
       )
+
+      if (orgResult.recordset.length === 0) {
+        throw notFound('Organization not found')
+      }
+
+      const org = orgResult.recordset[0]
+
+      // Check for active/scheduled events
+      const activeEventsResult = await dbQuery(
+        `SELECT COUNT(*) as count FROM auction_events
+         WHERE organization_id = @id AND status IN ('active', 'scheduled')`,
+        { id }
+      )
+      if (activeEventsResult.recordset[0].count > 0) {
+        throw badRequest('Cannot delete organization with active or scheduled events. Please cancel or complete all events first.')
+      }
+
+      // Check for pending payouts
+      const pendingPayoutsResult = await dbQuery(
+        `SELECT COUNT(*) as count FROM organization_payouts
+         WHERE organization_id = @id AND status IN ('pending', 'eligible', 'processing')`,
+        { id }
+      )
+      if (pendingPayoutsResult.recordset[0].count > 0) {
+        throw badRequest('Cannot delete organization with pending payouts. Please wait for all payouts to complete.')
+      }
+
+      // Check for held reserves
+      const heldReservesResult = await dbQuery(
+        `SELECT COUNT(*) as count FROM payout_reserves
+         WHERE organization_id = @id AND status = 'held'`,
+        { id }
+      )
+      if (heldReservesResult.recordset[0].count > 0) {
+        throw badRequest('Cannot delete organization with held reserves. Reserves are released 30 days after payout.')
+      }
+
+      // Check for open chargebacks
+      const openChargebacksResult = await dbQuery(
+        `SELECT COUNT(*) as count FROM chargebacks
+         WHERE organization_id = @id AND status = 'open'`,
+        { id }
+      )
+      if (openChargebacksResult.recordset[0].count > 0) {
+        throw badRequest('Cannot delete organization with open chargebacks. Please resolve all disputes first.')
+      }
+
+      // Disconnect Stripe Connect account if exists
+      if (org.stripe_account_id) {
+        await disconnectConnectAccount(id)
+      }
+
+      // Delete related financial records that don't cascade
+      // (keeping order to respect foreign keys)
+      await dbQuery('DELETE FROM payout_reserves WHERE organization_id = @id', { id })
+      await dbQuery('DELETE FROM chargebacks WHERE organization_id = @id', { id })
+      await dbQuery('DELETE FROM organization_payouts WHERE organization_id = @id', { id })
+      await dbQuery('DELETE FROM platform_fees WHERE organization_id = @id', { id })
+
+      // Delete organization (cascades to members, invitations, trust, events, items, bids)
+      await dbQuery('DELETE FROM organizations WHERE id = @id', { id })
+
+      console.log(`Organization ${org.name} (${id}) deleted by user ${userId}`)
 
       res.status(204).send()
     } catch (error) {
