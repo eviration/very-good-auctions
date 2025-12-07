@@ -63,7 +63,7 @@ export default function InvitationAcceptPage() {
     setDeclining(true)
     try {
       await apiClient.declineInvitation(token)
-      navigate('/organizations')
+      navigate('/my-organizations')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to decline invitation')
     } finally {
@@ -94,8 +94,8 @@ export default function InvitationAcceptPage() {
           <p className="text-gray-500 mb-6">
             This invitation may have expired or already been used.
           </p>
-          <Link to="/organizations" className="text-sage hover:underline">
-            Browse Organizations
+          <Link to="/" className="text-sage hover:underline">
+            Go to Home
           </Link>
         </div>
       </div>

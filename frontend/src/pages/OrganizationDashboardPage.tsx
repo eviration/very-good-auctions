@@ -607,7 +607,7 @@ export default function OrganizationDashboardPage() {
                   if (!confirm(`Are you sure you want to delete "${organization.name}"? This cannot be undone.`)) return
                   try {
                     await apiClient.deleteOrganization(organization.id)
-                    navigate('/organizations')
+                    navigate('/my-organizations')
                   } catch (err) {
                     alert(err instanceof Error ? err.message : 'Failed to delete organization')
                   }

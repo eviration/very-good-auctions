@@ -410,7 +410,7 @@ export default function CreateOrganizationPage() {
         title="Let's get to know you!"
         subtitle="First things first - what's your organization called?"
         onNext={() => setStep(2)}
-        onBack={() => navigate('/organizations')}
+        onBack={() => navigate('/my-organizations')}
         isValid={isStep1Valid}
         encouragement={getStep1Encouragement()}
         icon={

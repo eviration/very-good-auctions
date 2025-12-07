@@ -52,8 +52,8 @@ export default function OrganizationDetailPage() {
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
           {error || 'Organization not found'}
         </div>
-        <Link to="/organizations" className="mt-4 inline-block text-sage hover:underline">
-          &larr; Back to Organizations
+        <Link to="/" className="mt-4 inline-block text-sage hover:underline">
+          &larr; Back to Home
         </Link>
       </div>
     )
@@ -61,8 +61,8 @@ export default function OrganizationDetailPage() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
-      <Link to="/organizations" className="text-sage hover:underline">
-        &larr; Back to Organizations
+      <Link to="/" className="text-sage hover:underline">
+        &larr; Back to Home
       </Link>
 
       {/* Header */}
