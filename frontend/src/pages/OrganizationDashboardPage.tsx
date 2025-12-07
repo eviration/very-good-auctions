@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { apiClient } from '../services/api'
-import type { Organization, OrganizationMember, OrganizationInvitation, UpdateOrganizationRequest } from '../types'
+import type { Organization, OrganizationMember, OrganizationInvitation, UpdateOrganizationRequest, AuctionEvent } from '../types'
 import ImageDropZone from '../components/ImageDropZone'
 
 export default function OrganizationDashboardPage() {
@@ -11,10 +11,12 @@ export default function OrganizationDashboardPage() {
   const [organization, setOrganization] = useState<Organization | null>(null)
   const [members, setMembers] = useState<OrganizationMember[]>([])
   const [invitations, setInvitations] = useState<OrganizationInvitation[]>([])
+  const [events, setEvents] = useState<AuctionEvent[]>([])
+  const [loadingEvents, setLoadingEvents] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'members' | 'settings'>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'auctions' | 'members' | 'settings'>('overview')
   const [showInviteModal, setShowInviteModal] = useState(false)
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteRole, setInviteRole] = useState<'admin' | 'member'>('member')
@@ -70,6 +72,17 @@ export default function OrganizationDashboardPage() {
           ])
           setMembers(membersData)
           setInvitations(invitationsData)
+        }
+
+        // Fetch organization events
+        setLoadingEvents(true)
+        try {
+          const eventsData = await apiClient.getEvents({ organizationId: org.id, pageSize: 50 })
+          setEvents(eventsData.data)
+        } catch {
+          // Events are optional, don't fail the whole page
+        } finally {
+          setLoadingEvents(false)
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load organization')
@@ -209,6 +222,19 @@ export default function OrganizationDashboardPage() {
     }
   }
 
+  const handleDeleteEvent = async (eventId: string, eventName: string) => {
+    if (!confirm(`Are you sure you want to delete "${eventName}"? This action cannot be undone.`)) return
+
+    try {
+      await apiClient.deleteEvent(eventId)
+      setEvents((prev) => prev.filter((e) => e.id !== eventId))
+      setSuccessMessage(`"${eventName}" has been deleted`)
+      setTimeout(() => setSuccessMessage(null), 5000)
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to delete event')
+    }
+  }
+
   const canManageMembers = organization?.membership?.canManageMembers || organization?.membership?.role === 'owner'
   const isOwner = organization?.membership?.role === 'owner'
   const isAdmin = organization?.membership?.role === 'admin' || isOwner
@@ -303,7 +329,7 @@ export default function OrganizationDashboardPage() {
       {/* Tabs */}
       <div className="border-b border-sage/20 mb-6">
         <nav className="flex gap-8">
-          {['overview', 'members', 'settings'].map((tab) => (
+          {['overview', 'auctions', 'members', 'settings'].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab as typeof activeTab)}
@@ -324,11 +350,15 @@ export default function OrganizationDashboardPage() {
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-white rounded-lg shadow-sm border border-sage/20 p-6">
-              <div className="text-3xl font-bold text-sage">0</div>
-              <div className="text-gray-500 text-sm">Active Events</div>
+              <div className="text-3xl font-bold text-sage">
+                {events.filter((e) => e.status === 'active').length}
+              </div>
+              <div className="text-gray-500 text-sm">Active Auctions</div>
             </div>
             <div className="bg-white rounded-lg shadow-sm border border-sage/20 p-6">
-              <div className="text-3xl font-bold text-sage">$0</div>
+              <div className="text-3xl font-bold text-sage">
+                ${events.reduce((sum, e) => sum + (e.totalRaised || 0), 0).toLocaleString()}
+              </div>
               <div className="text-gray-500 text-sm">Total Raised</div>
             </div>
             <div className="bg-white rounded-lg shadow-sm border border-sage/20 p-6">
@@ -340,12 +370,28 @@ export default function OrganizationDashboardPage() {
           <div className="bg-white rounded-lg shadow-sm border border-sage/20 p-6">
             <h2 className="text-lg font-semibold text-charcoal mb-4">Quick Actions</h2>
             <div className="flex flex-wrap gap-4">
-              <button
-                disabled
-                className="bg-sage/20 text-sage px-4 py-2 rounded-lg cursor-not-allowed"
-              >
-                Create Event (Coming Soon)
-              </button>
+              {isAdmin && organization?.stripeChargesEnabled && organization?.stripePayoutsEnabled ? (
+                <Link
+                  to="/events/create"
+                  className="bg-sage text-white px-4 py-2 rounded-lg hover:bg-sage/90 inline-flex items-center gap-2"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  Create Auction
+                </Link>
+              ) : isAdmin ? (
+                <button
+                  onClick={handleStripeConnect}
+                  disabled={stripeLoading}
+                  className="bg-amber-500 text-white px-4 py-2 rounded-lg hover:bg-amber-600 inline-flex items-center gap-2 disabled:opacity-50"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  {stripeLoading ? 'Connecting...' : 'Complete Stripe Setup to Create Auctions'}
+                </button>
+              ) : null}
               {canManageMembers && (
                 <button
                   onClick={() => setShowInviteModal(true)}
@@ -356,6 +402,153 @@ export default function OrganizationDashboardPage() {
               )}
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Auctions Tab */}
+      {activeTab === 'auctions' && (
+        <div className="space-y-6">
+          {/* Header with Create button */}
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-charcoal">Your Auctions</h2>
+            {isAdmin && organization?.stripeChargesEnabled && organization?.stripePayoutsEnabled && (
+              <Link
+                to="/events/create"
+                className="bg-sage text-white px-4 py-2 rounded-lg hover:bg-sage/90 inline-flex items-center gap-2"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                Create Auction
+              </Link>
+            )}
+          </div>
+
+          {/* Stripe setup warning */}
+          {isAdmin && (!organization?.stripeChargesEnabled || !organization?.stripePayoutsEnabled) && (
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <span className="text-amber-800">Complete Stripe Connect setup to create auctions and receive payments.</span>
+              </div>
+              <button
+                onClick={handleStripeConnect}
+                disabled={stripeLoading}
+                className="bg-amber-500 text-white px-4 py-2 rounded-lg hover:bg-amber-600 text-sm font-medium disabled:opacity-50"
+              >
+                {stripeLoading ? 'Connecting...' : 'Complete Setup'}
+              </button>
+            </div>
+          )}
+
+          {/* Loading state */}
+          {loadingEvents && (
+            <div className="flex justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sage"></div>
+            </div>
+          )}
+
+          {/* Empty state */}
+          {!loadingEvents && events.length === 0 && (
+            <div className="bg-white rounded-lg shadow-sm border border-sage/20 p-12 text-center">
+              <svg className="w-16 h-16 mx-auto text-sage/30 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+              <h3 className="text-lg font-semibold text-charcoal mb-2">No auctions yet</h3>
+              <p className="text-gray-500 mb-6">Create your first auction to start fundraising!</p>
+              {isAdmin && organization?.stripeChargesEnabled && organization?.stripePayoutsEnabled && (
+                <Link
+                  to="/events/create"
+                  className="bg-sage text-white px-6 py-3 rounded-lg hover:bg-sage/90 inline-flex items-center gap-2"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  Create Your First Auction
+                </Link>
+              )}
+            </div>
+          )}
+
+          {/* Events list */}
+          {!loadingEvents && events.length > 0 && (
+            <div className="bg-white rounded-lg shadow-sm border border-sage/20 overflow-hidden">
+              <table className="w-full">
+                <thead className="bg-sage/10">
+                  <tr>
+                    <th className="text-left px-6 py-3 text-sm font-medium text-charcoal">Auction</th>
+                    <th className="text-left px-6 py-3 text-sm font-medium text-charcoal">Status</th>
+                    <th className="text-left px-6 py-3 text-sm font-medium text-charcoal">Date</th>
+                    <th className="text-left px-6 py-3 text-sm font-medium text-charcoal">Items</th>
+                    <th className="text-left px-6 py-3 text-sm font-medium text-charcoal">Raised</th>
+                    <th className="text-right px-6 py-3 text-sm font-medium text-charcoal">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-sage/10">
+                  {events.map((event) => (
+                    <tr key={event.id} className="hover:bg-sage/5">
+                      <td className="px-6 py-4">
+                        <Link
+                          to={`/events/${event.slug}`}
+                          className="font-medium text-charcoal hover:text-sage"
+                        >
+                          {event.name}
+                        </Link>
+                        <div className="text-sm text-gray-500">{event.auctionType} auction</div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`text-sm px-2 py-1 rounded-full ${
+                          event.status === 'active' ? 'bg-green-100 text-green-800' :
+                          event.status === 'scheduled' ? 'bg-blue-100 text-blue-800' :
+                          event.status === 'draft' ? 'bg-gray-100 text-gray-800' :
+                          event.status === 'ended' ? 'bg-purple-100 text-purple-800' :
+                          'bg-red-100 text-red-800'
+                        }`}>
+                          {event.status.charAt(0).toUpperCase() + event.status.slice(1)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-500">
+                        {new Date(event.startTime).toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-500">
+                        {event.itemCount || 0}
+                      </td>
+                      <td className="px-6 py-4 text-sm font-medium text-charcoal">
+                        ${(event.totalRaised || 0).toLocaleString()}
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <Link
+                            to={`/events/${event.slug}/manage`}
+                            className="text-sage hover:text-sage/80 p-1"
+                            title="Manage"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                          </Link>
+                          {isAdmin && event.status === 'draft' && (
+                            <button
+                              onClick={() => handleDeleteEvent(event.id, event.name)}
+                              className="text-red-600 hover:text-red-700 p-1"
+                              title="Delete"
+                            >
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
 
