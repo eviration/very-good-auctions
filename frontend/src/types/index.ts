@@ -325,7 +325,7 @@ export type EventStatus = 'draft' | 'scheduled' | 'active' | 'ended' | 'cancelle
 export interface CreateEventRequest {
   name: string
   description?: string
-  organizationId?: string
+  organizationId: string // Required - all auctions must belong to an organization
   startTime: string
   endTime: string
   submissionDeadline?: string

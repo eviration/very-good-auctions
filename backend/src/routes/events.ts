@@ -139,7 +139,7 @@ router.post(
   [
     body('name').isString().isLength({ min: 2, max: 255 }),
     body('description').optional().isString(),
-    body('organizationId').optional({ values: 'falsy' }).isUUID(),
+    body('organizationId').isUUID().withMessage('Organization is required'),
     body('startTime').isISO8601(),
     body('endTime').isISO8601(),
     body('submissionDeadline').optional().isISO8601(),
@@ -176,31 +176,29 @@ router.post(
       // Ensure user exists in database
       await ensureUserExists(userId, req.user!.email, req.user!.name)
 
-      // If organization event, check permissions and Stripe Connect status
-      if (organizationId) {
-        const membership = await checkOrgMembership(organizationId, userId, ['owner', 'admin'])
-        if (!membership) {
-          throw forbidden('Only organization owners and admins can create events')
-        }
+      // Verify organization membership and Stripe Connect status
+      const membership = await checkOrgMembership(organizationId, userId, ['owner', 'admin'])
+      if (!membership) {
+        throw forbidden('Only organization owners and admins can create events')
+      }
 
-        // Check if organization has completed Stripe Connect verification
-        const orgResult = await dbQuery(
-          `SELECT stripe_charges_enabled, stripe_payouts_enabled, name
-           FROM organizations WHERE id = @orgId`,
-          { orgId: organizationId }
+      // Check if organization has completed Stripe Connect verification
+      const orgResult = await dbQuery(
+        `SELECT stripe_charges_enabled, stripe_payouts_enabled, name
+         FROM organizations WHERE id = @orgId`,
+        { orgId: organizationId }
+      )
+
+      if (orgResult.recordset.length === 0) {
+        throw notFound('Organization not found')
+      }
+
+      const org = orgResult.recordset[0]
+      if (!org.stripe_charges_enabled || !org.stripe_payouts_enabled) {
+        throw badRequest(
+          `Cannot create an auction for "${org.name}" until Stripe Connect setup is complete. ` +
+          'Please complete the payment verification process in your organization settings.'
         )
-
-        if (orgResult.recordset.length === 0) {
-          throw notFound('Organization not found')
-        }
-
-        const org = orgResult.recordset[0]
-        if (!org.stripe_charges_enabled || !org.stripe_payouts_enabled) {
-          throw badRequest(
-            `Cannot create an auction for "${org.name}" until Stripe Connect setup is complete. ` +
-            'Please complete the payment verification process in your organization settings.'
-          )
-        }
       }
 
       // Validate dates
@@ -245,22 +243,21 @@ router.post(
       // Create event (no tier/maxItems - unlimited items, fees taken from proceeds)
       const result = await dbQuery(
         `INSERT INTO auction_events (
-          organization_id, owner_id, name, slug, description,
+          organization_id, name, slug, description,
           start_time, end_time, submission_deadline,
           auction_type, is_multi_item, increment_type, increment_value,
           buy_now_enabled, access_code, status,
           created_by, created_at, updated_at
         ) OUTPUT INSERTED.*
         VALUES (
-          @organizationId, @ownerId, @name, @slug, @description,
+          @organizationId, @name, @slug, @description,
           @startTime, @endTime, @submissionDeadline,
           @auctionType, @isMultiItem, @incrementType, @incrementValue,
           @buyNowEnabled, @accessCode, 'draft',
           @createdBy, GETUTCDATE(), GETUTCDATE()
         )`,
         {
-          organizationId: organizationId || null,
-          ownerId: organizationId ? null : userId,
+          organizationId,
           name,
           slug,
           description: description || null,
@@ -285,7 +282,6 @@ router.post(
         slug: event.slug,
         description: event.description,
         organizationId: event.organization_id,
-        ownerId: event.owner_id,
         startTime: event.start_time,
         endTime: event.end_time,
         submissionDeadline: event.submission_deadline,

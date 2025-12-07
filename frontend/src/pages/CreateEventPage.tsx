@@ -158,7 +158,7 @@ export default function CreateEventPage() {
       const payload: CreateEventRequest = {
         name: eventName,
         description: eventDescription || undefined,
-        organizationId: organizationId || undefined,
+        organizationId: organizationId!, // Organization is always required
         startTime: startDateTime,
         endTime: endDateTime,
         submissionDeadline: deadlineDateTime,
@@ -190,10 +190,10 @@ export default function CreateEventPage() {
   const nextStep = () => setCurrentStep((s) => Math.min(s + 1, TOTAL_STEPS))
   const prevStep = () => setCurrentStep((s) => Math.max(s - 1, 1))
 
-  // Validation
+  // Validation - organization is required
   const isStep1Valid = createNewOrg
     ? newOrgName.trim().length > 0 && newOrgEmail.trim().length > 0
-    : true // Can skip org
+    : selectedOrgId !== null // Must select an organization
   const isStep2Valid = eventName.trim().length > 0
   const isStep3Valid = Boolean(startDate && endDate && new Date(endDate) > new Date(startDate))
   const isStep4Valid = true // Auction settings have defaults
@@ -261,14 +261,14 @@ export default function CreateEventPage() {
     )
   }
 
-  // Step 1: Organization
+  // Step 1: Organization (required)
   if (currentStep === 1) {
     return (
       <WizardStep
         stepNumber={1}
         totalSteps={TOTAL_STEPS}
         title="Who's hosting this auction?"
-        subtitle="Connect your auction to an organization, or run it personally"
+        subtitle="Select the organization that will be hosting this fundraiser"
         onNext={nextStep}
         showBack={false}
         isValid={isStep1Valid}
@@ -280,15 +280,6 @@ export default function CreateEventPage() {
         }
       >
         <WizardOptionGrid columns={1}>
-          <WizardOptionCard
-            title="Personal Auction"
-            description="Run this auction under your own name"
-            selected={!createNewOrg && !selectedOrgId}
-            onClick={() => {
-              setCreateNewOrg(false)
-              setSelectedOrgId(null)
-            }}
-          />
 
           {myOrganizations.map((org) => {
             const isStripeVerified = org.stripeChargesEnabled && org.stripePayoutsEnabled
@@ -749,13 +740,11 @@ export default function CreateEventPage() {
             <p className="font-bold text-charcoal text-xl">{eventName}</p>
           </ReviewCard>
 
-          {(createNewOrg && newOrgName) || selectedOrgId ? (
-            <ReviewCard section="org" title="Organization">
-              <p className="font-bold text-charcoal text-xl">
-                {createNewOrg ? newOrgName : myOrganizations.find((o) => o.id === selectedOrgId)?.name}
-              </p>
-            </ReviewCard>
-          ) : null}
+          <ReviewCard section="org" title="Organization">
+            <p className="font-bold text-charcoal text-xl">
+              {createNewOrg ? newOrgName : myOrganizations.find((o) => o.id === selectedOrgId)?.name}
+            </p>
+          </ReviewCard>
 
           <ReviewCard section="schedule" title="Schedule">
             <p className="text-charcoal">
