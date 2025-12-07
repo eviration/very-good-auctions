@@ -503,14 +503,12 @@ class ApiClient {
   }
 
   async publishEvent(id: string): Promise<{
-    clientSecret: string
-    paymentIntentId: string
-    amount: number
-    tier: string
+    success: boolean
     eventName: string
-    cancellationPolicy: {
-      beforeStart: string
-      afterStart: string
+    message: string
+    feeInfo: {
+      feePerItem: number
+      description: string
     }
   }> {
     return this.request(`/events/${id}/publish`, {
@@ -518,20 +516,8 @@ class ApiClient {
     })
   }
 
-  async confirmPublishPayment(
-    eventId: string,
-    paymentIntentId: string
-  ): Promise<{ success: boolean; message: string }> {
-    return this.request(`/events/${eventId}/publish/confirm`, {
-      method: 'POST',
-      body: JSON.stringify({ paymentIntentId }),
-    })
-  }
-
   async cancelEvent(id: string): Promise<{
     cancelled: boolean
-    refunded: boolean
-    refundAmount: number | null
     message: string
   }> {
     return this.request(`/events/${id}/cancel`, {
@@ -596,8 +582,8 @@ class ApiClient {
     })
   }
 
-  async getPricingTiers(): Promise<PricingTiers> {
-    return this.request('/events/pricing/tiers')
+  async getPricingInfo(): Promise<{ feePerItem: number; description: string }> {
+    return this.request('/events/pricing/info')
   }
 
   // Event Items

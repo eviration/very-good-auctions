@@ -7,28 +7,13 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
   apiVersion: '2023-10-16',
 })
 
-// Tier limits and flat fees configuration
-export const TIER_LIMITS = {
-  small: { maxItems: 25, flatFee: 49 },
-  medium: { maxItems: 100, flatFee: 99 },
-  large: { maxItems: 500, flatFee: 199 },
-  unlimited: { maxItems: null, flatFee: 399 },
-} as const
+// Platform fee per item (taken from proceeds, invisible to bidder)
+export const PLATFORM_FEE_PER_ITEM = 1.00 // $1 per item sold
 
-// Platform fee percentage (collected from winning bids)
-export const PLATFORM_FEE_PERCENT = 5 // 5% of winning bid amount
-
-// Minimum platform fee per item
-export const PLATFORM_FEE_MIN = 0.50 // $0.50 minimum
-
-export type EventTier = keyof typeof TIER_LIMITS
-
-/**
- * Get the flat fee for publishing an event tier
- */
-export function getTierFlatFee(tier: EventTier): number {
-  return TIER_LIMITS[tier].flatFee
-}
+// Stripe fee estimate (for informational purposes)
+// Actual Stripe fees are: 2.9% + $0.30 per transaction
+export const STRIPE_FEE_PERCENT = 2.9
+export const STRIPE_FEE_FIXED = 0.30
 
 interface WinningBidSummary {
   itemId: string
@@ -48,11 +33,40 @@ interface EventCompletionResult {
 }
 
 /**
- * Calculate platform fee for a winning bid amount
+ * Calculate platform fee for a sold item
+ * Fixed $1 per item, taken from proceeds
  */
-export function calculatePlatformFee(amount: number): number {
-  const percentageFee = amount * (PLATFORM_FEE_PERCENT / 100)
-  return Math.max(percentageFee, PLATFORM_FEE_MIN)
+export function calculatePlatformFee(_amount: number): number {
+  return PLATFORM_FEE_PER_ITEM
+}
+
+/**
+ * Calculate estimated Stripe fees for a transaction
+ */
+export function calculateStripeFee(amount: number): number {
+  return (amount * STRIPE_FEE_PERCENT / 100) + STRIPE_FEE_FIXED
+}
+
+/**
+ * Calculate net proceeds for organization after all fees
+ * Fees are deducted from proceeds, not charged to bidder
+ */
+export function calculateNetProceeds(winningBid: number): {
+  grossAmount: number
+  platformFee: number
+  stripeFee: number
+  netAmount: number
+} {
+  const platformFee = PLATFORM_FEE_PER_ITEM
+  const stripeFee = calculateStripeFee(winningBid)
+  const netAmount = winningBid - platformFee - stripeFee
+
+  return {
+    grossAmount: winningBid,
+    platformFee,
+    stripeFee,
+    netAmount: Math.max(0, netAmount), // Ensure non-negative
+  }
 }
 
 /**
@@ -355,14 +369,14 @@ export async function handleWinnerPaymentWebhook(
 }
 
 /**
- * Get pricing information (tier limits + fee percentage)
+ * Get pricing information
  */
 export function getPricingInfo() {
   return {
-    tiers: TIER_LIMITS,
-    platformFeePercent: PLATFORM_FEE_PERCENT,
-    minimumFee: PLATFORM_FEE_MIN,
-    description: `${PLATFORM_FEE_PERCENT}% platform fee on winning bids (minimum $${PLATFORM_FEE_MIN.toFixed(2)} per item)`,
+    platformFeePerItem: PLATFORM_FEE_PER_ITEM,
+    stripeFeePercent: STRIPE_FEE_PERCENT,
+    stripeFeeFixed: STRIPE_FEE_FIXED,
+    description: `$${PLATFORM_FEE_PER_ITEM.toFixed(2)} per item sold (deducted from proceeds). Payment processing fees also apply.`,
   }
 }
 
@@ -431,18 +445,15 @@ export async function getEventFeeSummary(eventId: string): Promise<{
 }
 
 /**
- * Create payment intent for publishing an event
- * Charges the flat tier fee upfront
+ * Publish an event (no upfront fee - fees are taken from proceeds)
  */
-export async function createPublishPaymentIntent(
+export async function publishEvent(
   eventId: string,
   userId: string
 ): Promise<{
-  clientSecret: string
-  paymentIntentId: string
-  amount: number
-  tier: EventTier
+  success: boolean
   eventName: string
+  message: string
 }> {
   // Get event details
   const eventResult = await dbQuery(
@@ -480,117 +491,38 @@ export async function createPublishPaymentIntent(
     throw new Error('You do not have permission to publish this event')
   }
 
-  const tier = event.tier as EventTier
-  const flatFee = getTierFlatFee(tier)
-
-  // Get user's Stripe customer ID if exists
-  const userResult = await dbQuery(
-    'SELECT stripe_customer_id, email, display_name FROM users WHERE id = @userId',
-    { userId }
-  )
-
-  const user = userResult.recordset[0]
-  const stripeCustomerId = user?.stripe_customer_id
-
-  // Create payment intent
-  const paymentIntent = await stripe.paymentIntents.create({
-    amount: Math.round(flatFee * 100), // Convert to cents
-    currency: 'usd',
-    customer: stripeCustomerId || undefined,
-    automatic_payment_methods: {
-      enabled: true,
-    },
-    metadata: {
-      type: 'event_publish',
-      eventId,
-      userId,
-      tier,
-      eventName: event.name,
-      organizationId: event.organization_id || '',
-    },
-  })
-
-  return {
-    clientSecret: paymentIntent.client_secret!,
-    paymentIntentId: paymentIntent.id,
-    amount: flatFee,
-    tier,
-    eventName: event.name,
-  }
-}
-
-/**
- * Handle payment completion webhook for event publishing
- */
-export async function handlePublishPaymentWebhook(
-  paymentIntent: Stripe.PaymentIntent
-): Promise<void> {
-  if (paymentIntent.metadata?.type !== 'event_publish') {
-    return
-  }
-
-  const { eventId, userId, tier, organizationId } = paymentIntent.metadata
-
-  if (!eventId || !userId || !tier) {
-    console.error('Missing metadata in publish payment intent:', paymentIntent.id)
-    return
-  }
-
-  const flatFee = getTierFlatFee(tier as EventTier)
-
-  // Create platform fee record
-  const feeId = uuidv4()
-  await dbQuery(
-    `INSERT INTO platform_fees (
-      id, user_id, organization_id, event_id, fee_type, amount,
-      stripe_payment_intent_id, status, created_at
-    ) VALUES (
-      @feeId, @userId, @organizationId, @eventId, @feeType, @amount,
-      @paymentIntentId, 'paid', GETUTCDATE()
-    )`,
-    {
-      feeId,
-      userId,
-      organizationId: organizationId || null,
-      eventId,
-      feeType: `event_${tier}`,
-      amount: flatFee,
-      paymentIntentId: paymentIntent.id,
-    }
-  )
-
-  // Update event status to scheduled and link to fee
+  // Update event status to scheduled (no payment required)
   await dbQuery(
     `UPDATE auction_events
      SET status = 'scheduled',
-         fee_id = @feeId,
          updated_at = GETUTCDATE()
      WHERE id = @eventId`,
-    { eventId, feeId }
+    { eventId }
   )
 
-  console.log(`Event ${eventId} published after payment ${paymentIntent.id}`)
+  console.log(`Event ${eventId} published (fees will be collected from proceeds)`)
+
+  return {
+    success: true,
+    eventName: event.name,
+    message: 'Event published successfully. Platform fees will be deducted from proceeds when items sell.',
+  }
 }
 
 /**
- * Process event cancellation and determine refund eligibility
+ * Process event cancellation
+ * No refunds needed since fees are taken from proceeds
  */
 export async function processEventCancellation(
   eventId: string,
   userId: string
 ): Promise<{
   cancelled: boolean
-  refunded: boolean
-  refundAmount: number | null
   message: string
 }> {
-  // Get event with fee info
+  // Get event details
   const eventResult = await dbQuery(
-    `SELECT ae.*, pf.id as fee_id, pf.amount as fee_amount, pf.stripe_payment_intent_id,
-            pf.status as fee_status
-     FROM auction_events ae
-     LEFT JOIN platform_fees pf ON ae.fee_id = pf.id
-     WHERE ae.id = @eventId`,
+    `SELECT * FROM auction_events WHERE id = @eventId`,
     { eventId }
   )
 
@@ -600,15 +532,19 @@ export async function processEventCancellation(
 
   const event = eventResult.recordset[0]
 
-  // Verify user has permission (must be org admin or owner)
-  const permissionResult = await dbQuery(
-    `SELECT om.role FROM organization_members om
-     JOIN auction_events ae ON ae.organization_id = om.organization_id
-     WHERE ae.id = @eventId AND om.user_id = @userId AND om.role IN ('admin', 'owner')`,
-    { eventId, userId }
-  )
+  // Verify user has permission (must be org admin/owner or event owner)
+  let hasPermission = event.owner_id === userId
 
-  if (permissionResult.recordset.length === 0) {
+  if (!hasPermission && event.organization_id) {
+    const permissionResult = await dbQuery(
+      `SELECT role FROM organization_members
+       WHERE organization_id = @orgId AND user_id = @userId AND role IN ('admin', 'owner')`,
+      { orgId: event.organization_id, userId }
+    )
+    hasPermission = permissionResult.recordset.length > 0
+  }
+
+  if (!hasPermission) {
     throw new Error('You do not have permission to cancel this event')
   }
 
@@ -667,160 +603,15 @@ export async function processEventCancellation(
 
     return {
       cancelled: true,
-      refunded: false,
-      refundAmount: null,
-      message: 'Event cancelled. All bids have been cancelled and bidders notified. No refund issued as auction had already started.',
+      message: 'Event cancelled. All bids have been cancelled and bidders notified.',
     }
   }
 
-  // Event hasn't started - process refund if payment was made
-  if (event.fee_id && event.fee_status === 'paid' && event.stripe_payment_intent_id) {
-    try {
-      // Create refund via Stripe
-      await stripe.refunds.create({
-        payment_intent: event.stripe_payment_intent_id,
-      })
-
-      // Update fee record
-      await dbQuery(
-        `UPDATE platform_fees
-         SET status = 'refunded',
-             refunded_at = GETUTCDATE(),
-             refund_reason = 'Event cancelled before start'
-         WHERE id = @feeId`,
-        { feeId: event.fee_id }
-      )
-
-      return {
-        cancelled: true,
-        refunded: true,
-        refundAmount: event.fee_amount,
-        message: `Event cancelled and $${event.fee_amount.toFixed(2)} refunded to your payment method.`,
-      }
-    } catch (err) {
-      console.error('Refund failed:', err)
-      return {
-        cancelled: true,
-        refunded: false,
-        refundAmount: null,
-        message: 'Event cancelled but refund failed. Please contact support.',
-      }
-    }
-  }
-
+  // Event hasn't started - just cancel it
   return {
     cancelled: true,
-    refunded: false,
-    refundAmount: null,
     message: 'Event cancelled successfully.',
   }
-}
-
-/**
- * Confirm payment and publish event (called from frontend after successful payment)
- * This is an alternative to webhook-based confirmation
- */
-export async function confirmPublishPayment(
-  eventId: string,
-  paymentIntentId: string,
-  userId: string
-): Promise<{ success: boolean; message: string }> {
-  // Verify the payment intent from Stripe
-  const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId)
-
-  // Verify payment succeeded
-  if (paymentIntent.status !== 'succeeded') {
-    return {
-      success: false,
-      message: `Payment not completed. Status: ${paymentIntent.status}`,
-    }
-  }
-
-  // Verify this is an event_publish payment for the correct event
-  // Use case-insensitive comparison for UUIDs
-  if (
-    paymentIntent.metadata?.type !== 'event_publish' ||
-    paymentIntent.metadata?.eventId?.toLowerCase() !== eventId.toLowerCase()
-  ) {
-    return {
-      success: false,
-      message: 'Payment does not match this event',
-    }
-  }
-
-  // Check if event is already published (idempotency)
-  const eventResult = await dbQuery(
-    `SELECT status, fee_id FROM auction_events WHERE id = @eventId`,
-    { eventId }
-  )
-
-  if (eventResult.recordset.length === 0) {
-    return { success: false, message: 'Event not found' }
-  }
-
-  const event = eventResult.recordset[0]
-
-  // Already published - return success (idempotent)
-  if (event.status === 'scheduled' && event.fee_id) {
-    return { success: true, message: 'Event already published' }
-  }
-
-  // Check if fee record already exists for this payment (webhook might have processed it)
-  const existingFee = await dbQuery(
-    `SELECT id FROM platform_fees WHERE stripe_payment_intent_id = @paymentIntentId`,
-    { paymentIntentId }
-  )
-
-  if (existingFee.recordset.length > 0) {
-    // Fee exists, just make sure event is updated
-    await dbQuery(
-      `UPDATE auction_events
-       SET status = 'scheduled',
-           fee_id = @feeId,
-           updated_at = GETUTCDATE()
-       WHERE id = @eventId AND status = 'draft'`,
-      { eventId, feeId: existingFee.recordset[0].id }
-    )
-    return { success: true, message: 'Event published successfully' }
-  }
-
-  // Create platform fee record and publish event
-  const { tier, organizationId } = paymentIntent.metadata
-  const flatFee = getTierFlatFee(tier as EventTier)
-
-  const feeId = uuidv4()
-  await dbQuery(
-    `INSERT INTO platform_fees (
-      id, user_id, organization_id, event_id, fee_type, amount,
-      stripe_payment_intent_id, status, created_at
-    ) VALUES (
-      @feeId, @userId, @organizationId, @eventId, @feeType, @amount,
-      @paymentIntentId, 'paid', GETUTCDATE()
-    )`,
-    {
-      feeId,
-      userId,
-      organizationId: organizationId || null,
-      eventId,
-      feeType: `event_${tier}`,
-      amount: flatFee,
-      paymentIntentId,
-    }
-  )
-
-  // Update event status to scheduled
-  await dbQuery(
-    `UPDATE auction_events
-     SET status = 'scheduled',
-         fee_id = @feeId,
-         updated_at = GETUTCDATE()
-     WHERE id = @eventId`,
-    { eventId, feeId }
-  )
-
-  console.log(`Event ${eventId} published after payment confirmation ${paymentIntentId}`)
-
-  return { success: true, message: 'Event published successfully' }
 }
 
 export { stripe }

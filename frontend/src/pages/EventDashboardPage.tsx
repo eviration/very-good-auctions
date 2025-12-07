@@ -1,12 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import { loadStripe } from '@stripe/stripe-js'
-import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js'
 import { apiClient } from '../services/api'
 import type { AuctionEvent, EventItem, UpdateEventRequest, ItemSubmissionStatus } from '../types'
 import ImageDropZone from '../components/ImageDropZone'
-
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY || '')
 
 const statusColors = {
   draft: 'bg-gray-100 text-gray-800',
@@ -21,152 +17,6 @@ const submissionStatusColors: Record<ItemSubmissionStatus, string> = {
   approved: 'bg-green-100 text-green-800',
   rejected: 'bg-red-100 text-red-800',
   resubmit_requested: 'bg-orange-100 text-orange-800',
-}
-
-// Payment form component for Stripe Elements
-interface PaymentFormProps {
-  eventId: string
-  paymentIntentId: string
-  amount: number
-  tier: string
-  eventName: string
-  cancellationPolicy: {
-    beforeStart: string
-    afterStart: string
-  }
-  onSuccess: () => void
-  onCancel: () => void
-}
-
-function PublishPaymentForm({
-  eventId,
-  paymentIntentId,
-  amount,
-  tier,
-  eventName,
-  cancellationPolicy,
-  onSuccess,
-  onCancel,
-}: PaymentFormProps) {
-  const stripe = useStripe()
-  const elements = useElements()
-  const [processing, setProcessing] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [agreed, setAgreed] = useState(false)
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    if (!stripe || !elements || !agreed) return
-
-    setProcessing(true)
-    setError(null)
-
-    try {
-      const { error: submitError } = await elements.submit()
-      if (submitError) {
-        setError(submitError.message || 'Payment failed')
-        setProcessing(false)
-        return
-      }
-
-      const { error: confirmError } = await stripe.confirmPayment({
-        elements,
-        confirmParams: {
-          return_url: window.location.href,
-        },
-        redirect: 'if_required',
-      })
-
-      if (confirmError) {
-        setError(confirmError.message || 'Payment failed')
-        setProcessing(false)
-        return
-      }
-
-      // Payment succeeded, now confirm with backend to publish the event
-      const result = await apiClient.confirmPublishPayment(eventId, paymentIntentId)
-      if (!result.success) {
-        setError(result.message || 'Failed to publish event')
-        setProcessing(false)
-        return
-      }
-
-      onSuccess()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Payment failed')
-      setProcessing(false)
-    }
-  }
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="bg-sage/10 rounded-lg p-4">
-        <h3 className="font-semibold text-charcoal mb-2">Publishing "{eventName}"</h3>
-        <div className="flex justify-between items-center">
-          <span className="text-gray-600">
-            {tier.charAt(0).toUpperCase() + tier.slice(1)} tier publishing fee
-          </span>
-          <span className="text-2xl font-bold text-sage">${amount}</span>
-        </div>
-      </div>
-
-      <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-        <h4 className="font-medium text-amber-800 mb-2">Cancellation Policy</h4>
-        <ul className="text-sm text-amber-700 space-y-2">
-          <li className="flex items-start gap-2">
-            <span className="text-green-600 font-bold">✓</span>
-            <span><strong>Before auction starts:</strong> {cancellationPolicy.beforeStart}</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="text-red-600 font-bold">✗</span>
-            <span><strong>After auction starts:</strong> {cancellationPolicy.afterStart}</span>
-          </li>
-        </ul>
-      </div>
-
-      <div className="border rounded-lg p-4">
-        <PaymentElement />
-      </div>
-
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-          {error}
-        </div>
-      )}
-
-      <label className="flex items-start gap-3 cursor-pointer">
-        <input
-          type="checkbox"
-          checked={agreed}
-          onChange={(e) => setAgreed(e.target.checked)}
-          className="mt-1 h-4 w-4 text-sage focus:ring-sage border-gray-300 rounded"
-        />
-        <span className="text-sm text-gray-600">
-          I understand that I can modify or cancel this auction until the start time with a full refund.
-          After the auction starts, cancellation will not result in a refund and all bids will be cancelled.
-        </span>
-      </label>
-
-      <div className="flex gap-4">
-        <button
-          type="button"
-          onClick={onCancel}
-          disabled={processing}
-          className="flex-1 px-4 py-3 border border-sage/30 rounded-lg hover:bg-sage/10 disabled:opacity-50"
-        >
-          Cancel
-        </button>
-        <button
-          type="submit"
-          disabled={!stripe || processing || !agreed}
-          className="flex-1 bg-sage text-white px-4 py-3 rounded-lg hover:bg-sage/90 disabled:opacity-50 font-semibold"
-        >
-          {processing ? 'Processing...' : `Pay $${amount} & Publish`}
-        </button>
-      </div>
-    </form>
-  )
 }
 
 export default function EventDashboardPage() {
@@ -196,19 +46,8 @@ export default function EventDashboardPage() {
   // Success banner state (for showing payment confirmation)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
-  // Payment modal state
-  const [showPublishPaymentModal, setShowPublishPaymentModal] = useState(false)
-  const [publishPaymentData, setPublishPaymentData] = useState<{
-    clientSecret: string
-    paymentIntentId: string
-    amount: number
-    tier: string
-    eventName: string
-    cancellationPolicy: {
-      beforeStart: string
-      afterStart: string
-    }
-  } | null>(null)
+  // Publishing state
+  const [isPublishing, setIsPublishing] = useState(false)
 
   // Cover image upload state
   const [coverImageFile, setCoverImageFile] = useState<File | null>(null)
@@ -246,24 +85,24 @@ export default function EventDashboardPage() {
   const handlePublish = async () => {
     if (!event) return
 
+    setIsPublishing(true)
     try {
-      const paymentData = await apiClient.publishEvent(event.id)
-      setPublishPaymentData(paymentData)
-      setShowPublishPaymentModal(true)
+      const result = await apiClient.publishEvent(event.id)
+      if (result.success) {
+        // Show success message
+        setSuccessMessage('Your auction has been published successfully! It will go live at the scheduled start time. ' + result.feeInfo.description)
+        // Refresh event data to get updated status
+        await fetchData()
+        // Auto-dismiss success message after 10 seconds
+        setTimeout(() => setSuccessMessage(null), 10000)
+      } else {
+        alert(result.message)
+      }
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to initiate publishing')
+      alert(err instanceof Error ? err.message : 'Failed to publish event')
+    } finally {
+      setIsPublishing(false)
     }
-  }
-
-  const handlePublishPaymentSuccess = async () => {
-    setShowPublishPaymentModal(false)
-    setPublishPaymentData(null)
-    // Show success message
-    setSuccessMessage('Your auction has been published successfully! It will go live at the scheduled start time.')
-    // Refresh event data to get updated status
-    await fetchData()
-    // Auto-dismiss success message after 10 seconds
-    setTimeout(() => setSuccessMessage(null), 10000)
   }
 
   const handleApproveItem = async (itemId: string) => {
@@ -946,16 +785,12 @@ export default function EventDashboardPage() {
               <button
                 onClick={async () => {
                   const warningMessage = event.status === 'active'
-                    ? `Are you sure you want to cancel "${event.name}"? This auction is currently active. All bids will be cancelled, bidders will be notified, and NO REFUND will be issued.`
-                    : `Are you sure you want to cancel "${event.name}"? You will receive a full refund of the publishing fee.`
+                    ? `Are you sure you want to cancel "${event.name}"? This auction is currently active. All bids will be cancelled and bidders will be notified.`
+                    : `Are you sure you want to cancel "${event.name}"?`
                   if (!confirm(warningMessage)) return
                   try {
                     const result = await apiClient.cancelEvent(event.id)
-                    if (result.refunded) {
-                      setSuccessMessage(`Auction cancelled. A refund of $${result.refundAmount?.toFixed(2) || '0.00'} has been processed.`)
-                    } else {
-                      setSuccessMessage('Auction cancelled successfully.')
-                    }
+                    setSuccessMessage(result.message)
                     await fetchData()
                   } catch (err) {
                     alert(err instanceof Error ? err.message : 'Failed to cancel auction')
@@ -1104,40 +939,6 @@ export default function EventDashboardPage() {
         </div>
       )}
 
-      {/* Publish Payment Modal */}
-      {showPublishPaymentModal && publishPaymentData && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md my-8 max-h-[90vh] overflow-y-auto">
-            <h2 className="text-lg font-semibold text-charcoal mb-4">Publish Your Auction</h2>
-            <Elements
-              stripe={stripePromise}
-              options={{
-                clientSecret: publishPaymentData.clientSecret,
-                appearance: {
-                  theme: 'stripe',
-                  variables: {
-                    colorPrimary: '#6B7F6B',
-                  },
-                },
-              }}
-            >
-              <PublishPaymentForm
-                eventId={event.id}
-                paymentIntentId={publishPaymentData.paymentIntentId}
-                amount={publishPaymentData.amount}
-                tier={publishPaymentData.tier}
-                eventName={publishPaymentData.eventName}
-                cancellationPolicy={publishPaymentData.cancellationPolicy}
-                onSuccess={handlePublishPaymentSuccess}
-                onCancel={() => {
-                  setShowPublishPaymentModal(false)
-                  setPublishPaymentData(null)
-                }}
-              />
-            </Elements>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

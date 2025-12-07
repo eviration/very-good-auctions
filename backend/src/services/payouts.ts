@@ -1,7 +1,7 @@
 import { query as dbQuery } from '../config/database.js'
 import { v4 as uuidv4 } from 'uuid'
 import { transferToOrganization } from './stripeConnect.js'
-import { PLATFORM_FEE_PERCENT } from './platformFees.js'
+import { PLATFORM_FEE_PER_ITEM } from './platformFees.js'
 import { getOrganizationTaxInfo } from './taxForms.js'
 import { logComplianceEvent } from './complianceAudit.js'
 
@@ -58,7 +58,7 @@ export function calculateStripeFees(amount: number): number {
 /**
  * Calculate payout amounts for an event
  */
-export function calculatePayoutAmounts(grossAmount: number): {
+export function calculatePayoutAmounts(grossAmount: number, itemCount: number = 1): {
   grossAmount: number
   stripeFees: number
   platformFee: number
@@ -66,7 +66,8 @@ export function calculatePayoutAmounts(grossAmount: number): {
   netPayout: number
 } {
   const stripeFees = calculateStripeFees(grossAmount)
-  const platformFee = grossAmount * (PLATFORM_FEE_PERCENT / 100)
+  // Platform fee is $1 per item sold
+  const platformFee = itemCount * PLATFORM_FEE_PER_ITEM
   const afterFees = grossAmount - stripeFees - platformFee
   const reserveAmount = afterFees * (PAYOUT_CONFIG.RESERVE_PERCENT / 100)
   const netPayout = afterFees - reserveAmount
@@ -76,7 +77,7 @@ export function calculatePayoutAmounts(grossAmount: number): {
     stripeFees: Math.round(stripeFees * 100) / 100,
     platformFee: Math.round(platformFee * 100) / 100,
     reserveAmount: Math.round(reserveAmount * 100) / 100,
-    netPayout: Math.round(netPayout * 100) / 100,
+    netPayout: Math.max(0, Math.round(netPayout * 100) / 100),
   }
 }
 
@@ -237,9 +238,17 @@ export async function createPayoutRecord(eventId: string): Promise<string> {
     return existingPayout.recordset[0].id
   }
 
-  // Calculate amounts
+  // Get count of sold items for this event
+  const soldItemsResult = await dbQuery(
+    `SELECT COUNT(*) as item_count FROM event_items
+     WHERE event_id = @eventId AND status IN ('won', 'sold')`,
+    { eventId }
+  )
+  const itemCount = soldItemsResult.recordset[0]?.item_count || 0
+
+  // Calculate amounts ($1 per item sold)
   const grossAmount = event.total_raised || 0
-  const amounts = calculatePayoutAmounts(grossAmount)
+  const amounts = calculatePayoutAmounts(grossAmount, itemCount)
 
   // Calculate eligibility date (7 days after event end)
   const eligibleAt = new Date(event.end_time)

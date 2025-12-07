@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { apiClient } from '../services/api'
-import type { Organization, EventTier, PricingTiers, CreateEventRequest, OrganizationType } from '../types'
+import type { Organization, CreateEventRequest, OrganizationType } from '../types'
 import { WizardStep, WizardInput, WizardTextarea, WizardOptionCard, WizardOptionGrid, WizardSuccess } from '../components/wizard'
 import ImageDropZone from '../components/ImageDropZone'
 
-const TOTAL_STEPS = 6
+const TOTAL_STEPS = 5 // Reduced from 6 - removed tier selection step
 
 // Organization type options with friendly descriptions
 const ORG_TYPES: { value: OrganizationType; label: string; description: string; icon: React.ReactNode }[] = [
@@ -47,13 +47,6 @@ const ORG_TYPES: { value: OrganizationType; label: string; description: string; 
   },
 ]
 
-// Tier descriptions
-const tierInfo: Record<EventTier, { name: string; description: string; color: 'mint' | 'sky' | 'lavender' | 'peach' }> = {
-  small: { name: 'Small', description: 'Perfect for intimate fundraisers', color: 'mint' },
-  medium: { name: 'Medium', description: 'Great for school auctions', color: 'sky' },
-  large: { name: 'Large', description: 'Ideal for charity galas', color: 'lavender' },
-  unlimited: { name: 'Unlimited', description: 'No limits on items', color: 'peach' },
-}
 
 export default function CreateEventPage() {
   const navigate = useNavigate()
@@ -69,9 +62,6 @@ export default function CreateEventPage() {
   const [newOrgName, setNewOrgName] = useState('')
   const [newOrgType, setNewOrgType] = useState<OrganizationType>('nonprofit')
   const [newOrgEmail, setNewOrgEmail] = useState('')
-
-  // Pricing tiers
-  const [pricingTiers, setPricingTiers] = useState<PricingTiers | null>(null)
 
   // Event details
   const [eventName, setEventName] = useState('')
@@ -92,19 +82,12 @@ export default function CreateEventPage() {
   const [incrementValue, setIncrementValue] = useState('5')
   const [buyNowEnabled, setBuyNowEnabled] = useState(true)
 
-  // Tier selection
-  const [tier, setTier] = useState<EventTier>('small')
-
-  // Fetch organizations and pricing
+  // Fetch organizations
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [orgs, tiers] = await Promise.all([
-          apiClient.getMyOrganizations().catch(() => []),
-          apiClient.getPricingTiers().catch(() => null),
-        ])
+        const orgs = await apiClient.getMyOrganizations().catch(() => [])
         setMyOrganizations(orgs)
-        setPricingTiers(tiers)
       } catch {
         // Ignore errors
       }
@@ -183,7 +166,6 @@ export default function CreateEventPage() {
         incrementType,
         incrementValue: parseFloat(incrementValue),
         buyNowEnabled,
-        tier,
       }
 
       const event = await apiClient.createEvent(payload)
@@ -215,7 +197,6 @@ export default function CreateEventPage() {
   const isStep2Valid = eventName.trim().length > 0
   const isStep3Valid = Boolean(startDate && endDate && new Date(endDate) > new Date(startDate))
   const isStep4Valid = true // Auction settings have defaults
-  const isStep5Valid = true // Tier has default
 
   // Stripe setup required screen (when new org was created)
   if (needsStripeSetup) {
@@ -641,72 +622,16 @@ export default function CreateEventPage() {
     )
   }
 
-  // Step 5: Event Size (Tier)
+  // Step 5: Review & Create
   if (currentStep === 5) {
-    const selectedTierPricing = pricingTiers?.[tier]
-
-    return (
-      <WizardStep
-        stepNumber={5}
-        totalSteps={TOTAL_STEPS}
-        title="How big is your auction?"
-        subtitle="Pick a plan based on how many items you expect"
-        onNext={nextStep}
-        onBack={prevStep}
-        isValid={isStep5Valid}
-        encouragement={`The ${tierInfo[tier].name} plan is a great choice!`}
-        icon={
-          <svg className="w-10 h-10 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-          </svg>
-        }
-      >
-        <WizardOptionGrid columns={2}>
-          {(['small', 'medium', 'large', 'unlimited'] as const).map((t) => {
-            const info = tierInfo[t]
-            const pricing = pricingTiers?.[t]
-            return (
-              <WizardOptionCard
-                key={t}
-                title={info.name}
-                description={pricing ? (pricing.maxItems ? `Up to ${pricing.maxItems} items` : 'Unlimited items') : info.description}
-                selected={tier === t}
-                onClick={() => setTier(t)}
-                badge={pricing ? `$${pricing.fee}` : undefined}
-                badgeColor={info.color}
-              />
-            )
-          })}
-        </WizardOptionGrid>
-
-        {selectedTierPricing && (
-          <div className="mt-6 p-6 rounded-clay bg-clay-mint/30 border-2 border-clay-mint/50">
-            <div className="flex items-center justify-between">
-              <span className="font-bold text-charcoal text-lg">Platform fee:</span>
-              <span className="font-display text-4xl font-black text-charcoal">${selectedTierPricing.fee}</span>
-            </div>
-            <p className="text-charcoal-light mt-2">
-              {selectedTierPricing.maxItems
-                ? `Supports up to ${selectedTierPricing.maxItems} auction items`
-                : 'No limit on the number of items'}
-            </p>
-          </div>
-        )}
-      </WizardStep>
-    )
-  }
-
-  // Step 6: Review & Create
-  if (currentStep === 6) {
     // Determine which section has the error based on error message keywords
-    const getErrorSection = (errorMsg: string | null): 'name' | 'org' | 'schedule' | 'settings' | 'tier' | null => {
+    const getErrorSection = (errorMsg: string | null): 'name' | 'org' | 'schedule' | 'settings' | null => {
       if (!errorMsg) return null
       const lowerError = errorMsg.toLowerCase()
       if (lowerError.includes('name')) return 'name'
       if (lowerError.includes('organization')) return 'org'
       if (lowerError.includes('deadline') || lowerError.includes('start') || lowerError.includes('end') || lowerError.includes('date') || lowerError.includes('time')) return 'schedule'
       if (lowerError.includes('bid') || lowerError.includes('increment') || lowerError.includes('auction type')) return 'settings'
-      if (lowerError.includes('tier') || lowerError.includes('plan')) return 'tier'
       return null
     }
 
@@ -718,7 +643,6 @@ export default function CreateEventPage() {
       org: 1,
       schedule: 3,
       settings: 4,
-      tier: 5,
     }
 
     // Clickable review card component
@@ -727,7 +651,7 @@ export default function CreateEventPage() {
       title,
       children
     }: {
-      section: 'name' | 'org' | 'schedule' | 'settings' | 'tier'
+      section: 'name' | 'org' | 'schedule' | 'settings'
       title: string
       children: React.ReactNode
     }) => {
@@ -787,7 +711,7 @@ export default function CreateEventPage() {
 
     return (
       <WizardStep
-        stepNumber={6}
+        stepNumber={5}
         totalSteps={TOTAL_STEPS}
         title="Ready to launch?"
         subtitle="Review your auction details and create it"
@@ -854,16 +778,14 @@ export default function CreateEventPage() {
             </p>
           </ReviewCard>
 
-          <ReviewCard section="tier" title="Plan">
-            <div className="flex items-center justify-between">
-              <p className="font-bold text-charcoal text-xl">{tierInfo[tier].name}</p>
-              {pricingTiers?.[tier] && (
-                <span className={`clay-badge bg-clay-${tierInfo[tier].color} font-black text-lg px-4 py-1`}>
-                  ${pricingTiers[tier].fee}
-                </span>
-              )}
-            </div>
-          </ReviewCard>
+        </div>
+
+        {/* Pricing info */}
+        <div className="mt-6 p-4 rounded-clay bg-clay-mint/20 border-2 border-clay-mint/30">
+          <p className="text-charcoal-light text-sm">
+            <span className="font-bold text-charcoal">Free to create.</span>{' '}
+            $1 per item sold (deducted from proceeds). No upfront costs.
+          </p>
         </div>
 
         <p className="text-center text-charcoal-light text-sm mt-4">

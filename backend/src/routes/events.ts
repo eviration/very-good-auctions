@@ -7,9 +7,8 @@ import { authenticate, optionalAuth } from '../middleware/auth.js'
 import { query as dbQuery } from '../config/database.js'
 import { badRequest, notFound, forbidden } from '../middleware/errorHandler.js'
 import {
-  TIER_LIMITS,
-  createPublishPaymentIntent,
-  confirmPublishPayment,
+  PLATFORM_FEE_PER_ITEM,
+  publishEvent,
   processEventCancellation,
 } from '../services/platformFees.js'
 import { uploadToBlob, deleteImage } from '../services/storage.js'
@@ -33,12 +32,10 @@ const coverImageUpload = multer({
 // Access code alphabet (no confusing characters: 0/O, 1/I/L)
 const ACCESS_CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'
 
-// Pricing tiers (using shared config from platformFees)
-const PRICING_TIERS = {
-  small: { fee: TIER_LIMITS.small.flatFee, maxItems: TIER_LIMITS.small.maxItems },
-  medium: { fee: TIER_LIMITS.medium.flatFee, maxItems: TIER_LIMITS.medium.maxItems },
-  large: { fee: TIER_LIMITS.large.flatFee, maxItems: TIER_LIMITS.large.maxItems },
-  unlimited: { fee: TIER_LIMITS.unlimited.flatFee, maxItems: TIER_LIMITS.unlimited.maxItems },
+// Pricing info - $1 per item sold (taken from proceeds)
+const PRICING_INFO = {
+  feePerItem: PLATFORM_FEE_PER_ITEM,
+  description: 'Free to create. $1 per item sold (deducted from proceeds).',
 }
 
 // Helper function to generate slug from name
@@ -151,7 +148,6 @@ router.post(
     body('incrementType').optional().isIn(['fixed', 'percent']),
     body('incrementValue').optional().isFloat({ min: 0.01 }),
     body('buyNowEnabled').optional().isBoolean(),
-    body('tier').isIn(['small', 'medium', 'large', 'unlimited']),
   ],
   async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -175,7 +171,6 @@ router.post(
         incrementType = 'fixed',
         incrementValue = 1.0,
         buyNowEnabled = false,
-        tier,
       } = req.body
 
       // Ensure user exists in database
@@ -222,10 +217,6 @@ router.post(
         }
       }
 
-      // Get tier info
-      const tierInfo = PRICING_TIERS[tier as keyof typeof PRICING_TIERS]
-      const maxItems = tierInfo.maxItems || 999999
-
       // Generate unique slug
       let slug = generateSlug(name)
       let slugSuffix = 0
@@ -251,20 +242,20 @@ router.post(
       // Generate access code
       const accessCode = generateAccessCode()
 
-      // Create event
+      // Create event (no tier/maxItems - unlimited items, fees taken from proceeds)
       const result = await dbQuery(
         `INSERT INTO auction_events (
           organization_id, owner_id, name, slug, description,
           start_time, end_time, submission_deadline,
           auction_type, is_multi_item, increment_type, increment_value,
-          buy_now_enabled, access_code, tier, max_items, status,
+          buy_now_enabled, access_code, status,
           created_by, created_at, updated_at
         ) OUTPUT INSERTED.*
         VALUES (
           @organizationId, @ownerId, @name, @slug, @description,
           @startTime, @endTime, @submissionDeadline,
           @auctionType, @isMultiItem, @incrementType, @incrementValue,
-          @buyNowEnabled, @accessCode, @tier, @maxItems, 'draft',
+          @buyNowEnabled, @accessCode, 'draft',
           @createdBy, GETUTCDATE(), GETUTCDATE()
         )`,
         {
@@ -282,8 +273,6 @@ router.post(
           incrementValue,
           buyNowEnabled: buyNowEnabled ? 1 : 0,
           accessCode,
-          tier,
-          maxItems,
           createdBy: userId,
         }
       )
@@ -306,8 +295,6 @@ router.post(
         incrementValue: event.increment_value,
         buyNowEnabled: event.buy_now_enabled,
         accessCode: event.access_code,
-        tier: event.tier,
-        maxItems: event.max_items,
         status: event.status,
         createdAt: event.created_at,
       })
@@ -845,7 +832,7 @@ router.post(
   }
 )
 
-// Publish event - Step 1: Create payment intent
+// Publish event (no payment required - fees taken from proceeds)
 router.post(
   '/:id/publish',
   authenticate,
@@ -860,51 +847,18 @@ router.post(
       const { id } = req.params
       const userId = req.user!.id
 
-      // Create payment intent for publishing fee
-      const paymentData = await createPublishPaymentIntent(id, userId)
+      // Publish event directly (no payment required)
+      const result = await publishEvent(id, userId)
 
       res.json({
-        clientSecret: paymentData.clientSecret,
-        paymentIntentId: paymentData.paymentIntentId,
-        amount: paymentData.amount,
-        tier: paymentData.tier,
-        eventName: paymentData.eventName,
-        cancellationPolicy: {
-          beforeStart: 'Full refund available if cancelled before auction start time',
-          afterStart: 'No refund available once auction has started. All bids will be cancelled and bidders notified.',
+        success: result.success,
+        eventName: result.eventName,
+        message: result.message,
+        feeInfo: {
+          feePerItem: PRICING_INFO.feePerItem,
+          description: PRICING_INFO.description,
         },
       })
-    } catch (error) {
-      next(error)
-    }
-  }
-)
-
-// Publish event - Step 2: Confirm payment and publish
-router.post(
-  '/:id/publish/confirm',
-  authenticate,
-  param('id').isUUID(),
-  body('paymentIntentId').isString().notEmpty(),
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const errors = validationResult(req)
-      if (!errors.isEmpty()) {
-        throw badRequest('Invalid request parameters')
-      }
-
-      const { id } = req.params
-      const { paymentIntentId } = req.body
-      const userId = req.user!.id
-
-      // Confirm payment and publish event
-      const result = await confirmPublishPayment(id, paymentIntentId, userId)
-
-      if (!result.success) {
-        throw badRequest(result.message)
-      }
-
-      res.json({ success: true, message: result.message })
     } catch (error) {
       next(error)
     }
@@ -1113,9 +1067,9 @@ router.delete(
 
 // Get pricing tiers
 router.get(
-  '/pricing/tiers',
+  '/pricing/info',
   async (_req: Request, res: Response) => {
-    res.json(PRICING_TIERS)
+    res.json(PRICING_INFO)
   }
 )
 

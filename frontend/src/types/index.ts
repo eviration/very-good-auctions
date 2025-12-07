@@ -334,7 +334,6 @@ export interface CreateEventRequest {
   incrementType?: 'fixed' | 'percent'
   incrementValue?: number
   buyNowEnabled?: boolean
-  tier: EventTier
 }
 
 export interface UpdateEventRequest {
