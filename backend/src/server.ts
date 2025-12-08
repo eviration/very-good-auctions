@@ -17,12 +17,17 @@ import { adminPayoutRoutes } from './routes/adminPayouts.js'
 import { complianceRoutes } from './routes/compliance.js'
 import { feedbackRoutes } from './routes/feedback.js'
 import { adminRoutes } from './routes/admin.js'
+import { donateRoutes } from './routes/donate.js'
+import { submissionRoutes } from './routes/submissions.js'
+import { uatRoutes } from './routes/uat/index.js'
+import { eventInvitationsRouter } from './routes/eventInvitations.js'
 import { errorHandler } from './middleware/errorHandler.js'
 import { requestLogger } from './middleware/requestLogger.js'
 import { generalLimiter, adminLimiter, paymentLimiter } from './middleware/rateLimit.js'
 import { initializeDatabase } from './config/database.js'
 import { initializeSignalR } from './services/signalr.js'
 import { sendEmailWithDetails } from './services/email.js'
+import { initializeFeatureFlagCache } from './services/featureFlags.js'
 
 dotenv.config()
 
@@ -110,6 +115,7 @@ app.use('/api/webhooks', webhookRoutes) // Webhooks have their own verification
 app.use('/api/organizations', organizationRoutes)
 app.use('/api/invitations', invitationRoutes)
 app.use('/api/events', eventRoutes)
+app.use('/api/events', eventInvitationsRouter) // Event invitations for private auctions
 app.use('/api', eventItemRoutes)
 app.use('/api', eventBidRoutes)
 app.use('/api/platform-fees', platformFeeRoutes)
@@ -118,6 +124,9 @@ app.use('/api/admin/payouts', adminLimiter, adminPayoutRoutes) // Admin rate lim
 app.use('/api', complianceRoutes) // Compliance routes (tax, agreements) - protected by auth and general limiter
 app.use('/api/feedback', feedbackRoutes)
 app.use('/api/admin', adminLimiter, adminRoutes) // Admin rate limit
+app.use('/api/donate', donateRoutes) // Public donation endpoints - no auth required
+app.use('/api', submissionRoutes) // Submission management endpoints - auth required
+app.use('/api/uat', uatRoutes) // UAT (User Acceptance Testing) endpoints
 
 // Error handling
 app.use(errorHandler)
@@ -132,6 +141,10 @@ async function startServer() {
     // Initialize database connection
     await initializeDatabase()
     console.log('✓ Database connected')
+
+    // Initialize feature flags cache
+    await initializeFeatureFlagCache()
+    console.log('✓ Feature flags initialized')
 
     // Initialize SignalR
     const server = app.listen(PORT, () => {

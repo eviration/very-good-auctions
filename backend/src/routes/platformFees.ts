@@ -9,7 +9,9 @@ import {
   createWinnerPaymentIntent,
   processEventCompletion,
   calculatePlatformFee,
+  calculatePlatformFeeSync,
 } from '../services/platformFees.js'
+import { isFreeModeEnabled } from '../services/featureFlags.js'
 
 const router = Router()
 
@@ -17,29 +19,38 @@ const router = Router()
  * GET /api/platform-fees/pricing
  * Get pricing information (public)
  */
-router.get('/pricing', (_req: Request, res: Response) => {
-  res.json(getPricingInfo())
+router.get('/pricing', async (_req: Request, res: Response, next: NextFunction) => {
+  try {
+    const pricing = await getPricingInfo()
+    res.json(pricing)
+  } catch (error) {
+    next(error)
+  }
 })
 
 /**
  * GET /api/platform-fees/calculate
  * Calculate platform fee for an amount
  */
-router.get('/calculate', (req: Request, res: Response) => {
-  const amount = parseFloat(req.query.amount as string)
+router.get('/calculate', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const amount = parseFloat(req.query.amount as string)
 
-  if (isNaN(amount) || amount <= 0) {
-    res.status(400).json({ error: 'Invalid amount' })
-    return
+    if (isNaN(amount) || amount <= 0) {
+      res.status(400).json({ error: 'Invalid amount' })
+      return
+    }
+
+    const fee = await calculatePlatformFee(amount)
+
+    res.json({
+      amount,
+      platformFee: fee,
+      total: amount + fee,
+    })
+  } catch (error) {
+    next(error)
   }
-
-  const fee = calculatePlatformFee(amount)
-
-  res.json({
-    amount,
-    platformFee: fee,
-    total: amount + fee,
-  })
 })
 
 /**
@@ -198,37 +209,91 @@ router.get(
     try {
       const userId = req.user!.id
 
+      // Check free mode status once for all items
+      const freeMode = await isFreeModeEnabled()
+
       const result = await dbQuery(
         `SELECT
           ei.id,
           ei.title,
           ei.current_bid as winning_amount,
           ei.status,
+          ei.payment_status,
+          ei.fulfillment_status,
+          ei.fulfillment_type,
+          ei.tracking_number,
+          ei.tracking_carrier,
+          ei.tracking_url,
+          ei.pickup_ready_at,
           ae.name as event_name,
           ae.slug as event_slug,
           ae.end_time as event_ended_at,
+          ae.payment_mode,
+          ae.payment_instructions,
+          ae.payment_link,
+          ae.payment_qr_code_url,
+          ae.fulfillment_type as event_fulfillment_type,
+          ae.pickup_instructions,
+          ae.pickup_location,
+          ae.pickup_address_line1,
+          ae.pickup_city,
+          ae.pickup_state,
+          ae.payment_due_days,
+          o.name as organization_name,
           (SELECT TOP 1 blob_url FROM event_item_images WHERE item_id = ei.id ORDER BY display_order) as image_url
          FROM event_items ei
          INNER JOIN auction_events ae ON ei.event_id = ae.id
+         LEFT JOIN organizations o ON ae.organization_id = o.id
          WHERE ei.winner_id = @userId
            AND ei.status IN ('won', 'sold')
          ORDER BY ae.end_time DESC`,
         { userId }
       )
 
-      const wins = result.recordset.map((row: any) => ({
-        id: row.id,
-        title: row.title,
-        winningAmount: row.winning_amount,
-        platformFee: calculatePlatformFee(row.winning_amount),
-        total: row.winning_amount + calculatePlatformFee(row.winning_amount),
-        status: row.status,
-        eventName: row.event_name,
-        eventSlug: row.event_slug,
-        eventEndedAt: row.event_ended_at,
-        imageUrl: row.image_url,
-        paymentPending: row.status === 'won',
-      }))
+      const wins = result.recordset.map((row: any) => {
+        const isSelfManaged = row.payment_mode === 'self_managed'
+        const noFees = isSelfManaged || freeMode
+        const platformFee = noFees ? 0 : calculatePlatformFeeSync(row.winning_amount, freeMode)
+
+        return {
+          id: row.id,
+          title: row.title,
+          winningAmount: row.winning_amount,
+          platformFee,
+          total: row.winning_amount + platformFee,
+          status: row.status,
+          eventName: row.event_name,
+          eventSlug: row.event_slug,
+          eventEndedAt: row.event_ended_at,
+          imageUrl: row.image_url,
+          paymentPending: row.status === 'won',
+          // Self-managed payment info
+          paymentMode: row.payment_mode || 'integrated',
+          paymentInstructions: row.payment_instructions,
+          paymentLink: row.payment_link,
+          paymentQrCodeUrl: row.payment_qr_code_url,
+          paymentDueDays: row.payment_due_days,
+          organizationName: row.organization_name,
+          // Item-level payment/fulfillment tracking
+          paymentStatus: row.payment_status || 'pending',
+          fulfillmentStatus: row.fulfillment_status || 'pending',
+          fulfillmentType: row.fulfillment_type || row.event_fulfillment_type,
+          trackingNumber: row.tracking_number,
+          trackingCarrier: row.tracking_carrier,
+          trackingUrl: row.tracking_url,
+          pickupReadyAt: row.pickup_ready_at,
+          // Event-level pickup info (for self-managed)
+          pickupInstructions: row.pickup_instructions,
+          pickupLocation: row.pickup_location,
+          pickupAddress: row.pickup_address_line1 ? {
+            line1: row.pickup_address_line1,
+            city: row.pickup_city,
+            state: row.pickup_state,
+          } : null,
+          // Free mode indicator
+          freeModeActive: freeMode,
+        }
+      })
 
       res.json(wins)
     } catch (error) {

@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express'
 import jwt from 'jsonwebtoken'
 import jwksClient from 'jwks-rsa'
+import { query as dbQuery } from '../config/database.js'
 
 // Extend Express Request type
 declare global {
@@ -10,6 +11,7 @@ declare global {
         id: string
         email: string
         name?: string
+        isPlatformAdmin?: boolean
       }
     }
   }
@@ -148,4 +150,40 @@ export function optionalAuth(
   }
 
   authenticate(req, res, next)
+}
+
+/**
+ * Middleware to require platform admin access.
+ * Must be used after authenticate middleware.
+ * Checks if the user's email is in the platform_admins table.
+ */
+export async function requirePlatformAdmin(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  if (!req.user) {
+    res.status(401).json({ error: 'Authentication required' })
+    return
+  }
+
+  try {
+    // Check if user is a platform admin
+    const result = await dbQuery(
+      `SELECT 1 FROM platform_admins WHERE email = @email AND is_active = 1`,
+      { email: req.user.email.toLowerCase() }
+    )
+
+    if (result.recordset.length === 0) {
+      res.status(403).json({ error: 'Platform admin access required' })
+      return
+    }
+
+    // Mark user as platform admin
+    req.user.isPlatformAdmin = true
+    next()
+  } catch (error) {
+    console.error('Error checking platform admin status:', error)
+    res.status(500).json({ error: 'Internal server error' })
+  }
 }

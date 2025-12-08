@@ -116,6 +116,30 @@ async function checkEventAccess(eventId: string, userId: string, requireOwner = 
   return null
 }
 
+// Helper to check if string is a valid UUID
+function isUUID(str: string): boolean {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+  return uuidRegex.test(str)
+}
+
+// Helper to resolve event ID from ID or slug
+async function resolveEventId(idOrSlug: string): Promise<string | null> {
+  if (isUUID(idOrSlug)) {
+    return idOrSlug
+  }
+
+  const result = await dbQuery(
+    'SELECT id FROM auction_events WHERE slug = @slug',
+    { slug: idOrSlug }
+  )
+
+  if (result.recordset.length === 0) {
+    return null
+  }
+
+  return result.recordset[0].id
+}
+
 // Helper to ensure user exists
 async function ensureUserExists(userId: string, email: string, name: string) {
   const existing = await dbQuery(
@@ -148,6 +172,22 @@ router.post(
     body('incrementType').optional().isIn(['fixed', 'percent']),
     body('incrementValue').optional().isFloat({ min: 0.01 }),
     body('buyNowEnabled').optional().isBoolean(),
+    // Self-managed payments fields
+    body('paymentMode').optional().isIn(['self_managed', 'integrated']),
+    body('paymentInstructions').optional().isString(),
+    body('paymentLink').optional().isURL().withMessage('Payment link must be a valid URL'),
+    body('paymentQrCodeUrl').optional().isURL().withMessage('QR code URL must be a valid URL'),
+    body('fulfillmentType').optional().isIn(['shipping', 'pickup', 'both', 'digital']),
+    body('pickupInstructions').optional().isString(),
+    body('pickupLocation').optional().isString(),
+    body('pickupAddressLine1').optional().isString(),
+    body('pickupAddressLine2').optional().isString(),
+    body('pickupCity').optional().isString(),
+    body('pickupState').optional().isString(),
+    body('pickupPostalCode').optional().isString(),
+    body('pickupDates').optional().isString(),
+    body('paymentDueDays').optional().isInt({ min: 1, max: 90 }),
+    body('sendPaymentReminders').optional().isBoolean(),
   ],
   async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -171,6 +211,22 @@ router.post(
         incrementType = 'fixed',
         incrementValue = 1.0,
         buyNowEnabled = false,
+        // Self-managed payments fields
+        paymentMode = 'integrated',
+        paymentInstructions,
+        paymentLink,
+        paymentQrCodeUrl,
+        fulfillmentType = 'shipping',
+        pickupInstructions,
+        pickupLocation,
+        pickupAddressLine1,
+        pickupAddressLine2,
+        pickupCity,
+        pickupState,
+        pickupPostalCode,
+        pickupDates,
+        paymentDueDays = 7,
+        sendPaymentReminders = true,
       } = req.body
 
       // Ensure user exists in database
@@ -182,7 +238,7 @@ router.post(
         throw forbidden('Only organization owners and admins can create events')
       }
 
-      // Check if organization has completed Stripe Connect verification
+      // Check if organization exists and validate Stripe for integrated payments
       const orgResult = await dbQuery(
         `SELECT stripe_charges_enabled, stripe_payouts_enabled, name
          FROM organizations WHERE id = @orgId`,
@@ -194,11 +250,24 @@ router.post(
       }
 
       const org = orgResult.recordset[0]
-      if (!org.stripe_charges_enabled || !org.stripe_payouts_enabled) {
-        throw badRequest(
-          `Cannot create an auction for "${org.name}" until Stripe Connect setup is complete. ` +
-          'Please complete the payment verification process in your organization settings.'
-        )
+
+      // For integrated payments, Stripe Connect must be set up
+      if (paymentMode === 'integrated') {
+        if (!org.stripe_charges_enabled || !org.stripe_payouts_enabled) {
+          throw badRequest(
+            `Cannot create an auction with integrated payments for "${org.name}" until Stripe Connect setup is complete. ` +
+            'Please complete the payment verification process in your organization settings, or use self-managed payments.'
+          )
+        }
+      }
+
+      // For self-managed payments, require at least one payment method
+      if (paymentMode === 'self_managed') {
+        if (!paymentInstructions && !paymentLink && !paymentQrCodeUrl) {
+          throw badRequest(
+            'Self-managed payment events require at least one of: payment instructions, payment link, or payment QR code.'
+          )
+        }
       }
 
       // Validate dates
@@ -240,20 +309,31 @@ router.post(
       // Generate access code
       const accessCode = generateAccessCode()
 
+      // Get visibility (default to public)
+      const visibility = req.body.visibility || 'public'
+
       // Create event (no tier/maxItems - unlimited items, fees taken from proceeds)
       const result = await dbQuery(
         `INSERT INTO auction_events (
           organization_id, name, slug, description,
           start_time, end_time, submission_deadline,
           auction_type, is_multi_item, increment_type, increment_value,
-          buy_now_enabled, access_code, status,
+          buy_now_enabled, access_code, status, visibility,
+          payment_mode, payment_instructions, payment_link, payment_qr_code_url,
+          fulfillment_type, pickup_instructions, pickup_location,
+          pickup_address_line1, pickup_address_line2, pickup_city, pickup_state, pickup_postal_code,
+          pickup_dates, payment_due_days, send_payment_reminders,
           created_by, created_at, updated_at
         ) OUTPUT INSERTED.*
         VALUES (
           @organizationId, @name, @slug, @description,
           @startTime, @endTime, @submissionDeadline,
           @auctionType, @isMultiItem, @incrementType, @incrementValue,
-          @buyNowEnabled, @accessCode, 'draft',
+          @buyNowEnabled, @accessCode, 'draft', @visibility,
+          @paymentMode, @paymentInstructions, @paymentLink, @paymentQrCodeUrl,
+          @fulfillmentType, @pickupInstructions, @pickupLocation,
+          @pickupAddressLine1, @pickupAddressLine2, @pickupCity, @pickupState, @pickupPostalCode,
+          @pickupDates, @paymentDueDays, @sendPaymentReminders,
           @createdBy, GETUTCDATE(), GETUTCDATE()
         )`,
         {
@@ -270,6 +350,22 @@ router.post(
           incrementValue,
           buyNowEnabled: buyNowEnabled ? 1 : 0,
           accessCode,
+          visibility,
+          paymentMode,
+          paymentInstructions: paymentInstructions || null,
+          paymentLink: paymentLink || null,
+          paymentQrCodeUrl: paymentQrCodeUrl || null,
+          fulfillmentType,
+          pickupInstructions: pickupInstructions || null,
+          pickupLocation: pickupLocation || null,
+          pickupAddressLine1: pickupAddressLine1 || null,
+          pickupAddressLine2: pickupAddressLine2 || null,
+          pickupCity: pickupCity || null,
+          pickupState: pickupState || null,
+          pickupPostalCode: pickupPostalCode || null,
+          pickupDates: pickupDates || null,
+          paymentDueDays,
+          sendPaymentReminders: sendPaymentReminders ? 1 : 0,
           createdBy: userId,
         }
       )
@@ -286,12 +382,31 @@ router.post(
         endTime: event.end_time,
         submissionDeadline: event.submission_deadline,
         auctionType: event.auction_type,
+        visibility: event.visibility,
         isMultiItem: event.is_multi_item,
         incrementType: event.increment_type,
         incrementValue: event.increment_value,
         buyNowEnabled: event.buy_now_enabled,
         accessCode: event.access_code,
+        inviteCode: event.invite_code,
         status: event.status,
+        paymentMode: event.payment_mode,
+        paymentInstructions: event.payment_instructions,
+        paymentLink: event.payment_link,
+        paymentQrCodeUrl: event.payment_qr_code_url,
+        fulfillmentType: event.fulfillment_type,
+        pickupInstructions: event.pickup_instructions,
+        pickupLocation: event.pickup_location,
+        pickupAddress: {
+          line1: event.pickup_address_line1,
+          line2: event.pickup_address_line2,
+          city: event.pickup_city,
+          state: event.pickup_state,
+          postalCode: event.pickup_postal_code,
+        },
+        pickupDates: event.pickup_dates,
+        paymentDueDays: event.payment_due_days,
+        sendPaymentReminders: event.send_payment_reminders,
         createdAt: event.created_at,
       })
     } catch (error) {
@@ -321,11 +436,12 @@ router.get(
       const offset = (page - 1) * pageSize
 
       // Use 'e.' prefix for column names to avoid ambiguity with JOINed tables
-      let whereClause = "WHERE e.status IN ('scheduled', 'active', 'ended')"
+      // Only show public events in the main listing (private events require invitation)
+      let whereClause = "WHERE e.status IN ('scheduled', 'active', 'ended') AND (e.visibility = 'public' OR e.visibility IS NULL)"
       const params: Record<string, any> = {}
 
       if (status) {
-        whereClause = "WHERE e.status = @status"
+        whereClause = "WHERE e.status = @status AND (e.visibility = 'public' OR e.visibility IS NULL)"
         params.status = status
       }
 
@@ -406,12 +522,6 @@ router.get(
   }
 )
 
-// Helper to check if string is a valid UUID
-function isUUID(str: string): boolean {
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-  return uuidRegex.test(str)
-}
-
 // Get event by ID or slug
 router.get(
   '/:idOrSlug',
@@ -488,6 +598,24 @@ router.get(
         totalBids: event.total_bids,
         totalRaised: parseFloat(event.total_raised || 0),
         createdAt: event.created_at,
+        // Self-managed payments fields
+        paymentMode: event.payment_mode,
+        paymentInstructions: event.payment_instructions,
+        paymentLink: event.payment_link,
+        paymentQrCodeUrl: event.payment_qr_code_url,
+        fulfillmentType: event.fulfillment_type,
+        pickupInstructions: event.pickup_instructions,
+        pickupLocation: event.pickup_location,
+        pickupAddress: {
+          line1: event.pickup_address_line1,
+          line2: event.pickup_address_line2,
+          city: event.pickup_city,
+          state: event.pickup_state,
+          postalCode: event.pickup_postal_code,
+        },
+        pickupDates: event.pickup_dates,
+        paymentDueDays: event.payment_due_days,
+        sendPaymentReminders: event.send_payment_reminders,
         // Only show access code to admins
         ...(isAdmin ? { accessCode } : {}),
         isAdmin,
@@ -582,6 +710,24 @@ router.get(
         totalBids: event.total_bids,
         totalRaised: parseFloat(event.total_raised || 0),
         createdAt: event.created_at,
+        // Self-managed payments fields
+        paymentMode: event.payment_mode,
+        paymentInstructions: event.payment_instructions,
+        paymentLink: event.payment_link,
+        paymentQrCodeUrl: event.payment_qr_code_url,
+        fulfillmentType: event.fulfillment_type,
+        pickupInstructions: event.pickup_instructions,
+        pickupLocation: event.pickup_location,
+        pickupAddress: {
+          line1: event.pickup_address_line1,
+          line2: event.pickup_address_line2,
+          city: event.pickup_city,
+          state: event.pickup_state,
+          postalCode: event.pickup_postal_code,
+        },
+        pickupDates: event.pickup_dates,
+        paymentDueDays: event.payment_due_days,
+        sendPaymentReminders: event.send_payment_reminders,
         ...(isAdmin ? { accessCode } : {}),
         isAdmin,
       })
@@ -605,6 +751,22 @@ router.put(
     body('incrementType').optional().isIn(['fixed', 'percent']),
     body('incrementValue').optional().isFloat({ min: 0.01 }),
     body('buyNowEnabled').optional().isBoolean(),
+    // Self-managed payments fields
+    body('paymentMode').optional().isIn(['self_managed', 'integrated']),
+    body('paymentInstructions').optional().isString(),
+    body('paymentLink').optional().isURL().withMessage('Payment link must be a valid URL'),
+    body('paymentQrCodeUrl').optional().isURL().withMessage('QR code URL must be a valid URL'),
+    body('fulfillmentType').optional().isIn(['shipping', 'pickup', 'both', 'digital']),
+    body('pickupInstructions').optional().isString(),
+    body('pickupLocation').optional().isString(),
+    body('pickupAddressLine1').optional().isString(),
+    body('pickupAddressLine2').optional().isString(),
+    body('pickupCity').optional().isString(),
+    body('pickupState').optional().isString(),
+    body('pickupPostalCode').optional().isString(),
+    body('pickupDates').optional().isString(),
+    body('paymentDueDays').optional().isInt({ min: 1, max: 90 }),
+    body('sendPaymentReminders').optional().isBoolean(),
   ],
   async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -638,7 +800,36 @@ router.put(
         incrementType,
         incrementValue,
         buyNowEnabled,
+        // Self-managed payments fields
+        paymentMode,
+        paymentInstructions,
+        paymentLink,
+        paymentQrCodeUrl,
+        fulfillmentType,
+        pickupInstructions,
+        pickupLocation,
+        pickupAddressLine1,
+        pickupAddressLine2,
+        pickupCity,
+        pickupState,
+        pickupPostalCode,
+        pickupDates,
+        paymentDueDays,
+        sendPaymentReminders,
       } = req.body
+
+      // Validate self-managed payment requirements
+      const effectivePaymentMode = paymentMode || event.payment_mode
+      if (effectivePaymentMode === 'self_managed') {
+        const effectiveInstructions = paymentInstructions !== undefined ? paymentInstructions : event.payment_instructions
+        const effectiveLink = paymentLink !== undefined ? paymentLink : event.payment_link
+        const effectiveQr = paymentQrCodeUrl !== undefined ? paymentQrCodeUrl : event.payment_qr_code_url
+        if (!effectiveInstructions && !effectiveLink && !effectiveQr) {
+          throw badRequest(
+            'Self-managed payment events require at least one of: payment instructions, payment link, or payment QR code.'
+          )
+        }
+      }
 
       await dbQuery(
         `UPDATE auction_events SET
@@ -650,6 +841,21 @@ router.put(
           increment_type = COALESCE(@incrementType, increment_type),
           increment_value = COALESCE(@incrementValue, increment_value),
           buy_now_enabled = COALESCE(@buyNowEnabled, buy_now_enabled),
+          payment_mode = COALESCE(@paymentMode, payment_mode),
+          payment_instructions = COALESCE(@paymentInstructions, payment_instructions),
+          payment_link = COALESCE(@paymentLink, payment_link),
+          payment_qr_code_url = COALESCE(@paymentQrCodeUrl, payment_qr_code_url),
+          fulfillment_type = COALESCE(@fulfillmentType, fulfillment_type),
+          pickup_instructions = COALESCE(@pickupInstructions, pickup_instructions),
+          pickup_location = COALESCE(@pickupLocation, pickup_location),
+          pickup_address_line1 = COALESCE(@pickupAddressLine1, pickup_address_line1),
+          pickup_address_line2 = COALESCE(@pickupAddressLine2, pickup_address_line2),
+          pickup_city = COALESCE(@pickupCity, pickup_city),
+          pickup_state = COALESCE(@pickupState, pickup_state),
+          pickup_postal_code = COALESCE(@pickupPostalCode, pickup_postal_code),
+          pickup_dates = COALESCE(@pickupDates, pickup_dates),
+          payment_due_days = COALESCE(@paymentDueDays, payment_due_days),
+          send_payment_reminders = COALESCE(@sendPaymentReminders, send_payment_reminders),
           updated_at = GETUTCDATE()
          WHERE id = @id`,
         {
@@ -662,6 +868,21 @@ router.put(
           incrementType: incrementType || null,
           incrementValue: incrementValue || null,
           buyNowEnabled: buyNowEnabled !== undefined ? (buyNowEnabled ? 1 : 0) : null,
+          paymentMode: paymentMode || null,
+          paymentInstructions: paymentInstructions !== undefined ? paymentInstructions : null,
+          paymentLink: paymentLink !== undefined ? paymentLink : null,
+          paymentQrCodeUrl: paymentQrCodeUrl !== undefined ? paymentQrCodeUrl : null,
+          fulfillmentType: fulfillmentType || null,
+          pickupInstructions: pickupInstructions !== undefined ? pickupInstructions : null,
+          pickupLocation: pickupLocation !== undefined ? pickupLocation : null,
+          pickupAddressLine1: pickupAddressLine1 !== undefined ? pickupAddressLine1 : null,
+          pickupAddressLine2: pickupAddressLine2 !== undefined ? pickupAddressLine2 : null,
+          pickupCity: pickupCity !== undefined ? pickupCity : null,
+          pickupState: pickupState !== undefined ? pickupState : null,
+          pickupPostalCode: pickupPostalCode !== undefined ? pickupPostalCode : null,
+          pickupDates: pickupDates !== undefined ? pickupDates : null,
+          paymentDueDays: paymentDueDays || null,
+          sendPaymentReminders: sendPaymentReminders !== undefined ? (sendPaymentReminders ? 1 : 0) : null,
         }
       )
 
@@ -1055,6 +1276,301 @@ router.delete(
       }
 
       res.status(204).send()
+    } catch (error) {
+      next(error)
+    }
+  }
+)
+
+// =============================================
+// Donation Code Management Endpoints
+// =============================================
+
+// Helper to generate a unique donation code
+function generateDonationCode(): string {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789' // Avoid confusing chars like 0, O, 1, I
+  let code = ''
+  for (let i = 0; i < 8; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length))
+  }
+  return code
+}
+
+/**
+ * GET /api/events/:idOrSlug/donation-settings
+ * Get donation settings for an event.
+ * Requires event admin access.
+ */
+router.get(
+  '/:idOrSlug/donation-settings',
+  authenticate,
+  [param('idOrSlug').notEmpty()],
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const errors = validationResult(req)
+      if (!errors.isEmpty()) {
+        throw badRequest('Validation failed', errors.mapped())
+      }
+
+      const eventId = await resolveEventId(req.params.idOrSlug)
+      if (!eventId) {
+        throw notFound('Event not found')
+      }
+
+      const userId = req.user!.id
+      const access = await checkEventAccess(eventId, userId)
+      if (!access) {
+        throw forbidden('You do not have access to this event')
+      }
+
+      const result = await dbQuery(
+        `SELECT
+          donation_code,
+          donation_code_enabled,
+          donation_code_created_at,
+          donation_code_expires_at,
+          donation_requires_contact,
+          donation_require_value_estimate,
+          donation_max_images,
+          donation_instructions,
+          donation_notify_on_submission,
+          donation_auto_thank_donor
+         FROM auction_events
+         WHERE id = @eventId`,
+        { eventId }
+      )
+
+      if (result.recordset.length === 0) {
+        throw notFound('Event not found')
+      }
+
+      const settings = result.recordset[0]
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000'
+
+      res.json({
+        code: settings.donation_code,
+        enabled: settings.donation_code_enabled,
+        createdAt: settings.donation_code_created_at,
+        expiresAt: settings.donation_code_expires_at,
+        requiresContact: settings.donation_requires_contact,
+        requireValueEstimate: settings.donation_require_value_estimate,
+        maxImages: settings.donation_max_images,
+        instructions: settings.donation_instructions,
+        notifyOnSubmission: settings.donation_notify_on_submission,
+        autoThankDonor: settings.donation_auto_thank_donor,
+        donationUrl: settings.donation_code ? `${frontendUrl}/donate/${settings.donation_code}` : null,
+      })
+    } catch (error) {
+      next(error)
+    }
+  }
+)
+
+/**
+ * POST /api/events/:idOrSlug/donation-settings/generate-code
+ * Generate a new donation code for an event.
+ * Requires event admin access.
+ */
+router.post(
+  '/:idOrSlug/donation-settings/generate-code',
+  authenticate,
+  [param('idOrSlug').notEmpty()],
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const errors = validationResult(req)
+      if (!errors.isEmpty()) {
+        throw badRequest('Validation failed', errors.mapped())
+      }
+
+      const eventId = await resolveEventId(req.params.idOrSlug)
+      if (!eventId) {
+        throw notFound('Event not found')
+      }
+
+      const userId = req.user!.id
+      const access = await checkEventAccess(eventId, userId)
+      if (!access) {
+        throw forbidden('You do not have access to this event')
+      }
+
+      // Generate unique code
+      let code: string
+      let attempts = 0
+      const maxAttempts = 10
+
+      do {
+        code = generateDonationCode()
+        const existing = await dbQuery(
+          'SELECT id FROM auction_events WHERE donation_code = @code',
+          { code }
+        )
+        if (existing.recordset.length === 0) {
+          break
+        }
+        attempts++
+      } while (attempts < maxAttempts)
+
+      if (attempts >= maxAttempts) {
+        throw badRequest('Failed to generate unique code. Please try again.')
+      }
+
+      await dbQuery(
+        `UPDATE auction_events
+         SET donation_code = @code,
+             donation_code_created_at = GETUTCDATE()
+         WHERE id = @eventId`,
+        { eventId, code }
+      )
+
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000'
+
+      res.json({
+        code,
+        donationUrl: `${frontendUrl}/donate/${code}`,
+      })
+    } catch (error) {
+      next(error)
+    }
+  }
+)
+
+/**
+ * PATCH /api/events/:idOrSlug/donation-settings
+ * Update donation settings for an event.
+ * Requires event admin access.
+ */
+router.patch(
+  '/:idOrSlug/donation-settings',
+  authenticate,
+  [
+    param('idOrSlug').notEmpty(),
+    body('enabled').optional().isBoolean(),
+    body('expiresAt').optional({ nullable: true }).isISO8601(),
+    body('requiresContact').optional().isBoolean(),
+    body('requireValueEstimate').optional().isBoolean(),
+    body('maxImages').optional().isInt({ min: 0, max: 10 }),
+    body('instructions').optional({ nullable: true }).trim().isLength({ max: 2000 }),
+    body('notifyOnSubmission').optional().isBoolean(),
+    body('autoThankDonor').optional().isBoolean(),
+  ],
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const errors = validationResult(req)
+      if (!errors.isEmpty()) {
+        throw badRequest('Validation failed', errors.mapped())
+      }
+
+      const eventId = await resolveEventId(req.params.idOrSlug)
+      if (!eventId) {
+        throw notFound('Event not found')
+      }
+
+      const userId = req.user!.id
+      const access = await checkEventAccess(eventId, userId)
+      if (!access) {
+        throw forbidden('You do not have access to this event')
+      }
+
+      const {
+        enabled,
+        expiresAt,
+        requiresContact,
+        requireValueEstimate,
+        maxImages,
+        instructions,
+        notifyOnSubmission,
+        autoThankDonor,
+      } = req.body
+
+      // Build update query
+      const updates: string[] = []
+      const params: Record<string, unknown> = { eventId }
+
+      if (enabled !== undefined) {
+        updates.push('donation_code_enabled = @enabled')
+        params.enabled = enabled
+      }
+      if (expiresAt !== undefined) {
+        updates.push('donation_code_expires_at = @expiresAt')
+        params.expiresAt = expiresAt
+      }
+      if (requiresContact !== undefined) {
+        updates.push('donation_requires_contact = @requiresContact')
+        params.requiresContact = requiresContact
+      }
+      if (requireValueEstimate !== undefined) {
+        updates.push('donation_require_value_estimate = @requireValueEstimate')
+        params.requireValueEstimate = requireValueEstimate
+      }
+      if (maxImages !== undefined) {
+        updates.push('donation_max_images = @maxImages')
+        params.maxImages = maxImages
+      }
+      if (instructions !== undefined) {
+        updates.push('donation_instructions = @instructions')
+        params.instructions = instructions
+      }
+      if (notifyOnSubmission !== undefined) {
+        updates.push('donation_notify_on_submission = @notifyOnSubmission')
+        params.notifyOnSubmission = notifyOnSubmission
+      }
+      if (autoThankDonor !== undefined) {
+        updates.push('donation_auto_thank_donor = @autoThankDonor')
+        params.autoThankDonor = autoThankDonor
+      }
+
+      if (updates.length > 0) {
+        await dbQuery(
+          `UPDATE auction_events SET ${updates.join(', ')} WHERE id = @eventId`,
+          params
+        )
+      }
+
+      res.json({ success: true })
+    } catch (error) {
+      next(error)
+    }
+  }
+)
+
+/**
+ * DELETE /api/events/:idOrSlug/donation-settings/code
+ * Delete/regenerate the donation code (disables existing links).
+ * Requires event admin access.
+ */
+router.delete(
+  '/:idOrSlug/donation-settings/code',
+  authenticate,
+  [param('idOrSlug').notEmpty()],
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const errors = validationResult(req)
+      if (!errors.isEmpty()) {
+        throw badRequest('Validation failed', errors.mapped())
+      }
+
+      const eventId = await resolveEventId(req.params.idOrSlug)
+      if (!eventId) {
+        throw notFound('Event not found')
+      }
+
+      const userId = req.user!.id
+      const access = await checkEventAccess(eventId, userId)
+      if (!access) {
+        throw forbidden('You do not have access to this event')
+      }
+
+      await dbQuery(
+        `UPDATE auction_events
+         SET donation_code = NULL,
+             donation_code_enabled = 0,
+             donation_code_created_at = NULL,
+             donation_code_expires_at = NULL
+         WHERE id = @eventId`,
+        { eventId }
+      )
+
+      res.json({ success: true, message: 'Donation code deleted' })
     } catch (error) {
       next(error)
     }

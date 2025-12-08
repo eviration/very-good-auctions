@@ -1131,4 +1131,710 @@ router.delete(
   }
 )
 
+// =====================================================
+// Payment and Fulfillment Status Management (Self-Managed Payments)
+// =====================================================
+
+// Helper to generate tracking URL based on carrier
+function getTrackingUrl(carrier: string, trackingNumber: string): string {
+  const urls: Record<string, string> = {
+    ups: `https://www.ups.com/track?tracknum=${trackingNumber}`,
+    usps: `https://tools.usps.com/go/TrackConfirmAction?tLabels=${trackingNumber}`,
+    fedex: `https://www.fedex.com/fedextrack/?trknbr=${trackingNumber}`,
+    dhl: `https://www.dhl.com/en/express/tracking.html?AWB=${trackingNumber}`,
+  }
+  return urls[carrier.toLowerCase()] || ''
+}
+
+// Update payment status (org admin only)
+router.patch(
+  '/:id/payment-status',
+  authenticate,
+  [
+    param('id').isUUID(),
+    body('status').isIn(['pending', 'paid', 'payment_issue', 'waived', 'refunded']),
+    body('paymentMethodUsed').optional().isString(),
+    body('notes').optional().isString(),
+  ],
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const errors = validationResult(req)
+      if (!errors.isEmpty()) {
+        throw badRequest('Validation failed', errors.mapped())
+      }
+
+      const { id } = req.params
+      const userId = req.user!.id
+      const { status, paymentMethodUsed, notes } = req.body
+
+      // Get item with event info
+      const itemResult = await dbQuery(
+        `SELECT i.*, e.payment_mode, e.organization_id
+         FROM event_items i
+         INNER JOIN auction_events e ON i.event_id = e.id
+         WHERE i.id = @id`,
+        { id }
+      )
+
+      if (itemResult.recordset.length === 0) {
+        throw notFound('Item not found')
+      }
+
+      const item = itemResult.recordset[0]
+
+      // Check admin access to the event
+      const access = await checkEventAccess(item.event_id, userId)
+      if (!access) {
+        throw forbidden('Only event admins can update payment status')
+      }
+
+      // Store old status for notification logic
+      const oldStatus = item.payment_status
+
+      // Update payment status
+      const updateParams: Record<string, any> = {
+        id,
+        status,
+        confirmedBy: userId,
+        paymentMethodUsed: paymentMethodUsed || null,
+        notes: notes || null,
+      }
+
+      await dbQuery(
+        `UPDATE event_items SET
+          payment_status = @status,
+          payment_confirmed_at = ${status === 'paid' ? 'GETUTCDATE()' : 'payment_confirmed_at'},
+          payment_confirmed_by = ${status === 'paid' ? '@confirmedBy' : 'payment_confirmed_by'},
+          payment_method_used = COALESCE(@paymentMethodUsed, payment_method_used),
+          payment_notes = COALESCE(@notes, payment_notes),
+          updated_at = GETUTCDATE()
+         WHERE id = @id`,
+        updateParams
+      )
+
+      // TODO: Send notification to winner if status changed to 'paid'
+      // if (status === 'paid' && oldStatus !== 'paid') {
+      //   await sendPaymentConfirmedNotification(item)
+      // }
+
+      res.json({
+        message: 'Payment status updated successfully',
+        status,
+        previousStatus: oldStatus,
+      })
+    } catch (error) {
+      next(error)
+    }
+  }
+)
+
+// Update fulfillment status (org admin only)
+router.patch(
+  '/:id/fulfillment-status',
+  authenticate,
+  [
+    param('id').isUUID(),
+    body('status').isIn(['pending', 'processing', 'ready_for_pickup', 'shipped', 'out_for_delivery', 'delivered', 'picked_up', 'issue']),
+    body('fulfillmentType').optional().isIn(['shipping', 'pickup', 'digital']),
+    body('trackingNumber').optional().isString(),
+    body('trackingCarrier').optional().isString(),
+    body('estimatedDelivery').optional().isString(),
+    body('pickupCompletedBy').optional().isString(),
+    body('digitalDeliveryInfo').optional().isString(),
+    body('notes').optional().isString(),
+  ],
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const errors = validationResult(req)
+      if (!errors.isEmpty()) {
+        throw badRequest('Validation failed', errors.mapped())
+      }
+
+      const { id } = req.params
+      const userId = req.user!.id
+      const {
+        status,
+        fulfillmentType,
+        trackingNumber,
+        trackingCarrier,
+        estimatedDelivery,
+        pickupCompletedBy,
+        digitalDeliveryInfo,
+        notes,
+      } = req.body
+
+      // Get item with event info
+      const itemResult = await dbQuery(
+        `SELECT i.*, e.payment_mode, e.organization_id
+         FROM event_items i
+         INNER JOIN auction_events e ON i.event_id = e.id
+         WHERE i.id = @id`,
+        { id }
+      )
+
+      if (itemResult.recordset.length === 0) {
+        throw notFound('Item not found')
+      }
+
+      const item = itemResult.recordset[0]
+
+      // Check admin access to the event
+      const access = await checkEventAccess(item.event_id, userId)
+      if (!access) {
+        throw forbidden('Only event admins can update fulfillment status')
+      }
+
+      // Store old status for notification logic
+      const oldStatus = item.fulfillment_status
+
+      // Generate tracking URL if shipping info provided
+      let trackingUrl = null
+      if (trackingNumber && trackingCarrier) {
+        trackingUrl = getTrackingUrl(trackingCarrier, trackingNumber)
+      }
+
+      // Build the update
+      await dbQuery(
+        `UPDATE event_items SET
+          fulfillment_status = @status,
+          fulfillment_type = COALESCE(@fulfillmentType, fulfillment_type),
+          tracking_number = COALESCE(@trackingNumber, tracking_number),
+          tracking_carrier = COALESCE(@trackingCarrier, tracking_carrier),
+          tracking_url = COALESCE(@trackingUrl, tracking_url),
+          estimated_delivery = COALESCE(@estimatedDelivery, estimated_delivery),
+          shipped_at = ${status === 'shipped' ? 'GETUTCDATE()' : 'shipped_at'},
+          pickup_ready_at = ${status === 'ready_for_pickup' ? 'GETUTCDATE()' : 'pickup_ready_at'},
+          pickup_completed_at = ${status === 'picked_up' ? 'GETUTCDATE()' : 'pickup_completed_at'},
+          pickup_completed_by = COALESCE(@pickupCompletedBy, pickup_completed_by),
+          digital_delivery_info = COALESCE(@digitalDeliveryInfo, digital_delivery_info),
+          digital_delivered_at = ${status === 'delivered' && fulfillmentType === 'digital' ? 'GETUTCDATE()' : 'digital_delivered_at'},
+          fulfillment_notes = COALESCE(@notes, fulfillment_notes),
+          fulfilled_at = ${['delivered', 'picked_up'].includes(status) ? 'GETUTCDATE()' : 'fulfilled_at'},
+          fulfilled_by = ${['delivered', 'picked_up'].includes(status) ? '@fulfilledBy' : 'fulfilled_by'},
+          updated_at = GETUTCDATE()
+         WHERE id = @id`,
+        {
+          id,
+          status,
+          fulfillmentType: fulfillmentType || null,
+          trackingNumber: trackingNumber || null,
+          trackingCarrier: trackingCarrier || null,
+          trackingUrl: trackingUrl || null,
+          estimatedDelivery: estimatedDelivery || null,
+          pickupCompletedBy: pickupCompletedBy || null,
+          digitalDeliveryInfo: digitalDeliveryInfo || null,
+          notes: notes || null,
+          fulfilledBy: userId,
+        }
+      )
+
+      // TODO: Send notifications based on status change
+      // if (status === 'shipped' && oldStatus !== 'shipped') {
+      //   await sendItemShippedNotification(item, trackingNumber, trackingCarrier, trackingUrl)
+      // }
+      // if (status === 'ready_for_pickup' && oldStatus !== 'ready_for_pickup') {
+      //   await sendReadyForPickupNotification(item)
+      // }
+
+      res.json({
+        message: 'Fulfillment status updated successfully',
+        status,
+        previousStatus: oldStatus,
+        tracking: trackingNumber ? { number: trackingNumber, carrier: trackingCarrier, url: trackingUrl } : null,
+      })
+    } catch (error) {
+      next(error)
+    }
+  }
+)
+
+// Get payment summary for an event (org admin only)
+router.get(
+  '/events/:eventId/payment-summary',
+  authenticate,
+  param('eventId').isString(),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { eventId: eventIdOrSlug } = req.params
+      const userId = req.user!.id
+
+      // Resolve event ID from ID or slug
+      const eventId = await resolveEventId(eventIdOrSlug)
+      if (!eventId) {
+        throw notFound('Event not found')
+      }
+
+      // Check admin access
+      const access = await checkEventAccess(eventId, userId)
+      if (!access) {
+        throw forbidden('Only event admins can view payment summary')
+      }
+
+      // Get summary counts and values by status
+      const summaryResult = await dbQuery(
+        `SELECT
+          payment_status,
+          COUNT(*) as count,
+          COALESCE(SUM(current_bid), 0) as total_value
+         FROM event_items
+         WHERE event_id = @eventId
+           AND winner_id IS NOT NULL
+         GROUP BY payment_status`,
+        { eventId }
+      )
+
+      // Get all items with winner info
+      const itemsResult = await dbQuery(
+        `SELECT i.*, u.display_name as winner_name, u.email as winner_email
+         FROM event_items i
+         LEFT JOIN users u ON i.winner_id = u.id
+         WHERE i.event_id = @eventId
+           AND i.winner_id IS NOT NULL
+         ORDER BY i.payment_status, i.updated_at DESC`,
+        { eventId }
+      )
+
+      // Build summary object
+      const byStatus: Record<string, { count: number; value: number }> = {
+        pending: { count: 0, value: 0 },
+        paid: { count: 0, value: 0 },
+        payment_issue: { count: 0, value: 0 },
+        waived: { count: 0, value: 0 },
+        refunded: { count: 0, value: 0 },
+      }
+
+      let totalItems = 0
+      let totalValue = 0
+
+      for (const row of summaryResult.recordset) {
+        const status = row.payment_status || 'pending'
+        if (byStatus[status]) {
+          byStatus[status].count = row.count
+          byStatus[status].value = parseFloat(row.total_value)
+        }
+        totalItems += row.count
+        totalValue += parseFloat(row.total_value)
+      }
+
+      // Get images for items
+      const itemIds = itemsResult.recordset.map((i: any) => i.id)
+      let images: any[] = []
+      if (itemIds.length > 0) {
+        const imageResult = await dbQuery(
+          `SELECT * FROM event_item_images
+           WHERE item_id IN (${itemIds.map((_: any, idx: number) => `@id${idx}`).join(',')})
+             AND is_primary = 1`,
+          itemIds.reduce((acc: any, id: string, idx: number) => ({ ...acc, [`id${idx}`]: id }), {})
+        )
+        images = imageResult.recordset
+      }
+
+      const items = itemsResult.recordset.map((item: any) => {
+        const primaryImage = images.find((img: any) => img.item_id === item.id)
+        return {
+          id: item.id,
+          title: item.title,
+          imageUrl: primaryImage?.blob_url || null,
+          winningBid: item.current_bid ? parseFloat(item.current_bid) : null,
+          wonAt: item.won_at,
+          winner: {
+            id: item.winner_id,
+            name: item.winner_name,
+            email: item.winner_email,
+          },
+          paymentStatus: item.payment_status || 'pending',
+          paymentConfirmedAt: item.payment_confirmed_at,
+          paymentMethodUsed: item.payment_method_used,
+          paymentNotes: item.payment_notes,
+          fulfillmentStatus: item.fulfillment_status || 'pending',
+          fulfillmentType: item.fulfillment_type,
+        }
+      })
+
+      res.json({
+        totalItems,
+        totalValue,
+        byStatus,
+        items,
+      })
+    } catch (error) {
+      next(error)
+    }
+  }
+)
+
+// Get fulfillment summary for an event (org admin only)
+router.get(
+  '/events/:eventId/fulfillment-summary',
+  authenticate,
+  param('eventId').isString(),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { eventId: eventIdOrSlug } = req.params
+      const userId = req.user!.id
+
+      // Resolve event ID from ID or slug
+      const eventId = await resolveEventId(eventIdOrSlug)
+      if (!eventId) {
+        throw notFound('Event not found')
+      }
+
+      // Check admin access
+      const access = await checkEventAccess(eventId, userId)
+      if (!access) {
+        throw forbidden('Only event admins can view fulfillment summary')
+      }
+
+      // Get summary counts by fulfillment status
+      const summaryResult = await dbQuery(
+        `SELECT
+          fulfillment_status,
+          COUNT(*) as count
+         FROM event_items
+         WHERE event_id = @eventId
+           AND winner_id IS NOT NULL
+         GROUP BY fulfillment_status`,
+        { eventId }
+      )
+
+      // Build summary object
+      const byStatus: Record<string, number> = {
+        pending: 0,
+        processing: 0,
+        ready_for_pickup: 0,
+        shipped: 0,
+        out_for_delivery: 0,
+        delivered: 0,
+        picked_up: 0,
+        issue: 0,
+      }
+
+      for (const row of summaryResult.recordset) {
+        const status = row.fulfillment_status || 'pending'
+        if (Object.prototype.hasOwnProperty.call(byStatus, status)) {
+          byStatus[status] = row.count
+        }
+      }
+
+      // Get all items with fulfillment details
+      const itemsResult = await dbQuery(
+        `SELECT i.*, u.display_name as winner_name, u.email as winner_email
+         FROM event_items i
+         LEFT JOIN users u ON i.winner_id = u.id
+         WHERE i.event_id = @eventId
+           AND i.winner_id IS NOT NULL
+         ORDER BY
+           CASE fulfillment_status
+             WHEN 'pending' THEN 1
+             WHEN 'processing' THEN 2
+             WHEN 'ready_for_pickup' THEN 3
+             WHEN 'shipped' THEN 4
+             WHEN 'out_for_delivery' THEN 5
+             WHEN 'delivered' THEN 6
+             WHEN 'picked_up' THEN 6
+             WHEN 'issue' THEN 0
+             ELSE 7
+           END,
+           i.updated_at DESC`,
+        { eventId }
+      )
+
+      // Get images for items
+      const itemIds = itemsResult.recordset.map((i: any) => i.id)
+      let images: any[] = []
+      if (itemIds.length > 0) {
+        const imageResult = await dbQuery(
+          `SELECT * FROM event_item_images
+           WHERE item_id IN (${itemIds.map((_: any, idx: number) => `@id${idx}`).join(',')})
+             AND is_primary = 1`,
+          itemIds.reduce((acc: any, id: string, idx: number) => ({ ...acc, [`id${idx}`]: id }), {})
+        )
+        images = imageResult.recordset
+      }
+
+      const items = itemsResult.recordset.map((item: any) => {
+        const primaryImage = images.find((img: any) => img.item_id === item.id)
+        return {
+          id: item.id,
+          title: item.title,
+          imageUrl: primaryImage?.blob_url || null,
+          winningBid: item.current_bid ? parseFloat(item.current_bid) : null,
+          winner: {
+            id: item.winner_id,
+            name: item.winner_name,
+            email: item.winner_email,
+          },
+          paymentStatus: item.payment_status || 'pending',
+          fulfillmentStatus: item.fulfillment_status || 'pending',
+          fulfillmentType: item.fulfillment_type,
+          tracking: item.tracking_number ? {
+            number: item.tracking_number,
+            carrier: item.tracking_carrier,
+            url: item.tracking_url,
+            estimatedDelivery: item.estimated_delivery,
+          } : null,
+          shippedAt: item.shipped_at,
+          pickupReadyAt: item.pickup_ready_at,
+          fulfilledAt: item.fulfilled_at,
+          fulfillmentNotes: item.fulfillment_notes,
+        }
+      })
+
+      res.json({
+        byStatus,
+        items,
+      })
+    } catch (error) {
+      next(error)
+    }
+  }
+)
+
+// Bulk update payment status (org admin only)
+router.post(
+  '/events/:eventId/bulk-payment-status',
+  authenticate,
+  [
+    param('eventId').isString(),
+    body('itemIds').isArray({ min: 1 }),
+    body('status').isIn(['paid', 'payment_issue', 'waived']),
+    body('paymentMethodUsed').optional().isString(),
+  ],
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const errors = validationResult(req)
+      if (!errors.isEmpty()) {
+        throw badRequest('Validation failed', errors.mapped())
+      }
+
+      const { eventId: eventIdOrSlug } = req.params
+      const userId = req.user!.id
+      const { itemIds, status, paymentMethodUsed } = req.body
+
+      // Resolve event ID
+      const eventId = await resolveEventId(eventIdOrSlug)
+      if (!eventId) {
+        throw notFound('Event not found')
+      }
+
+      // Check admin access
+      const access = await checkEventAccess(eventId, userId)
+      if (!access) {
+        throw forbidden('Only event admins can update payment status')
+      }
+
+      // Build parameterized query for item IDs
+      const itemIdParams = itemIds.reduce((acc: any, id: string, idx: number) => ({
+        ...acc,
+        [`itemId${idx}`]: id,
+      }), {})
+      const itemIdPlaceholders = itemIds.map((_: any, idx: number) => `@itemId${idx}`).join(',')
+
+      // Update all items
+      await dbQuery(
+        `UPDATE event_items SET
+          payment_status = @status,
+          payment_confirmed_at = ${status === 'paid' ? 'GETUTCDATE()' : 'payment_confirmed_at'},
+          payment_confirmed_by = ${status === 'paid' ? '@confirmedBy' : 'payment_confirmed_by'},
+          payment_method_used = COALESCE(@paymentMethodUsed, payment_method_used),
+          updated_at = GETUTCDATE()
+         WHERE id IN (${itemIdPlaceholders})
+           AND event_id = @eventId`,
+        {
+          ...itemIdParams,
+          eventId,
+          status,
+          confirmedBy: userId,
+          paymentMethodUsed: paymentMethodUsed || null,
+        }
+      )
+
+      res.json({
+        message: `Updated ${itemIds.length} items to ${status}`,
+        count: itemIds.length,
+      })
+    } catch (error) {
+      next(error)
+    }
+  }
+)
+
+// Bulk update fulfillment status (org admin only)
+router.post(
+  '/events/:eventId/bulk-fulfillment-status',
+  authenticate,
+  [
+    param('eventId').isString(),
+    body('itemIds').isArray({ min: 1 }),
+    body('status').isIn(['processing', 'ready_for_pickup', 'shipped', 'delivered', 'picked_up']),
+  ],
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const errors = validationResult(req)
+      if (!errors.isEmpty()) {
+        throw badRequest('Validation failed', errors.mapped())
+      }
+
+      const { eventId: eventIdOrSlug } = req.params
+      const userId = req.user!.id
+      const { itemIds, status } = req.body
+
+      // Resolve event ID
+      const eventId = await resolveEventId(eventIdOrSlug)
+      if (!eventId) {
+        throw notFound('Event not found')
+      }
+
+      // Check admin access
+      const access = await checkEventAccess(eventId, userId)
+      if (!access) {
+        throw forbidden('Only event admins can update fulfillment status')
+      }
+
+      // Build parameterized query for item IDs
+      const itemIdParams = itemIds.reduce((acc: any, id: string, idx: number) => ({
+        ...acc,
+        [`itemId${idx}`]: id,
+      }), {})
+      const itemIdPlaceholders = itemIds.map((_: any, idx: number) => `@itemId${idx}`).join(',')
+
+      // Update all items
+      await dbQuery(
+        `UPDATE event_items SET
+          fulfillment_status = @status,
+          pickup_ready_at = ${status === 'ready_for_pickup' ? 'GETUTCDATE()' : 'pickup_ready_at'},
+          fulfilled_at = ${['delivered', 'picked_up'].includes(status) ? 'GETUTCDATE()' : 'fulfilled_at'},
+          fulfilled_by = ${['delivered', 'picked_up'].includes(status) ? '@fulfilledBy' : 'fulfilled_by'},
+          updated_at = GETUTCDATE()
+         WHERE id IN (${itemIdPlaceholders})
+           AND event_id = @eventId`,
+        {
+          ...itemIdParams,
+          eventId,
+          status,
+          fulfilledBy: userId,
+        }
+      )
+
+      res.json({
+        message: `Updated ${itemIds.length} items to ${status}`,
+        count: itemIds.length,
+      })
+    } catch (error) {
+      next(error)
+    }
+  }
+)
+
+// Get won items for an event (org admin only)
+router.get(
+  '/events/:eventId/won-items',
+  authenticate,
+  param('eventId').isString(),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { eventId: eventIdOrSlug } = req.params
+      const userId = req.user!.id
+
+      // Resolve event ID from ID or slug
+      const eventId = await resolveEventId(eventIdOrSlug)
+      if (!eventId) {
+        throw notFound('Event not found')
+      }
+
+      // Check admin access
+      const access = await checkEventAccess(eventId, userId)
+      if (!access) {
+        throw forbidden('Only event admins can view won items')
+      }
+
+      // Get all items with winners
+      const itemsResult = await dbQuery(
+        `SELECT i.*,
+                u.display_name as winner_name,
+                u.email as winner_email,
+                e.payment_mode,
+                e.payment_instructions,
+                e.payment_link,
+                e.fulfillment_type as event_fulfillment_type
+         FROM event_items i
+         LEFT JOIN users u ON i.winner_id = u.id
+         LEFT JOIN auction_events e ON i.event_id = e.id
+         WHERE i.event_id = @eventId
+           AND i.winner_id IS NOT NULL
+         ORDER BY i.updated_at DESC`,
+        { eventId }
+      )
+
+      // Get images for items
+      const itemIds = itemsResult.recordset.map((i: any) => i.id)
+      let images: any[] = []
+      if (itemIds.length > 0) {
+        const imageResult = await dbQuery(
+          `SELECT * FROM event_item_images
+           WHERE item_id IN (${itemIds.map((_: any, idx: number) => `@id${idx}`).join(',')})
+           ORDER BY display_order`,
+          itemIds.reduce((acc: any, id: string, idx: number) => ({ ...acc, [`id${idx}`]: id }), {})
+        )
+        images = imageResult.recordset
+      }
+
+      const items = itemsResult.recordset.map((item: any) => {
+        const itemImages = images
+          .filter((img: any) => img.item_id === item.id)
+          .map((img: any) => ({
+            id: img.id,
+            blobUrl: img.blob_url,
+            displayOrder: img.display_order,
+            isPrimary: img.is_primary,
+          }))
+
+        return {
+          id: item.id,
+          eventId: item.event_id,
+          title: item.title,
+          description: item.description,
+          condition: item.condition,
+          currentBid: item.current_bid ? parseFloat(item.current_bid) : null,
+          bidCount: item.bid_count,
+          status: item.status,
+          images: itemImages,
+          // Winner info
+          winnerId: item.winner_id,
+          winnerName: item.winner_name,
+          winnerEmail: item.winner_email,
+          winningBid: item.current_bid ? parseFloat(item.current_bid) : null,
+          // Payment tracking
+          paymentStatus: item.payment_status || 'pending',
+          paymentConfirmedAt: item.payment_confirmed_at,
+          paymentConfirmedBy: item.payment_confirmed_by,
+          paymentMethodUsed: item.payment_method_used,
+          paymentNotes: item.payment_notes,
+          // Fulfillment tracking
+          fulfillmentStatus: item.fulfillment_status || 'pending',
+          fulfillmentType: item.fulfillment_type || item.event_fulfillment_type,
+          trackingNumber: item.tracking_number,
+          trackingCarrier: item.tracking_carrier,
+          trackingUrl: item.tracking_url,
+          shippedAt: item.shipped_at,
+          estimatedDelivery: item.estimated_delivery,
+          pickupReadyAt: item.pickup_ready_at,
+          pickupCompletedAt: item.pickup_completed_at,
+          pickupCompletedBy: item.pickup_completed_by,
+          digitalDeliveryInfo: item.digital_delivery_info,
+          digitalDeliveredAt: item.digital_delivered_at,
+          fulfillmentNotes: item.fulfillment_notes,
+          fulfilledAt: item.fulfilled_at,
+          fulfilledBy: item.fulfilled_by,
+          createdAt: item.created_at,
+        }
+      })
+
+      res.json(items)
+    } catch (error) {
+      next(error)
+    }
+  }
+)
+
 export { router as eventItemRoutes }
