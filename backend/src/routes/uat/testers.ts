@@ -1,5 +1,5 @@
 import { Router, Request, Response, NextFunction } from 'express'
-import { body, param, query as queryValidator, validationResult } from 'express-validator'
+import { body, param, validationResult } from 'express-validator'
 import crypto from 'crypto'
 import { query as dbQuery } from '../../config/database.js'
 import { authenticate, requirePlatformAdmin } from '../../middleware/auth.js'
