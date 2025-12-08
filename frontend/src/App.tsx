@@ -10,6 +10,7 @@ import { tokenRequest } from './auth/authConfig'
 // Layout
 import Header from './components/Header'
 import Footer from './components/Footer'
+import { ToastContainer } from './components/Toast'
 
 // Pages
 import HomePage from './pages/HomePage'
@@ -267,6 +268,7 @@ function App() {
       </main>
       
       <Footer />
+      <ToastContainer />
     </div>
   )
 }

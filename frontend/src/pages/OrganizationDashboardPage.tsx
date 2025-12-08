@@ -3,10 +3,12 @@ import { useParams, Link, useNavigate } from 'react-router-dom'
 import { apiClient } from '../services/api'
 import type { Organization, OrganizationMember, OrganizationInvitation, UpdateOrganizationRequest, AuctionEvent } from '../types'
 import ImageDropZone from '../components/ImageDropZone'
+import { useToastStore } from '../hooks/useToastStore'
 
 export default function OrganizationDashboardPage() {
   const { slug } = useParams<{ slug: string }>()
   const navigate = useNavigate()
+  const addToast = useToastStore((state) => state.addToast)
 
   const [organization, setOrganization] = useState<Organization | null>(null)
   const [members, setMembers] = useState<OrganizationMember[]>([])
@@ -228,10 +230,9 @@ export default function OrganizationDashboardPage() {
     try {
       await apiClient.deleteEvent(eventId)
       setEvents((prev) => prev.filter((e) => e.id !== eventId))
-      setSuccessMessage(`"${eventName}" has been deleted`)
-      setTimeout(() => setSuccessMessage(null), 5000)
+      addToast({ type: 'success', message: `"${eventName}" has been deleted.` })
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to delete event')
+      addToast({ type: 'error', message: err instanceof Error ? err.message : 'Failed to delete event' })
     }
   }
 
@@ -998,11 +999,13 @@ export default function OrganizationDashboardPage() {
                         return
                       }
                       setDeleting(true)
+                      const orgName = deletionSummary.organization.name
                       try {
                         await apiClient.deleteOrganization(organization!.id)
+                        addToast({ type: 'success', message: `"${orgName}" has been permanently deleted.` })
                         navigate('/my-organizations')
                       } catch (err) {
-                        alert(err instanceof Error ? err.message : 'Failed to delete organization')
+                        addToast({ type: 'error', message: err instanceof Error ? err.message : 'Failed to delete organization' })
                         setDeleting(false)
                       }
                     }}
