@@ -10,7 +10,6 @@ import { tokenRequest } from './auth/authConfig'
 // Layout
 import Header from './components/Header'
 import Footer from './components/Footer'
-import { ToastContainer } from './components/Toast'
 
 // Pages
 import HomePage from './pages/HomePage'
@@ -33,7 +32,6 @@ import EventDetailPage from './pages/EventDetailPage'
 import EventItemPage from './pages/EventItemPage'
 import SubmitItemPage from './pages/SubmitItemPage'
 import SubmitItemSuccessPage from './pages/SubmitItemSuccessPage'
-import DonatePage from './pages/DonatePage'
 import MyWinsPage from './pages/MyWinsPage'
 import MyBidsPage from './pages/MyBidsPage'
 import MyItemsPage from './pages/MyItemsPage'
@@ -43,8 +41,6 @@ import FeedbackPage from './pages/FeedbackPage'
 import AdminFeedbackPage from './pages/AdminFeedbackPage'
 import ManageAdminsPage from './pages/ManageAdminsPage'
 import AdminDashboardPage from './pages/AdminDashboardPage'
-import { UatAdminPage } from './pages/UatAdminPage'
-import { UatInvitePage } from './pages/UatInvitePage'
 
 // Auth
 import { AuthCallback } from './auth/AuthCallback'
@@ -185,7 +181,6 @@ function App() {
           <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="/organizations/:slug" element={<OrganizationDetailPage />} />
           <Route path="/invitations/:token" element={<InvitationAcceptPage />} />
-          <Route path="/donate/:code" element={<DonatePage />} />
 
           {/* Protected routes */}
           <Route path="/profile" element={
@@ -266,21 +261,12 @@ function App() {
             </ProtectedRoute>
           } />
 
-          {/* UAT Routes */}
-          <Route path="/uat/invite/:token" element={<UatInvitePage />} />
-          <Route path="/uat/admin" element={
-            <ProtectedRoute>
-              <UatAdminPage />
-            </ProtectedRoute>
-          } />
-
           {/* 404 */}
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </main>
       
       <Footer />
-      <ToastContainer />
     </div>
   )
 }

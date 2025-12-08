@@ -152,13 +152,6 @@ export type NotificationType =
   | 'auction_lost'
   | 'item_removed'
   | 'bid_cancelled'
-  // Self-managed payment notification types
-  | 'payment_reminder'
-  | 'payment_confirmed'
-  | 'item_shipped'
-  | 'ready_for_pickup'
-  | 'item_delivered'
-  | 'digital_delivered'
 
 // API response types
 export interface PaginatedResponse<T> {
@@ -323,34 +316,11 @@ export interface AuctionEvent {
   totalRaised: number
   isAdmin?: boolean
   createdAt: string
-  // Payment mode settings (self-managed payments)
-  paymentMode?: PaymentMode
-  paymentInstructions?: string
-  paymentLink?: string
-  paymentQrCodeUrl?: string
-  // Fulfillment settings
-  fulfillmentType?: FulfillmentType
-  pickupInstructions?: string
-  pickupLocation?: string
-  pickupAddressLine1?: string
-  pickupAddressLine2?: string
-  pickupCity?: string
-  pickupState?: string
-  pickupPostalCode?: string
-  pickupDates?: string
-  // Payment reminder settings
-  paymentDueDays?: number
-  sendPaymentReminders?: boolean
 }
 
 export type EventTier = 'small' | 'medium' | 'large' | 'unlimited'
 
 export type EventStatus = 'draft' | 'scheduled' | 'active' | 'ended' | 'cancelled'
-
-export type PaymentMode = 'integrated' | 'self_managed'
-export type FulfillmentType = 'shipping' | 'pickup' | 'both' | 'digital'
-export type ItemPaymentStatus = 'pending' | 'paid' | 'payment_issue' | 'waived' | 'refunded'
-export type ItemFulfillmentStatus = 'pending' | 'processing' | 'ready_for_pickup' | 'shipped' | 'out_for_delivery' | 'delivered' | 'picked_up' | 'issue'
 
 export interface CreateEventRequest {
   name: string
@@ -364,24 +334,6 @@ export interface CreateEventRequest {
   incrementType?: 'fixed' | 'percent'
   incrementValue?: number
   buyNowEnabled?: boolean
-  // Payment mode settings
-  paymentMode?: PaymentMode
-  paymentInstructions?: string
-  paymentLink?: string
-  paymentQrCodeUrl?: string
-  // Fulfillment settings
-  fulfillmentType?: FulfillmentType
-  pickupInstructions?: string
-  pickupLocation?: string
-  pickupAddressLine1?: string
-  pickupAddressLine2?: string
-  pickupCity?: string
-  pickupState?: string
-  pickupPostalCode?: string
-  pickupDates?: string
-  // Payment reminder settings
-  paymentDueDays?: number
-  sendPaymentReminders?: boolean
 }
 
 export interface UpdateEventRequest {
@@ -393,24 +345,6 @@ export interface UpdateEventRequest {
   incrementType?: 'fixed' | 'percent'
   incrementValue?: number
   buyNowEnabled?: boolean
-  // Payment mode settings
-  paymentMode?: PaymentMode
-  paymentInstructions?: string
-  paymentLink?: string
-  paymentQrCodeUrl?: string
-  // Fulfillment settings
-  fulfillmentType?: FulfillmentType
-  pickupInstructions?: string
-  pickupLocation?: string
-  pickupAddressLine1?: string
-  pickupAddressLine2?: string
-  pickupCity?: string
-  pickupState?: string
-  pickupPostalCode?: string
-  pickupDates?: string
-  // Payment reminder settings
-  paymentDueDays?: number
-  sendPaymentReminders?: boolean
 }
 
 // Event Item types
@@ -442,33 +376,6 @@ export interface EventItem {
   isAdmin?: boolean
   isSubmitter?: boolean
   createdAt: string
-  // Winner info
-  winnerId?: string
-  winnerName?: string
-  winnerEmail?: string
-  winningBid?: number
-  // Payment tracking (for self-managed payments)
-  paymentStatus?: ItemPaymentStatus
-  paymentConfirmedAt?: string
-  paymentConfirmedBy?: string
-  paymentMethodUsed?: string
-  paymentNotes?: string
-  // Fulfillment tracking
-  fulfillmentStatus?: ItemFulfillmentStatus
-  fulfillmentType?: 'shipping' | 'pickup' | 'digital'
-  trackingNumber?: string
-  trackingCarrier?: string
-  trackingUrl?: string
-  shippedAt?: string
-  estimatedDelivery?: string
-  pickupReadyAt?: string
-  pickupCompletedAt?: string
-  pickupCompletedBy?: string
-  digitalDeliveryInfo?: string
-  digitalDeliveredAt?: string
-  fulfillmentNotes?: string
-  fulfilledAt?: string
-  fulfilledBy?: string
 }
 
 export type ItemSubmissionStatus = 'pending' | 'approved' | 'rejected' | 'resubmit_requested'

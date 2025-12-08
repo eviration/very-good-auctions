@@ -5,16 +5,7 @@ import type { Organization, CreateEventRequest, OrganizationType } from '../type
 import { WizardStep, WizardInput, WizardTextarea, WizardOptionCard, WizardOptionGrid, WizardSuccess } from '../components/wizard'
 import ImageDropZone from '../components/ImageDropZone'
 
-const TOTAL_STEPS = 6 // 1: Org, 2: Event Details, 3: Schedule, 4: Auction Settings, 5: Payment Mode, 6: Review
-
-// Feature flags type
-interface FeatureFlags {
-  integrated_payments_enabled: boolean
-  self_managed_payments_enabled: boolean
-  free_mode_enabled: boolean
-  silent_auctions_enabled: boolean
-  standard_auctions_enabled: boolean
-}
+const TOTAL_STEPS = 5 // Reduced from 6 - removed tier selection step
 
 // Organization type options with friendly descriptions
 const ORG_TYPES: { value: OrganizationType; label: string; description: string; icon: React.ReactNode }[] = [
@@ -91,43 +82,12 @@ export default function CreateEventPage() {
   const [incrementValue, setIncrementValue] = useState('5')
   const [buyNowEnabled, setBuyNowEnabled] = useState(true)
 
-  // Payment mode settings
-  const [paymentMode, setPaymentMode] = useState<'integrated' | 'self_managed'>('self_managed')
-  const [paymentInstructions, setPaymentInstructions] = useState('')
-  const [paymentLink, setPaymentLink] = useState('')
-  const [fulfillmentType, setFulfillmentType] = useState<'shipping' | 'pickup' | 'both' | 'digital'>('pickup')
-  const [pickupLocation, setPickupLocation] = useState('')
-  const [pickupInstructions, setPickupInstructions] = useState('')
-  const [paymentDueDays, setPaymentDueDays] = useState('7')
-
-  // Feature flags and admin status
-  const [featureFlags, setFeatureFlags] = useState<FeatureFlags>({
-    integrated_payments_enabled: true,
-    self_managed_payments_enabled: true,
-    free_mode_enabled: false,
-    silent_auctions_enabled: true,
-    standard_auctions_enabled: true,
-  })
-  const [isAdmin, setIsAdmin] = useState(false)
-
-  // Fetch organizations, feature flags, and admin status
+  // Fetch organizations
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [orgs, flags, adminStatus] = await Promise.all([
-          apiClient.getMyOrganizations().catch(() => []),
-          apiClient.getPublicFeatureFlags().catch(() => ({
-            integrated_payments_enabled: true,
-            self_managed_payments_enabled: true,
-            free_mode_enabled: false,
-            silent_auctions_enabled: true,
-            standard_auctions_enabled: true,
-          })),
-          apiClient.checkPlatformAdminStatus().catch(() => ({ isPlatformAdmin: false })),
-        ])
+        const orgs = await apiClient.getMyOrganizations().catch(() => [])
         setMyOrganizations(orgs)
-        setFeatureFlags(flags)
-        setIsAdmin(adminStatus.isPlatformAdmin)
       } catch {
         // Ignore errors
       }
@@ -206,14 +166,6 @@ export default function CreateEventPage() {
         incrementType,
         incrementValue: parseFloat(incrementValue),
         buyNowEnabled,
-        // Payment mode settings
-        paymentMode,
-        paymentInstructions: paymentMode === 'self_managed' ? paymentInstructions || undefined : undefined,
-        paymentLink: paymentMode === 'self_managed' && paymentLink ? paymentLink : undefined,
-        fulfillmentType,
-        pickupLocation: (fulfillmentType === 'pickup' || fulfillmentType === 'both') ? pickupLocation || undefined : undefined,
-        pickupInstructions: (fulfillmentType === 'pickup' || fulfillmentType === 'both') ? pickupInstructions || undefined : undefined,
-        paymentDueDays: paymentMode === 'self_managed' ? parseInt(paymentDueDays) : undefined,
       }
 
       const event = await apiClient.createEvent(payload)
@@ -245,7 +197,6 @@ export default function CreateEventPage() {
   const isStep2Valid = eventName.trim().length > 0
   const isStep3Valid = Boolean(startDate && endDate && new Date(endDate) > new Date(startDate))
   const isStep4Valid = true // Auction settings have defaults
-  const isStep5Valid = paymentMode === 'integrated' || (paymentInstructions.trim().length > 0 || paymentLink.trim().length > 0)
 
   // Stripe setup required screen (when new org was created)
   if (needsStripeSetup) {
@@ -588,29 +539,17 @@ export default function CreateEventPage() {
               title="Standard Auction"
               description="Bids are visible to everyone - creates excitement!"
               selected={auctionType === 'standard'}
-              onClick={() => (featureFlags.standard_auctions_enabled || isAdmin) && setAuctionType('standard')}
-              badge={!featureFlags.standard_auctions_enabled ? (isAdmin ? 'Admin Only' : 'Disabled') : 'Popular'}
-              badgeColor={!featureFlags.standard_auctions_enabled ? 'peach' : 'mint'}
-              disabled={!featureFlags.standard_auctions_enabled && !isAdmin}
+              onClick={() => setAuctionType('standard')}
+              badge="Popular"
+              badgeColor="mint"
             />
             <WizardOptionCard
               title="Silent Auction"
               description="Bids stay hidden until the auction ends"
               selected={auctionType === 'silent'}
-              onClick={() => (featureFlags.silent_auctions_enabled || isAdmin) && setAuctionType('silent')}
-              badge={!featureFlags.silent_auctions_enabled ? (isAdmin ? 'Admin Only' : 'Disabled') : undefined}
-              badgeColor={!featureFlags.silent_auctions_enabled ? 'peach' : undefined}
-              disabled={!featureFlags.silent_auctions_enabled && !isAdmin}
+              onClick={() => setAuctionType('silent')}
             />
           </WizardOptionGrid>
-          {isAdmin && (!featureFlags.standard_auctions_enabled || !featureFlags.silent_auctions_enabled) && (
-            <p className="text-sm text-amber-600 mt-2 flex items-center gap-1">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-              Admin view: disabled options are highlighted but selectable by you
-            </p>
-          )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -674,186 +613,16 @@ export default function CreateEventPage() {
     )
   }
 
-  // Step 5: Payment Mode
+  // Step 5: Review & Create
   if (currentStep === 5) {
-    const selectedOrg = myOrganizations.find((o) => o.id === selectedOrgId)
-    const canUseIntegrated = selectedOrg?.stripeChargesEnabled && selectedOrg?.stripePayoutsEnabled
-
-    // Determine if payment modes are enabled (based on feature flags)
-    const selfManagedEnabled = featureFlags.self_managed_payments_enabled || isAdmin
-    const integratedEnabled = featureFlags.integrated_payments_enabled || isAdmin
-
-    // Get badge text for self-managed payments
-    const getSelfManagedBadge = () => {
-      if (!featureFlags.self_managed_payments_enabled) {
-        return isAdmin ? 'Admin Only' : 'Disabled'
-      }
-      return 'Recommended'
-    }
-
-    // Get badge text for integrated payments
-    const getIntegratedBadge = () => {
-      if (!featureFlags.integrated_payments_enabled) {
-        return isAdmin ? 'Admin Only' : 'Disabled'
-      }
-      if (!canUseIntegrated) {
-        return 'Setup Required'
-      }
-      return undefined
-    }
-
-    return (
-      <WizardStep
-        stepNumber={5}
-        totalSteps={TOTAL_STEPS}
-        title="How will winners pay?"
-        subtitle="Choose how to collect payments from auction winners"
-        onNext={nextStep}
-        onBack={prevStep}
-        isValid={isStep5Valid}
-        encouragement={isStep5Valid ? "Payment setup looks good!" : "Add payment instructions or link"}
-        icon={
-          <svg className="w-10 h-10 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-          </svg>
-        }
-      >
-        <div className="space-y-3">
-          <label className="text-charcoal font-bold text-lg">Payment collection method</label>
-          <WizardOptionGrid columns={2}>
-            <WizardOptionCard
-              title="Self-Managed Payments"
-              description="Use your own payment methods (Venmo, PayPal, Zelle, cash, check)"
-              selected={paymentMode === 'self_managed'}
-              onClick={() => selfManagedEnabled && setPaymentMode('self_managed')}
-              badge={getSelfManagedBadge()}
-              badgeColor={!featureFlags.self_managed_payments_enabled ? 'peach' : 'mint'}
-              disabled={!selfManagedEnabled}
-            />
-            <WizardOptionCard
-              title="Integrated Payments"
-              description="Accept cards via Stripe (requires Stripe Connect setup)"
-              selected={paymentMode === 'integrated'}
-              onClick={() => integratedEnabled && canUseIntegrated && setPaymentMode('integrated')}
-              disabled={!integratedEnabled || !canUseIntegrated}
-              badge={getIntegratedBadge()}
-              badgeColor={!featureFlags.integrated_payments_enabled ? 'peach' : 'peach'}
-            />
-          </WizardOptionGrid>
-          {isAdmin && (!featureFlags.self_managed_payments_enabled || !featureFlags.integrated_payments_enabled) && (
-            <p className="text-sm text-amber-600 mt-2 flex items-center gap-1">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-              Admin view: disabled options are highlighted but selectable by you
-            </p>
-          )}
-        </div>
-
-        {paymentMode === 'self_managed' && (
-          <div className="space-y-6 mt-6 p-6 rounded-clay bg-clay-surface">
-            <WizardTextarea
-              label="Payment instructions for winners"
-              hint="Tell winners how to pay you (e.g., 'Send payment via Venmo to @YourOrg')"
-              placeholder="Please send payment via Venmo to @SpringfieldPTA within 7 days of winning. Include the item name in the payment note."
-              value={paymentInstructions}
-              onChange={(e) => setPaymentInstructions(e.target.value)}
-              required
-            />
-
-            <WizardInput
-              label="Payment link (optional)"
-              hint="Direct link to your payment page (Venmo, PayPal, etc.)"
-              placeholder="https://venmo.com/u/YourOrganization"
-              value={paymentLink}
-              onChange={(e) => setPaymentLink(e.target.value)}
-            />
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <label className="text-charcoal font-bold text-lg">Payment due within</label>
-                <select
-                  value={paymentDueDays}
-                  onChange={(e) => setPaymentDueDays(e.target.value)}
-                  className="clay-input w-full text-lg py-4"
-                >
-                  <option value="3">3 days</option>
-                  <option value="5">5 days</option>
-                  <option value="7">7 days</option>
-                  <option value="14">14 days</option>
-                  <option value="30">30 days</option>
-                </select>
-              </div>
-            </div>
-          </div>
-        )}
-
-        <div className="space-y-3 mt-6">
-          <label className="text-charcoal font-bold text-lg">How will items be delivered?</label>
-          <WizardOptionGrid columns={2}>
-            <WizardOptionCard
-              title="Local Pickup"
-              description="Winners pick up items from a location you specify"
-              selected={fulfillmentType === 'pickup'}
-              onClick={() => setFulfillmentType('pickup')}
-              badge="Popular"
-              badgeColor="mint"
-            />
-            <WizardOptionCard
-              title="Shipping"
-              description="Items will be shipped to winners"
-              selected={fulfillmentType === 'shipping'}
-              onClick={() => setFulfillmentType('shipping')}
-            />
-            <WizardOptionCard
-              title="Both Options"
-              description="Winners can choose pickup or shipping"
-              selected={fulfillmentType === 'both'}
-              onClick={() => setFulfillmentType('both')}
-            />
-            <WizardOptionCard
-              title="Digital Delivery"
-              description="Items are delivered digitally (e.g., gift cards, vouchers)"
-              selected={fulfillmentType === 'digital'}
-              onClick={() => setFulfillmentType('digital')}
-            />
-          </WizardOptionGrid>
-        </div>
-
-        {(fulfillmentType === 'pickup' || fulfillmentType === 'both') && (
-          <div className="space-y-4 mt-6 p-6 rounded-clay bg-clay-surface">
-            <WizardInput
-              label="Pickup location"
-              hint="Where winners should pick up their items"
-              placeholder="e.g., Springfield Elementary School, 123 Main St"
-              value={pickupLocation}
-              onChange={(e) => setPickupLocation(e.target.value)}
-            />
-
-            <WizardTextarea
-              label="Pickup instructions (optional)"
-              hint="Additional details about pickup times, procedures, etc."
-              placeholder="Pickup available Monday-Friday, 3-5pm at the main office. Please bring your winning confirmation email."
-              value={pickupInstructions}
-              onChange={(e) => setPickupInstructions(e.target.value)}
-            />
-          </div>
-        )}
-      </WizardStep>
-    )
-  }
-
-  // Step 6: Review & Create
-  if (currentStep === 6) {
     // Determine which section has the error based on error message keywords
-    const getErrorSection = (errorMsg: string | null): 'name' | 'org' | 'schedule' | 'settings' | 'payment' | null => {
+    const getErrorSection = (errorMsg: string | null): 'name' | 'org' | 'schedule' | 'settings' | null => {
       if (!errorMsg) return null
       const lowerError = errorMsg.toLowerCase()
       if (lowerError.includes('name')) return 'name'
       if (lowerError.includes('organization')) return 'org'
       if (lowerError.includes('deadline') || lowerError.includes('start') || lowerError.includes('end') || lowerError.includes('date') || lowerError.includes('time')) return 'schedule'
       if (lowerError.includes('bid') || lowerError.includes('increment') || lowerError.includes('auction type')) return 'settings'
-      if (lowerError.includes('payment') || lowerError.includes('fulfillment') || lowerError.includes('pickup')) return 'payment'
       return null
     }
 
@@ -865,7 +634,6 @@ export default function CreateEventPage() {
       org: 1,
       schedule: 3,
       settings: 4,
-      payment: 5,
     }
 
     // Clickable review card component
@@ -874,7 +642,7 @@ export default function CreateEventPage() {
       title,
       children
     }: {
-      section: 'name' | 'org' | 'schedule' | 'settings' | 'payment'
+      section: 'name' | 'org' | 'schedule' | 'settings'
       title: string
       children: React.ReactNode
     }) => {
@@ -999,38 +767,13 @@ export default function CreateEventPage() {
             </p>
           </ReviewCard>
 
-          <ReviewCard section="payment" title="Payment & Fulfillment">
-            <p className="font-bold text-charcoal text-xl">
-              {paymentMode === 'self_managed' ? 'Self-Managed Payments' : 'Integrated (Stripe)'}
-            </p>
-            <p className="text-charcoal-light">
-              {fulfillmentType === 'pickup' && 'Local pickup'}
-              {fulfillmentType === 'shipping' && 'Shipping to winners'}
-              {fulfillmentType === 'both' && 'Pickup or shipping'}
-              {fulfillmentType === 'digital' && 'Digital delivery'}
-              {paymentMode === 'self_managed' && ` • ${paymentDueDays} days to pay`}
-            </p>
-            {pickupLocation && (
-              <p className="text-charcoal-light text-sm mt-1">Pickup at: {pickupLocation}</p>
-            )}
-          </ReviewCard>
-
         </div>
 
         {/* Pricing info */}
         <div className="mt-6 p-4 rounded-clay bg-clay-mint/20 border-2 border-clay-mint/30">
           <p className="text-charcoal-light text-sm">
-            {paymentMode === 'self_managed' ? (
-              <>
-                <span className="font-bold text-charcoal">Free to use.</span>{' '}
-                Self-managed payments have no platform fees. You handle payments directly.
-              </>
-            ) : (
-              <>
-                <span className="font-bold text-charcoal">Free to create.</span>{' '}
-                $1 per item sold (deducted from proceeds). No upfront costs.
-              </>
-            )}
+            <span className="font-bold text-charcoal">Free to create.</span>{' '}
+            $1 per item sold (deducted from proceeds). No upfront costs.
           </p>
         </div>
 
