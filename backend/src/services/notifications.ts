@@ -23,6 +23,13 @@ export type NotificationType =
   | 'item_removed'
   | 'bid_cancelled'
   | 'bid_placed'
+  // Self-managed payment notification types
+  | 'payment_reminder'
+  | 'payment_confirmed'
+  | 'item_shipped'
+  | 'ready_for_pickup'
+  | 'item_delivered'
+  | 'digital_delivered'
 
 interface CreateNotificationParams {
   userId: string
@@ -608,4 +615,142 @@ export async function notifyEventBiddersCancelled(
       }
     })
   )
+}
+
+// =====================================================
+// Self-Managed Payments Notification Functions
+// =====================================================
+
+// Notify winner when their payment has been confirmed
+export async function notifyPaymentConfirmed(
+  userId: string,
+  itemTitle: string,
+  eventId: string,
+  itemId: string,
+  paymentMethod?: string
+): Promise<string> {
+  const message = paymentMethod
+    ? `Your payment for "${itemTitle}" via ${paymentMethod} has been confirmed!`
+    : `Your payment for "${itemTitle}" has been confirmed!`
+
+  const notificationId = await createNotification({
+    userId,
+    type: 'payment_confirmed',
+    title: 'Payment Confirmed',
+    message,
+    eventId,
+    itemId,
+  })
+
+  // TODO: Add email sending when email template is ready
+  // getUserInfo(userId).then(async (user) => {
+  //   if (user) {
+  //     sendPaymentConfirmedEmail({...}).catch(err => console.error(...))
+  //   }
+  // })
+
+  return notificationId
+}
+
+// Notify winner when their item has been shipped
+export async function notifyItemShipped(
+  userId: string,
+  itemTitle: string,
+  eventId: string,
+  itemId: string,
+  tracking?: { number: string; carrier: string; url: string | null }
+): Promise<string> {
+  let message = `Your item "${itemTitle}" has been shipped!`
+  if (tracking) {
+    message += ` Tracking: ${tracking.carrier.toUpperCase()} ${tracking.number}`
+  }
+
+  const notificationId = await createNotification({
+    userId,
+    type: 'item_shipped',
+    title: 'Item Shipped',
+    message,
+    eventId,
+    itemId,
+  })
+
+  // TODO: Add email sending when email template is ready
+
+  return notificationId
+}
+
+// Notify winner when their item is ready for pickup
+export async function notifyReadyForPickup(
+  userId: string,
+  itemTitle: string,
+  eventId: string,
+  itemId: string,
+  pickupLocation?: string
+): Promise<string> {
+  let message = `Your item "${itemTitle}" is ready for pickup!`
+  if (pickupLocation) {
+    message += ` Location: ${pickupLocation}`
+  }
+
+  const notificationId = await createNotification({
+    userId,
+    type: 'ready_for_pickup',
+    title: 'Ready for Pickup',
+    message,
+    eventId,
+    itemId,
+  })
+
+  // TODO: Add email sending when email template is ready
+
+  return notificationId
+}
+
+// Notify winner when their digital item has been delivered
+export async function notifyDigitalDelivered(
+  userId: string,
+  itemTitle: string,
+  eventId: string,
+  itemId: string
+): Promise<string> {
+  const notificationId = await createNotification({
+    userId,
+    type: 'digital_delivered',
+    title: 'Digital Item Delivered',
+    message: `Your digital item "${itemTitle}" has been delivered! Check your email for access details.`,
+    eventId,
+    itemId,
+  })
+
+  // TODO: Add email sending when email template is ready
+
+  return notificationId
+}
+
+// Notify winner about payment reminder
+export async function notifyPaymentReminder(
+  userId: string,
+  itemTitle: string,
+  eventId: string,
+  itemId: string,
+  amountOwed: number,
+  daysOverdue?: number
+): Promise<string> {
+  let message = `Reminder: Payment of $${amountOwed.toFixed(2)} is due for "${itemTitle}".`
+  if (daysOverdue && daysOverdue > 0) {
+    message = `Your payment of $${amountOwed.toFixed(2)} for "${itemTitle}" is ${daysOverdue} day(s) overdue.`
+  }
+
+  const notificationId = await createNotification({
+    userId,
+    type: 'payment_reminder',
+    title: 'Payment Reminder',
+    message,
+    eventId,
+    itemId,
+  })
+
+  // TODO: Add email sending when email template is ready
+
+  return notificationId
 }

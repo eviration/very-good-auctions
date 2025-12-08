@@ -72,11 +72,12 @@ export function calculateNetProceeds(winningBid: number): {
 /**
  * Process auction completion and calculate fees
  * Called when an event ends
+ * Handles both integrated (Stripe) and self-managed payment modes
  */
 export async function processEventCompletion(
   eventId: string
 ): Promise<EventCompletionResult> {
-  // Get event details
+  // Get event details including payment mode
   const eventResult = await dbQuery(
     `SELECT * FROM auction_events WHERE id = @eventId`,
     { eventId }
@@ -87,6 +88,7 @@ export async function processEventCompletion(
   }
 
   const event = eventResult.recordset[0]
+  const isSelfManaged = event.payment_mode === 'self_managed'
 
   // Determine winners based on auction type
   let winningBids: WinningBidSummary[] = []
@@ -121,7 +123,7 @@ export async function processEventCompletion(
       winnerEmail: row.winner_email,
       winnerName: row.winner_name,
       winningAmount: row.amount,
-      platformFee: calculatePlatformFee(row.amount),
+      platformFee: isSelfManaged ? 0 : calculatePlatformFee(row.amount),
     }))
   } else {
     // For standard auctions, highest visible bid wins
@@ -153,7 +155,7 @@ export async function processEventCompletion(
       winnerEmail: row.winner_email,
       winnerName: row.winner_name,
       winningAmount: row.amount,
-      platformFee: calculatePlatformFee(row.amount),
+      platformFee: isSelfManaged ? 0 : calculatePlatformFee(row.amount),
     }))
   }
 
@@ -172,11 +174,16 @@ export async function processEventCompletion(
 
   // Update item statuses and store winners
   for (const bid of winningBids) {
+    // For self-managed payments, set payment_status to 'pending' and fulfillment_status to 'pending'
+    // For integrated payments, the existing flow handles it via Stripe webhooks
     await dbQuery(
       `UPDATE event_items
        SET status = 'won',
            current_bid = @amount,
-           winner_id = @winnerId
+           winner_id = @winnerId,
+           won_at = GETUTCDATE(),
+           payment_status = ${isSelfManaged ? "'pending'" : "payment_status"},
+           fulfillment_status = ${isSelfManaged ? "'pending'" : "fulfillment_status"}
        WHERE id = @itemId`,
       {
         itemId: bid.itemId,
@@ -185,21 +192,23 @@ export async function processEventCompletion(
       }
     )
 
-    // Create platform fee record for each winning item
-    await dbQuery(
-      `INSERT INTO platform_fees (
-        id, user_id, organization_id, event_id, fee_type, amount, status, created_at
-      ) VALUES (
-        @id, @userId, @organizationId, @eventId, 'item_sale', @amount, 'pending', GETUTCDATE()
-      )`,
-      {
-        id: uuidv4(),
-        userId: event.owner_id || null,
-        organizationId: event.organization_id || null,
-        eventId,
-        amount: bid.platformFee,
-      }
-    )
+    // Only create platform fee records for integrated payments
+    if (!isSelfManaged) {
+      await dbQuery(
+        `INSERT INTO platform_fees (
+          id, user_id, organization_id, event_id, fee_type, amount, status, created_at
+        ) VALUES (
+          @id, @userId, @organizationId, @eventId, 'item_sale', @amount, 'pending', GETUTCDATE()
+        )`,
+        {
+          id: uuidv4(),
+          userId: event.owner_id || null,
+          organizationId: event.organization_id || null,
+          eventId,
+          amount: bid.platformFee,
+        }
+      )
+    }
   }
 
   // Mark items with no bids as unsold
@@ -213,6 +222,7 @@ export async function processEventCompletion(
   )
 
   // Send notifications to winners
+  // For self-managed payments, the notification will include payment instructions
   for (const bid of winningBids) {
     await notifyAuctionWon(bid.winnerId, bid.itemTitle, bid.winningAmount, eventId, bid.itemId)
   }
