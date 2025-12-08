@@ -116,6 +116,30 @@ async function checkEventAccess(eventId: string, userId: string, requireOwner = 
   return null
 }
 
+// Helper to check if string is a valid UUID
+function isUUID(str: string): boolean {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+  return uuidRegex.test(str)
+}
+
+// Helper to resolve event ID from ID or slug
+async function resolveEventId(idOrSlug: string): Promise<string | null> {
+  if (isUUID(idOrSlug)) {
+    return idOrSlug
+  }
+
+  const result = await dbQuery(
+    'SELECT id FROM auction_events WHERE slug = @slug',
+    { slug: idOrSlug }
+  )
+
+  if (result.recordset.length === 0) {
+    return null
+  }
+
+  return result.recordset[0].id
+}
+
 // Helper to ensure user exists
 async function ensureUserExists(userId: string, email: string, name: string) {
   const existing = await dbQuery(
@@ -490,12 +514,6 @@ router.get(
     }
   }
 )
-
-// Helper to check if string is a valid UUID
-function isUUID(str: string): boolean {
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-  return uuidRegex.test(str)
-}
 
 // Get event by ID or slug
 router.get(
@@ -1251,6 +1269,301 @@ router.delete(
       }
 
       res.status(204).send()
+    } catch (error) {
+      next(error)
+    }
+  }
+)
+
+// =============================================
+// Donation Code Management Endpoints
+// =============================================
+
+// Helper to generate a unique donation code
+function generateDonationCode(): string {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789' // Avoid confusing chars like 0, O, 1, I
+  let code = ''
+  for (let i = 0; i < 8; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length))
+  }
+  return code
+}
+
+/**
+ * GET /api/events/:idOrSlug/donation-settings
+ * Get donation settings for an event.
+ * Requires event admin access.
+ */
+router.get(
+  '/:idOrSlug/donation-settings',
+  authenticate,
+  [param('idOrSlug').notEmpty()],
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const errors = validationResult(req)
+      if (!errors.isEmpty()) {
+        throw badRequest('Validation failed', errors.mapped())
+      }
+
+      const eventId = await resolveEventId(req.params.idOrSlug)
+      if (!eventId) {
+        throw notFound('Event not found')
+      }
+
+      const userId = req.user!.id
+      const access = await checkEventAccess(eventId, userId)
+      if (!access) {
+        throw forbidden('You do not have access to this event')
+      }
+
+      const result = await dbQuery(
+        `SELECT
+          donation_code,
+          donation_code_enabled,
+          donation_code_created_at,
+          donation_code_expires_at,
+          donation_requires_contact,
+          donation_require_value_estimate,
+          donation_max_images,
+          donation_instructions,
+          donation_notify_on_submission,
+          donation_auto_thank_donor
+         FROM auction_events
+         WHERE id = @eventId`,
+        { eventId }
+      )
+
+      if (result.recordset.length === 0) {
+        throw notFound('Event not found')
+      }
+
+      const settings = result.recordset[0]
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000'
+
+      res.json({
+        code: settings.donation_code,
+        enabled: settings.donation_code_enabled,
+        createdAt: settings.donation_code_created_at,
+        expiresAt: settings.donation_code_expires_at,
+        requiresContact: settings.donation_requires_contact,
+        requireValueEstimate: settings.donation_require_value_estimate,
+        maxImages: settings.donation_max_images,
+        instructions: settings.donation_instructions,
+        notifyOnSubmission: settings.donation_notify_on_submission,
+        autoThankDonor: settings.donation_auto_thank_donor,
+        donationUrl: settings.donation_code ? `${frontendUrl}/donate/${settings.donation_code}` : null,
+      })
+    } catch (error) {
+      next(error)
+    }
+  }
+)
+
+/**
+ * POST /api/events/:idOrSlug/donation-settings/generate-code
+ * Generate a new donation code for an event.
+ * Requires event admin access.
+ */
+router.post(
+  '/:idOrSlug/donation-settings/generate-code',
+  authenticate,
+  [param('idOrSlug').notEmpty()],
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const errors = validationResult(req)
+      if (!errors.isEmpty()) {
+        throw badRequest('Validation failed', errors.mapped())
+      }
+
+      const eventId = await resolveEventId(req.params.idOrSlug)
+      if (!eventId) {
+        throw notFound('Event not found')
+      }
+
+      const userId = req.user!.id
+      const access = await checkEventAccess(eventId, userId)
+      if (!access) {
+        throw forbidden('You do not have access to this event')
+      }
+
+      // Generate unique code
+      let code: string
+      let attempts = 0
+      const maxAttempts = 10
+
+      do {
+        code = generateDonationCode()
+        const existing = await dbQuery(
+          'SELECT id FROM auction_events WHERE donation_code = @code',
+          { code }
+        )
+        if (existing.recordset.length === 0) {
+          break
+        }
+        attempts++
+      } while (attempts < maxAttempts)
+
+      if (attempts >= maxAttempts) {
+        throw badRequest('Failed to generate unique code. Please try again.')
+      }
+
+      await dbQuery(
+        `UPDATE auction_events
+         SET donation_code = @code,
+             donation_code_created_at = GETUTCDATE()
+         WHERE id = @eventId`,
+        { eventId, code }
+      )
+
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000'
+
+      res.json({
+        code,
+        donationUrl: `${frontendUrl}/donate/${code}`,
+      })
+    } catch (error) {
+      next(error)
+    }
+  }
+)
+
+/**
+ * PATCH /api/events/:idOrSlug/donation-settings
+ * Update donation settings for an event.
+ * Requires event admin access.
+ */
+router.patch(
+  '/:idOrSlug/donation-settings',
+  authenticate,
+  [
+    param('idOrSlug').notEmpty(),
+    body('enabled').optional().isBoolean(),
+    body('expiresAt').optional({ nullable: true }).isISO8601(),
+    body('requiresContact').optional().isBoolean(),
+    body('requireValueEstimate').optional().isBoolean(),
+    body('maxImages').optional().isInt({ min: 0, max: 10 }),
+    body('instructions').optional({ nullable: true }).trim().isLength({ max: 2000 }),
+    body('notifyOnSubmission').optional().isBoolean(),
+    body('autoThankDonor').optional().isBoolean(),
+  ],
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const errors = validationResult(req)
+      if (!errors.isEmpty()) {
+        throw badRequest('Validation failed', errors.mapped())
+      }
+
+      const eventId = await resolveEventId(req.params.idOrSlug)
+      if (!eventId) {
+        throw notFound('Event not found')
+      }
+
+      const userId = req.user!.id
+      const access = await checkEventAccess(eventId, userId)
+      if (!access) {
+        throw forbidden('You do not have access to this event')
+      }
+
+      const {
+        enabled,
+        expiresAt,
+        requiresContact,
+        requireValueEstimate,
+        maxImages,
+        instructions,
+        notifyOnSubmission,
+        autoThankDonor,
+      } = req.body
+
+      // Build update query
+      const updates: string[] = []
+      const params: Record<string, unknown> = { eventId }
+
+      if (enabled !== undefined) {
+        updates.push('donation_code_enabled = @enabled')
+        params.enabled = enabled
+      }
+      if (expiresAt !== undefined) {
+        updates.push('donation_code_expires_at = @expiresAt')
+        params.expiresAt = expiresAt
+      }
+      if (requiresContact !== undefined) {
+        updates.push('donation_requires_contact = @requiresContact')
+        params.requiresContact = requiresContact
+      }
+      if (requireValueEstimate !== undefined) {
+        updates.push('donation_require_value_estimate = @requireValueEstimate')
+        params.requireValueEstimate = requireValueEstimate
+      }
+      if (maxImages !== undefined) {
+        updates.push('donation_max_images = @maxImages')
+        params.maxImages = maxImages
+      }
+      if (instructions !== undefined) {
+        updates.push('donation_instructions = @instructions')
+        params.instructions = instructions
+      }
+      if (notifyOnSubmission !== undefined) {
+        updates.push('donation_notify_on_submission = @notifyOnSubmission')
+        params.notifyOnSubmission = notifyOnSubmission
+      }
+      if (autoThankDonor !== undefined) {
+        updates.push('donation_auto_thank_donor = @autoThankDonor')
+        params.autoThankDonor = autoThankDonor
+      }
+
+      if (updates.length > 0) {
+        await dbQuery(
+          `UPDATE auction_events SET ${updates.join(', ')} WHERE id = @eventId`,
+          params
+        )
+      }
+
+      res.json({ success: true })
+    } catch (error) {
+      next(error)
+    }
+  }
+)
+
+/**
+ * DELETE /api/events/:idOrSlug/donation-settings/code
+ * Delete/regenerate the donation code (disables existing links).
+ * Requires event admin access.
+ */
+router.delete(
+  '/:idOrSlug/donation-settings/code',
+  authenticate,
+  [param('idOrSlug').notEmpty()],
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const errors = validationResult(req)
+      if (!errors.isEmpty()) {
+        throw badRequest('Validation failed', errors.mapped())
+      }
+
+      const eventId = await resolveEventId(req.params.idOrSlug)
+      if (!eventId) {
+        throw notFound('Event not found')
+      }
+
+      const userId = req.user!.id
+      const access = await checkEventAccess(eventId, userId)
+      if (!access) {
+        throw forbidden('You do not have access to this event')
+      }
+
+      await dbQuery(
+        `UPDATE auction_events
+         SET donation_code = NULL,
+             donation_code_enabled = 0,
+             donation_code_created_at = NULL,
+             donation_code_expires_at = NULL
+         WHERE id = @eventId`,
+        { eventId }
+      )
+
+      res.json({ success: true, message: 'Donation code deleted' })
     } catch (error) {
       next(error)
     }

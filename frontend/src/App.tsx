@@ -33,6 +33,7 @@ import EventDetailPage from './pages/EventDetailPage'
 import EventItemPage from './pages/EventItemPage'
 import SubmitItemPage from './pages/SubmitItemPage'
 import SubmitItemSuccessPage from './pages/SubmitItemSuccessPage'
+import DonatePage from './pages/DonatePage'
 import MyWinsPage from './pages/MyWinsPage'
 import MyBidsPage from './pages/MyBidsPage'
 import MyItemsPage from './pages/MyItemsPage'
@@ -182,6 +183,7 @@ function App() {
           <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="/organizations/:slug" element={<OrganizationDetailPage />} />
           <Route path="/invitations/:token" element={<InvitationAcceptPage />} />
+          <Route path="/donate/:code" element={<DonatePage />} />
 
           {/* Protected routes */}
           <Route path="/profile" element={

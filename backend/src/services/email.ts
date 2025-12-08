@@ -1713,3 +1713,171 @@ You've now received the full payout for this event. Thank you for using Very Goo
     plainTextContent,
   })
 }
+
+// =============================================
+// Item Submission Emails
+// =============================================
+
+// Donor thank you email - sent when a donor submits an item
+export async function sendDonorThankYouEmail(params: {
+  recipientEmail: string
+  recipientName: string
+  itemName: string
+  eventName: string
+  organizationName: string
+  estimatedValue?: number | null
+}): Promise<boolean> {
+  const { recipientEmail, recipientName, itemName, eventName, organizationName, estimatedValue } = params
+
+  const subject = `Thank you for your donation to ${eventName}!`
+
+  const content = `
+    <h2 style="margin: 0 0 20px 0; color: #2e7d32; font-size: 20px; font-weight: 600;">
+      Thank You for Your Donation!
+    </h2>
+
+    <p style="margin: 0 0 20px 0; color: #4a4a4a; font-size: 16px; line-height: 1.6;">
+      Hi ${recipientName},
+    </p>
+
+    <p style="margin: 0 0 20px 0; color: #4a4a4a; font-size: 16px; line-height: 1.6;">
+      Thank you for submitting <strong>"${itemName}"</strong> for the <strong>${eventName}</strong> auction!
+    </p>
+
+    <div style="background-color: #f0f7f4; border-radius: 8px; padding: 20px; margin: 20px 0; border-left: 4px solid #10b981;">
+      <p style="margin: 0 0 10px 0; color: #4a4a4a; font-size: 14px;">
+        <strong>Item:</strong> ${itemName}
+      </p>
+      <p style="margin: 0 0 10px 0; color: #4a4a4a; font-size: 14px;">
+        <strong>Event:</strong> ${eventName}
+      </p>
+      <p style="margin: 0 0 10px 0; color: #4a4a4a; font-size: 14px;">
+        <strong>Organization:</strong> ${organizationName}
+      </p>
+      ${estimatedValue ? `
+      <p style="margin: 0; color: #4a4a4a; font-size: 14px;">
+        <strong>Estimated Value:</strong> $${estimatedValue.toFixed(2)}
+      </p>
+      ` : ''}
+    </div>
+
+    <p style="margin: 0 0 20px 0; color: #4a4a4a; font-size: 16px; line-height: 1.6;">
+      The event organizers will review your submission and let you know once it's approved. You'll receive another email when the auction goes live.
+    </p>
+
+    <p style="margin: 20px 0 0 0; color: #888888; font-size: 14px; line-height: 1.6;">
+      Your generosity helps support ${organizationName} and makes a real difference!
+    </p>
+  `
+
+  const plainTextContent = `
+Thank You for Your Donation!
+
+Hi ${recipientName},
+
+Thank you for submitting "${itemName}" for the ${eventName} auction!
+
+Item: ${itemName}
+Event: ${eventName}
+Organization: ${organizationName}
+${estimatedValue ? `Estimated Value: $${estimatedValue.toFixed(2)}` : ''}
+
+The event organizers will review your submission and let you know once it's approved. You'll receive another email when the auction goes live.
+
+Your generosity helps support ${organizationName} and makes a real difference!
+
+© ${new Date().getFullYear()} Very Good Auctions. All rights reserved.
+`
+
+  return sendEmail({
+    to: recipientEmail,
+    subject,
+    htmlContent: emailWrapper('Donation Received', content),
+    plainTextContent,
+  })
+}
+
+// New submission notification email - sent to organization when a new item is submitted
+export async function sendNewSubmissionNotificationEmail(params: {
+  recipientEmail: string
+  eventName: string
+  itemName: string
+  donorName: string
+  donorEmail: string | null
+  estimatedValue: number | null
+}): Promise<boolean> {
+  const { recipientEmail, eventName, itemName, donorName, donorEmail, estimatedValue } = params
+
+  const dashboardUrl = `${frontendUrl}/dashboard`
+
+  const subject = `New item submitted for ${eventName}: "${itemName}"`
+
+  const content = `
+    <h2 style="margin: 0 0 20px 0; color: #1a1a1a; font-size: 20px; font-weight: 600;">
+      New Item Submission
+    </h2>
+
+    <p style="margin: 0 0 20px 0; color: #4a4a4a; font-size: 16px; line-height: 1.6;">
+      A new item has been submitted for review for your auction <strong>${eventName}</strong>.
+    </p>
+
+    <div style="background-color: #f5f5f5; border-radius: 8px; padding: 20px; margin: 20px 0;">
+      <p style="margin: 0 0 10px 0; color: #4a4a4a; font-size: 14px;">
+        <strong>Item:</strong> ${itemName}
+      </p>
+      <p style="margin: 0 0 10px 0; color: #4a4a4a; font-size: 14px;">
+        <strong>Submitted by:</strong> ${donorName}
+      </p>
+      ${donorEmail ? `
+      <p style="margin: 0 0 10px 0; color: #4a4a4a; font-size: 14px;">
+        <strong>Email:</strong> <a href="mailto:${donorEmail}" style="color: #5A7C6F;">${donorEmail}</a>
+      </p>
+      ` : ''}
+      ${estimatedValue ? `
+      <p style="margin: 0; color: #4a4a4a; font-size: 14px;">
+        <strong>Estimated Value:</strong> $${estimatedValue.toFixed(2)}
+      </p>
+      ` : ''}
+    </div>
+
+    <!-- CTA Button -->
+    <table role="presentation" style="width: 100%; border-collapse: collapse;">
+      <tr>
+        <td style="text-align: center; padding: 20px 0;">
+          <a href="${dashboardUrl}"
+             style="display: inline-block; background-color: #5A7C6F; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 6px; font-size: 16px; font-weight: 600;">
+            Review Submission
+          </a>
+        </td>
+      </tr>
+    </table>
+
+    <p style="margin: 20px 0 0 0; color: #888888; font-size: 14px; line-height: 1.6;">
+      Log in to your dashboard to review, approve, or reject this submission.
+    </p>
+  `
+
+  const plainTextContent = `
+New Item Submission
+
+A new item has been submitted for review for your auction "${eventName}".
+
+Item: ${itemName}
+Submitted by: ${donorName}
+${donorEmail ? `Email: ${donorEmail}` : ''}
+${estimatedValue ? `Estimated Value: $${estimatedValue.toFixed(2)}` : ''}
+
+Review submission: ${dashboardUrl}
+
+Log in to your dashboard to review, approve, or reject this submission.
+
+© ${new Date().getFullYear()} Very Good Auctions. All rights reserved.
+`
+
+  return sendEmail({
+    to: recipientEmail,
+    subject,
+    htmlContent: emailWrapper('New Submission', content),
+    plainTextContent,
+  })
+}

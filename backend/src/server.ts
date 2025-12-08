@@ -17,6 +17,8 @@ import { adminPayoutRoutes } from './routes/adminPayouts.js'
 import { complianceRoutes } from './routes/compliance.js'
 import { feedbackRoutes } from './routes/feedback.js'
 import { adminRoutes } from './routes/admin.js'
+import { donateRoutes } from './routes/donate.js'
+import { submissionRoutes } from './routes/submissions.js'
 import { errorHandler } from './middleware/errorHandler.js'
 import { requestLogger } from './middleware/requestLogger.js'
 import { generalLimiter, adminLimiter, paymentLimiter } from './middleware/rateLimit.js'
@@ -119,6 +121,8 @@ app.use('/api/admin/payouts', adminLimiter, adminPayoutRoutes) // Admin rate lim
 app.use('/api', complianceRoutes) // Compliance routes (tax, agreements) - protected by auth and general limiter
 app.use('/api/feedback', feedbackRoutes)
 app.use('/api/admin', adminLimiter, adminRoutes) // Admin rate limit
+app.use('/api/donate', donateRoutes) // Public donation endpoints - no auth required
+app.use('/api', submissionRoutes) // Submission management endpoints - auth required
 
 // Error handling
 app.use(errorHandler)

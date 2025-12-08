@@ -1504,6 +1504,245 @@ class ApiClient {
   }> {
     return this.request('/admin/feature-flags/public')
   }
+
+  // =====================================================
+  // Public Donation Endpoints (no auth required)
+  // =====================================================
+
+  async getDonationEventInfo(code: string): Promise<{
+    event: {
+      id: string
+      name: string
+      description: string | null
+      startsAt: string
+      endsAt: string
+    }
+    organization: {
+      name: string
+      logoUrl: string | null
+    }
+    settings: {
+      requiresContact: boolean
+      requireValueEstimate: boolean
+      maxImages: number
+      instructions: string | null
+    }
+  }> {
+    return this.request(`/donate/${code}`)
+  }
+
+  async submitDonation(
+    code: string,
+    data: {
+      name: string
+      description?: string
+      estimatedValue?: number
+      condition?: string
+      category?: string
+      donorName?: string
+      donorEmail?: string
+      donorPhone?: string
+      donorNotes?: string
+      donorAnonymous?: boolean
+      imageIds?: string[]
+    }
+  ): Promise<{
+    success: boolean
+    submissionId: string
+    message: string
+  }> {
+    return this.request(`/donate/${code}/submit`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async uploadDonationImage(
+    code: string,
+    file: File
+  ): Promise<{
+    imageId: string
+    imageUrl: string
+  }> {
+    const formData = new FormData()
+    formData.append('image', file)
+
+    const url = `${API_BASE_URL}/donate/${code}/upload-image`
+    const response = await fetch(url, {
+      method: 'POST',
+      body: formData,
+    })
+
+    if (!response.ok) {
+      let errorMessage = `Image upload failed (${response.status})`
+      try {
+        const errorData = await response.json()
+        errorMessage = errorData.error || errorMessage
+      } catch {
+        // Ignore JSON parse errors
+      }
+      throw new Error(errorMessage)
+    }
+
+    return response.json()
+  }
+
+  // =====================================================
+  // Donation Settings (auth required)
+  // =====================================================
+
+  async getDonationSettings(eventIdOrSlug: string): Promise<{
+    code: string | null
+    enabled: boolean
+    createdAt: string | null
+    expiresAt: string | null
+    requiresContact: boolean
+    requireValueEstimate: boolean
+    maxImages: number
+    instructions: string | null
+    notifyOnSubmission: boolean
+    autoThankDonor: boolean
+    donationUrl: string | null
+  }> {
+    return this.request(`/events/${eventIdOrSlug}/donation-settings`)
+  }
+
+  async generateDonationCode(eventIdOrSlug: string): Promise<{
+    code: string
+    donationUrl: string
+  }> {
+    return this.request(`/events/${eventIdOrSlug}/donation-settings/generate-code`, {
+      method: 'POST',
+    })
+  }
+
+  async updateDonationSettings(
+    eventIdOrSlug: string,
+    data: {
+      enabled?: boolean
+      expiresAt?: string | null
+      requiresContact?: boolean
+      requireValueEstimate?: boolean
+      maxImages?: number
+      instructions?: string | null
+      notifyOnSubmission?: boolean
+      autoThankDonor?: boolean
+    }
+  ): Promise<{ success: boolean }> {
+    return this.request(`/events/${eventIdOrSlug}/donation-settings`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async deleteDonationCode(eventIdOrSlug: string): Promise<{ success: boolean; message: string }> {
+    return this.request(`/events/${eventIdOrSlug}/donation-settings/code`, {
+      method: 'DELETE',
+    })
+  }
+
+  // =====================================================
+  // Submission Management (auth required)
+  // =====================================================
+
+  async getEventSubmissions(
+    eventIdOrSlug: string,
+    options?: {
+      status?: 'pending' | 'approved' | 'rejected' | 'withdrawn'
+      page?: number
+      limit?: number
+    }
+  ): Promise<{
+    submissions: Array<{
+      id: string
+      name: string
+      description: string | null
+      estimatedValue: number | null
+      condition: string | null
+      category: string | null
+      donor: {
+        name: string | null
+        email: string | null
+        phone: string | null
+        notes: string | null
+        anonymous: boolean
+      }
+      status: string
+      reviewedBy: string | null
+      reviewedAt: string | null
+      reviewNotes: string | null
+      rejectionReason: string | null
+      eventItemId: string | null
+      submittedAt: string
+      lastEditedBy: string | null
+      lastEditedAt: string | null
+      imageCount: number
+      primaryImageUrl: string | null
+    }>
+    pagination: {
+      page: number
+      limit: number
+      total: number
+      totalPages: number
+    }
+  }> {
+    const params = new URLSearchParams()
+    if (options?.status) params.append('status', options.status)
+    if (options?.page) params.append('page', String(options.page))
+    if (options?.limit) params.append('limit', String(options.limit))
+    const query = params.toString() ? `?${params.toString()}` : ''
+    return this.request(`/events/${eventIdOrSlug}/submissions${query}`)
+  }
+
+  async getSubmissionStats(eventIdOrSlug: string): Promise<{
+    total: number
+    pending: number
+    approved: number
+    rejected: number
+    withdrawn: number
+    converted: number
+    totalEstimatedValue: number
+  }> {
+    return this.request(`/events/${eventIdOrSlug}/submissions/stats`)
+  }
+
+  async approveSubmission(
+    eventIdOrSlug: string,
+    submissionId: string,
+    reviewNotes?: string
+  ): Promise<{ success: boolean; message: string }> {
+    return this.request(`/events/${eventIdOrSlug}/submissions/${submissionId}/approve`, {
+      method: 'POST',
+      body: JSON.stringify({ reviewNotes }),
+    })
+  }
+
+  async rejectSubmission(
+    eventIdOrSlug: string,
+    submissionId: string,
+    rejectionReason?: string
+  ): Promise<{ success: boolean; message: string }> {
+    return this.request(`/events/${eventIdOrSlug}/submissions/${submissionId}/reject`, {
+      method: 'POST',
+      body: JSON.stringify({ rejectionReason }),
+    })
+  }
+
+  async convertSubmissionToItem(
+    eventIdOrSlug: string,
+    submissionId: string,
+    options?: {
+      startingBid?: number
+      bidIncrement?: number
+      buyNowPrice?: number
+      categoryId?: string
+    }
+  ): Promise<{ success: boolean; eventItemId: string; message: string }> {
+    return this.request(`/events/${eventIdOrSlug}/submissions/${submissionId}/convert`, {
+      method: 'POST',
+      body: JSON.stringify(options || {}),
+    })
+  }
 }
 
 export const apiClient = new ApiClient()
