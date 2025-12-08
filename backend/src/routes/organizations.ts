@@ -463,40 +463,55 @@ router.get(
       )
       const activeEventsCount = activeEventsResult.recordset[0].count
 
-      // Check for pending payouts
-      const pendingPayoutsResult = await dbQuery(
-        `SELECT COUNT(*) as count, COALESCE(SUM(net_payout), 0) as total
-         FROM organization_payouts
-         WHERE organization_id = @id AND status IN ('pending', 'eligible', 'processing')`,
-        { id }
-      )
-      const pendingPayouts = {
-        count: pendingPayoutsResult.recordset[0].count,
-        total: pendingPayoutsResult.recordset[0].total,
+      // Check for pending payouts (table may not exist)
+      let pendingPayouts = { count: 0, total: 0 }
+      try {
+        const pendingPayoutsResult = await dbQuery(
+          `SELECT COUNT(*) as count, COALESCE(SUM(net_payout), 0) as total
+           FROM organization_payouts
+           WHERE organization_id = @id AND status IN ('pending', 'eligible', 'processing')`,
+          { id }
+        )
+        pendingPayouts = {
+          count: pendingPayoutsResult.recordset[0].count,
+          total: pendingPayoutsResult.recordset[0].total,
+        }
+      } catch {
+        // Table doesn't exist, skip
       }
 
-      // Check for held reserves
-      const heldReservesResult = await dbQuery(
-        `SELECT COUNT(*) as count, COALESCE(SUM(amount), 0) as total
-         FROM payout_reserves
-         WHERE organization_id = @id AND status = 'held'`,
-        { id }
-      )
-      const heldReserves = {
-        count: heldReservesResult.recordset[0].count,
-        total: heldReservesResult.recordset[0].total,
+      // Check for held reserves (table may not exist)
+      let heldReserves = { count: 0, total: 0 }
+      try {
+        const heldReservesResult = await dbQuery(
+          `SELECT COUNT(*) as count, COALESCE(SUM(amount), 0) as total
+           FROM payout_reserves
+           WHERE organization_id = @id AND status = 'held'`,
+          { id }
+        )
+        heldReserves = {
+          count: heldReservesResult.recordset[0].count,
+          total: heldReservesResult.recordset[0].total,
+        }
+      } catch {
+        // Table doesn't exist, skip
       }
 
-      // Check for open chargebacks
-      const openChargebacksResult = await dbQuery(
-        `SELECT COUNT(*) as count, COALESCE(SUM(amount), 0) as total
-         FROM chargebacks
-         WHERE organization_id = @id AND status = 'open'`,
-        { id }
-      )
-      const openChargebacks = {
-        count: openChargebacksResult.recordset[0].count,
-        total: openChargebacksResult.recordset[0].total,
+      // Check for open chargebacks (table may not exist)
+      let openChargebacks = { count: 0, total: 0 }
+      try {
+        const openChargebacksResult = await dbQuery(
+          `SELECT COUNT(*) as count, COALESCE(SUM(amount), 0) as total
+           FROM chargebacks
+           WHERE organization_id = @id AND status = 'open'`,
+          { id }
+        )
+        openChargebacks = {
+          count: openChargebacksResult.recordset[0].count,
+          total: openChargebacksResult.recordset[0].total,
+        }
+      } catch {
+        // Table doesn't exist, skip
       }
 
       // Get summary of what will be deleted
@@ -520,20 +535,25 @@ router.get(
       )
       const totalMembers = membersResult.recordset[0].count
 
-      // Get financial summary
-      const financialResult = await dbQuery(
-        `SELECT
-           COALESCE(SUM(gross_amount), 0) as total_raised,
-           COALESCE(SUM(CASE WHEN status = 'completed' THEN net_payout ELSE 0 END), 0) as total_paid_out,
-           COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed_payouts
-         FROM organization_payouts
-         WHERE organization_id = @id`,
-        { id }
-      )
-      const financial = {
-        totalRaised: financialResult.recordset[0].total_raised,
-        totalPaidOut: financialResult.recordset[0].total_paid_out,
-        completedPayouts: financialResult.recordset[0].completed_payouts,
+      // Get financial summary (table may not exist)
+      let financial = { totalRaised: 0, totalPaidOut: 0, completedPayouts: 0 }
+      try {
+        const financialResult = await dbQuery(
+          `SELECT
+             COALESCE(SUM(gross_amount), 0) as total_raised,
+             COALESCE(SUM(CASE WHEN status = 'completed' THEN net_payout ELSE 0 END), 0) as total_paid_out,
+             COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed_payouts
+           FROM organization_payouts
+           WHERE organization_id = @id`,
+          { id }
+        )
+        financial = {
+          totalRaised: financialResult.recordset[0].total_raised,
+          totalPaidOut: financialResult.recordset[0].total_paid_out,
+          completedPayouts: financialResult.recordset[0].completed_payouts,
+        }
+      } catch {
+        // Table doesn't exist, skip
       }
 
       // Determine blockers
@@ -610,47 +630,97 @@ router.delete(
         throw badRequest('Cannot delete organization with active or scheduled events. Please cancel or complete all events first.')
       }
 
-      // Check for pending payouts
-      const pendingPayoutsResult = await dbQuery(
-        `SELECT COUNT(*) as count FROM organization_payouts
-         WHERE organization_id = @id AND status IN ('pending', 'eligible', 'processing')`,
-        { id }
-      )
-      if (pendingPayoutsResult.recordset[0].count > 0) {
-        throw badRequest('Cannot delete organization with pending payouts. Please wait for all payouts to complete.')
+      // Check for pending payouts (table may not exist yet)
+      try {
+        const pendingPayoutsResult = await dbQuery(
+          `SELECT COUNT(*) as count FROM organization_payouts
+           WHERE organization_id = @id AND status IN ('pending', 'eligible', 'processing')`,
+          { id }
+        )
+        if (pendingPayoutsResult.recordset[0].count > 0) {
+          throw badRequest('Cannot delete organization with pending payouts. Please wait for all payouts to complete.')
+        }
+      } catch (err) {
+        // If it's our badRequest error, rethrow it
+        if (err && typeof err === 'object' && 'statusCode' in err) throw err
+        // Otherwise table doesn't exist, skip check
       }
 
-      // Check for held reserves
-      const heldReservesResult = await dbQuery(
-        `SELECT COUNT(*) as count FROM payout_reserves
-         WHERE organization_id = @id AND status = 'held'`,
-        { id }
-      )
-      if (heldReservesResult.recordset[0].count > 0) {
-        throw badRequest('Cannot delete organization with held reserves. Reserves are released 30 days after payout.')
+      // Check for held reserves (table may not exist yet)
+      try {
+        const heldReservesResult = await dbQuery(
+          `SELECT COUNT(*) as count FROM payout_reserves
+           WHERE organization_id = @id AND status = 'held'`,
+          { id }
+        )
+        if (heldReservesResult.recordset[0].count > 0) {
+          throw badRequest('Cannot delete organization with held reserves. Reserves are released 30 days after payout.')
+        }
+      } catch (err) {
+        if (err && typeof err === 'object' && 'statusCode' in err) throw err
       }
 
-      // Check for open chargebacks
-      const openChargebacksResult = await dbQuery(
-        `SELECT COUNT(*) as count FROM chargebacks
-         WHERE organization_id = @id AND status = 'open'`,
-        { id }
-      )
-      if (openChargebacksResult.recordset[0].count > 0) {
-        throw badRequest('Cannot delete organization with open chargebacks. Please resolve all disputes first.')
+      // Check for open chargebacks (table may not exist yet)
+      try {
+        const openChargebacksResult = await dbQuery(
+          `SELECT COUNT(*) as count FROM chargebacks
+           WHERE organization_id = @id AND status = 'open'`,
+          { id }
+        )
+        if (openChargebacksResult.recordset[0].count > 0) {
+          throw badRequest('Cannot delete organization with open chargebacks. Please resolve all disputes first.')
+        }
+      } catch (err) {
+        if (err && typeof err === 'object' && 'statusCode' in err) throw err
       }
 
       // Disconnect Stripe Connect account if exists
       if (org.stripe_account_id) {
-        await disconnectConnectAccount(id)
+        try {
+          await disconnectConnectAccount(id)
+        } catch (stripeErr) {
+          console.error('Failed to disconnect Stripe account:', stripeErr)
+          // Continue with deletion even if Stripe disconnect fails
+        }
       }
 
       // Delete related financial records that don't cascade
-      // (keeping order to respect foreign keys)
-      await dbQuery('DELETE FROM payout_reserves WHERE organization_id = @id', { id })
-      await dbQuery('DELETE FROM chargebacks WHERE organization_id = @id', { id })
-      await dbQuery('DELETE FROM organization_payouts WHERE organization_id = @id', { id })
-      await dbQuery('DELETE FROM platform_fees WHERE organization_id = @id', { id })
+      // (keeping order to respect foreign keys, using IF EXISTS for tables that may not exist)
+      try {
+        await dbQuery(`
+          IF OBJECT_ID('payout_reserves', 'U') IS NOT NULL
+            DELETE FROM payout_reserves WHERE organization_id = @id
+        `, { id })
+      } catch (err) {
+        console.error('Error deleting payout_reserves:', err)
+      }
+
+      try {
+        await dbQuery(`
+          IF OBJECT_ID('chargebacks', 'U') IS NOT NULL
+            DELETE FROM chargebacks WHERE organization_id = @id
+        `, { id })
+      } catch (err) {
+        console.error('Error deleting chargebacks:', err)
+      }
+
+      try {
+        await dbQuery(`
+          IF OBJECT_ID('organization_payouts', 'U') IS NOT NULL
+            DELETE FROM organization_payouts WHERE organization_id = @id
+        `, { id })
+      } catch (err) {
+        console.error('Error deleting organization_payouts:', err)
+      }
+
+      try {
+        await dbQuery(`
+          IF OBJECT_ID('platform_fees', 'U') IS NOT NULL
+            DELETE FROM platform_fees WHERE organization_id = @id
+        `, { id })
+      } catch (err) {
+        console.error('Error deleting platform_fees:', err)
+      }
 
       // Delete organization (cascades to members, invitations, trust, events, items, bids)
       await dbQuery('DELETE FROM organizations WHERE id = @id', { id })
