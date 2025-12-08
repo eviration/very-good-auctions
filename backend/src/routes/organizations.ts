@@ -684,42 +684,29 @@ router.delete(
         }
       }
 
-      // Delete related financial records that don't cascade
-      // (keeping order to respect foreign keys, using IF EXISTS for tables that may not exist)
-      try {
-        await dbQuery(`
-          IF OBJECT_ID('payout_reserves', 'U') IS NOT NULL
-            DELETE FROM payout_reserves WHERE organization_id = @id
-        `, { id })
-      } catch (err) {
-        console.error('Error deleting payout_reserves:', err)
-      }
+      // Delete related records that don't have ON DELETE CASCADE
+      // Order matters due to foreign key relationships
+      const tablesToClean = [
+        'payout_reserves',      // 004_payouts.sql - no cascade
+        'chargebacks',          // 004_payouts.sql - no cascade
+        'organization_payouts', // 004_payouts.sql - no cascade
+        'platform_fees',        // 002_events.sql - no cascade
+        'tax_information',      // 005_compliance.sql - no cascade
+        'platform_agreements',  // 005_compliance.sql - no cascade
+        'nonprofit_verification', // 005_compliance.sql - has cascade, but clean anyway
+        'tax_reporting',        // 005_compliance.sql - no cascade
+        'auction_feedback',     // 006_feedback.sql - no cascade
+      ]
 
-      try {
-        await dbQuery(`
-          IF OBJECT_ID('chargebacks', 'U') IS NOT NULL
-            DELETE FROM chargebacks WHERE organization_id = @id
-        `, { id })
-      } catch (err) {
-        console.error('Error deleting chargebacks:', err)
-      }
-
-      try {
-        await dbQuery(`
-          IF OBJECT_ID('organization_payouts', 'U') IS NOT NULL
-            DELETE FROM organization_payouts WHERE organization_id = @id
-        `, { id })
-      } catch (err) {
-        console.error('Error deleting organization_payouts:', err)
-      }
-
-      try {
-        await dbQuery(`
-          IF OBJECT_ID('platform_fees', 'U') IS NOT NULL
-            DELETE FROM platform_fees WHERE organization_id = @id
-        `, { id })
-      } catch (err) {
-        console.error('Error deleting platform_fees:', err)
+      for (const table of tablesToClean) {
+        try {
+          await dbQuery(`
+            IF OBJECT_ID('${table}', 'U') IS NOT NULL
+              DELETE FROM ${table} WHERE organization_id = @id
+          `, { id })
+        } catch (err) {
+          console.error(`Error deleting from ${table}:`, err)
+        }
       }
 
       // Delete organization (cascades to members, invitations, trust, events, items, bids)
