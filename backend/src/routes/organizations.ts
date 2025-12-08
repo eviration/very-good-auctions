@@ -698,19 +698,29 @@ router.delete(
         'auction_feedback',     // 006_feedback.sql - no cascade
       ]
 
+      console.log(`Starting cleanup of related tables for org ${id}`)
       for (const table of tablesToClean) {
         try {
+          console.log(`Cleaning table: ${table}`)
           await dbQuery(`
             IF OBJECT_ID('${table}', 'U') IS NOT NULL
               DELETE FROM ${table} WHERE organization_id = @id
           `, { id })
+          console.log(`Successfully cleaned table: ${table}`)
         } catch (err) {
           console.error(`Error deleting from ${table}:`, err)
         }
       }
 
       // Delete organization (cascades to members, invitations, trust, events, items, bids)
-      await dbQuery('DELETE FROM organizations WHERE id = @id', { id })
+      console.log(`Deleting organization ${id}`)
+      try {
+        await dbQuery('DELETE FROM organizations WHERE id = @id', { id })
+        console.log(`Successfully deleted organization ${id}`)
+      } catch (deleteErr) {
+        console.error(`Failed to delete organization ${id}:`, deleteErr)
+        throw deleteErr
+      }
 
       console.log(`Organization ${org.name} (${id}) deleted by user ${userId}`)
 
