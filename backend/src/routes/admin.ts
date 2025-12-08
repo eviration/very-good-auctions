@@ -9,6 +9,13 @@ import {
   TaxInformation,
 } from '../services/taxForms.js'
 import { logComplianceEvent } from '../services/complianceAudit.js'
+import {
+  getAllFeatureFlags,
+  updateFeatureFlag,
+  getFeatureFlagAuditLog,
+  getFeatureFlagsObject,
+  FeatureFlagKey,
+} from '../services/featureFlags.js'
 
 const router = Router()
 
@@ -502,6 +509,106 @@ router.post(
         success: true,
         message: `W-9 ${status === 'verified' ? 'verified' : 'rejected'} successfully`,
       })
+    } catch (error) {
+      next(error)
+    }
+  }
+)
+
+// =============================================================================
+// Feature Flags Admin Routes
+// =============================================================================
+
+// Get all feature flags (admin only)
+router.get(
+  '/feature-flags',
+  authenticate,
+  requirePlatformAdmin,
+  async (_req: Request, res: Response, next: NextFunction) => {
+    try {
+      const flags = await getAllFeatureFlags()
+      res.json({ flags })
+    } catch (error) {
+      next(error)
+    }
+  }
+)
+
+// Update a feature flag (admin only)
+router.put(
+  '/feature-flags/:flagKey',
+  authenticate,
+  requirePlatformAdmin,
+  [
+    param('flagKey').isIn([
+      'integrated_payments_enabled',
+      'self_managed_payments_enabled',
+      'free_mode_enabled',
+      'silent_auctions_enabled',
+      'standard_auctions_enabled',
+    ]).withMessage('Invalid feature flag key'),
+    body('value').isBoolean().withMessage('Value must be a boolean'),
+    body('reason').optional().isString().isLength({ max: 500 }),
+  ],
+  async (req: Request, res: Response, next: NextFunction) => {
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) {
+      return next(badRequest(errors.array()[0].msg))
+    }
+
+    try {
+      const { flagKey } = req.params
+      const { value, reason } = req.body
+
+      const flag = await updateFeatureFlag(
+        flagKey as FeatureFlagKey,
+        value,
+        req.user!.id,
+        req.user!.email,
+        reason
+      )
+
+      res.json({
+        success: true,
+        flag,
+        message: `Feature flag "${flagKey}" ${value ? 'enabled' : 'disabled'}`,
+      })
+    } catch (error) {
+      next(error)
+    }
+  }
+)
+
+// Get feature flag audit log (admin only)
+router.get(
+  '/feature-flags/audit-log',
+  authenticate,
+  requirePlatformAdmin,
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const flagKey = req.query.flagKey as FeatureFlagKey | undefined
+      const limit = Math.min(parseInt(req.query.limit as string) || 50, 100)
+
+      const entries = await getFeatureFlagAuditLog(flagKey, limit)
+      res.json({ entries })
+    } catch (error) {
+      next(error)
+    }
+  }
+)
+
+// =============================================================================
+// Public Feature Flags Route (for frontend to know what's enabled)
+// =============================================================================
+
+// Get feature flags for UI (public, no admin required)
+// This allows the frontend to know which features are available
+router.get(
+  '/feature-flags/public',
+  async (_req: Request, res: Response, next: NextFunction) => {
+    try {
+      const flags = await getFeatureFlagsObject()
+      res.json({ flags })
     } catch (error) {
       next(error)
     }

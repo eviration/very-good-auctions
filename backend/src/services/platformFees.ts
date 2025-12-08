@@ -2,6 +2,7 @@ import Stripe from 'stripe'
 import { query as dbQuery } from '../config/database.js'
 import { v4 as uuidv4 } from 'uuid'
 import { notifyAuctionWon, notifyAuctionLost } from './notifications.js'
+import { isFreeModeEnabled } from './featureFlags.js'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
   apiVersion: '2023-10-16',
@@ -35,8 +36,23 @@ interface EventCompletionResult {
 /**
  * Calculate platform fee for a sold item
  * Fixed $1 per item, taken from proceeds
+ * Returns 0 if free mode is enabled
  */
-export function calculatePlatformFee(_amount: number): number {
+export async function calculatePlatformFee(_amount: number): Promise<number> {
+  const freeMode = await isFreeModeEnabled()
+  if (freeMode) {
+    return 0
+  }
+  return PLATFORM_FEE_PER_ITEM
+}
+
+/**
+ * Synchronous version of calculatePlatformFee for cases where we already know free mode status
+ */
+export function calculatePlatformFeeSync(_amount: number, freeMode: boolean = false): number {
+  if (freeMode) {
+    return 0
+  }
   return PLATFORM_FEE_PER_ITEM
 }
 
@@ -51,13 +67,15 @@ export function calculateStripeFee(amount: number): number {
  * Calculate net proceeds for organization after all fees
  * Fees are deducted from proceeds, not charged to bidder
  */
-export function calculateNetProceeds(winningBid: number): {
+export async function calculateNetProceeds(winningBid: number): Promise<{
   grossAmount: number
   platformFee: number
   stripeFee: number
   netAmount: number
-} {
-  const platformFee = PLATFORM_FEE_PER_ITEM
+  freeModeActive: boolean
+}> {
+  const freeMode = await isFreeModeEnabled()
+  const platformFee = freeMode ? 0 : PLATFORM_FEE_PER_ITEM
   const stripeFee = calculateStripeFee(winningBid)
   const netAmount = winningBid - platformFee - stripeFee
 
@@ -66,6 +84,7 @@ export function calculateNetProceeds(winningBid: number): {
     platformFee,
     stripeFee,
     netAmount: Math.max(0, netAmount), // Ensure non-negative
+    freeModeActive: freeMode,
   }
 }
 
@@ -89,6 +108,10 @@ export async function processEventCompletion(
 
   const event = eventResult.recordset[0]
   const isSelfManaged = event.payment_mode === 'self_managed'
+
+  // Check if free mode is enabled (no platform fees)
+  const freeMode = await isFreeModeEnabled()
+  const noFees = isSelfManaged || freeMode
 
   // Determine winners based on auction type
   let winningBids: WinningBidSummary[] = []
@@ -123,7 +146,7 @@ export async function processEventCompletion(
       winnerEmail: row.winner_email,
       winnerName: row.winner_name,
       winningAmount: row.amount,
-      platformFee: isSelfManaged ? 0 : calculatePlatformFee(row.amount),
+      platformFee: noFees ? 0 : calculatePlatformFeeSync(row.amount, freeMode),
     }))
   } else {
     // For standard auctions, highest visible bid wins
@@ -155,7 +178,7 @@ export async function processEventCompletion(
       winnerEmail: row.winner_email,
       winnerName: row.winner_name,
       winningAmount: row.amount,
-      platformFee: isSelfManaged ? 0 : calculatePlatformFee(row.amount),
+      platformFee: noFees ? 0 : calculatePlatformFeeSync(row.amount, freeMode),
     }))
   }
 
@@ -192,8 +215,8 @@ export async function processEventCompletion(
       }
     )
 
-    // Only create platform fee records for integrated payments
-    if (!isSelfManaged) {
+    // Only create platform fee records for integrated payments when not in free mode
+    if (!noFees && bid.platformFee > 0) {
       await dbQuery(
         `INSERT INTO platform_fees (
           id, user_id, organization_id, event_id, fee_type, amount, status, created_at
@@ -292,7 +315,7 @@ export async function createWinnerPaymentIntent(
   }
 
   const winningAmount = item.current_bid
-  const platformFee = calculatePlatformFee(winningAmount)
+  const platformFee = await calculatePlatformFee(winningAmount)
   const totalAmount = winningAmount + platformFee
 
   // Get user's Stripe customer ID
@@ -381,12 +404,18 @@ export async function handleWinnerPaymentWebhook(
 /**
  * Get pricing information
  */
-export function getPricingInfo() {
+export async function getPricingInfo() {
+  const freeMode = await isFreeModeEnabled()
+  const effectiveFee = freeMode ? 0 : PLATFORM_FEE_PER_ITEM
+
   return {
-    platformFeePerItem: PLATFORM_FEE_PER_ITEM,
+    platformFeePerItem: effectiveFee,
     stripeFeePercent: STRIPE_FEE_PERCENT,
     stripeFeeFixed: STRIPE_FEE_FIXED,
-    description: `$${PLATFORM_FEE_PER_ITEM.toFixed(2)} per item sold (deducted from proceeds). Payment processing fees also apply.`,
+    freeModeActive: freeMode,
+    description: freeMode
+      ? 'Free mode is currently active - no platform fees!'
+      : `$${PLATFORM_FEE_PER_ITEM.toFixed(2)} per item sold (deducted from proceeds). Payment processing fees also apply.`,
   }
 }
 
@@ -406,6 +435,9 @@ export async function getEventFeeSummary(eventId: string): Promise<{
     paymentStatus: 'pending' | 'paid' | null
   }[]
 }> {
+  // Check free mode status once for all items
+  const freeMode = await isFreeModeEnabled()
+
   const itemsResult = await dbQuery(
     `SELECT
       ei.id,
@@ -436,7 +468,7 @@ export async function getEventFeeSummary(eventId: string): Promise<{
     id: row.id,
     title: row.title,
     winningBid: row.status === 'won' || row.status === 'sold' ? row.winning_bid : null,
-    platformFee: row.winning_bid ? calculatePlatformFee(row.winning_bid) : null,
+    platformFee: row.winning_bid ? calculatePlatformFeeSync(row.winning_bid, freeMode) : null,
     paymentStatus: row.status === 'sold' ? 'paid' as const : row.status === 'won' ? 'pending' as const : null,
   }))
 

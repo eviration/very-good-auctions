@@ -23,6 +23,7 @@ import { generalLimiter, adminLimiter, paymentLimiter } from './middleware/rateL
 import { initializeDatabase } from './config/database.js'
 import { initializeSignalR } from './services/signalr.js'
 import { sendEmailWithDetails } from './services/email.js'
+import { initializeFeatureFlagCache } from './services/featureFlags.js'
 
 dotenv.config()
 
@@ -132,6 +133,10 @@ async function startServer() {
     // Initialize database connection
     await initializeDatabase()
     console.log('✓ Database connected')
+
+    // Initialize feature flags cache
+    await initializeFeatureFlagCache()
+    console.log('✓ Feature flags initialized')
 
     // Initialize SignalR
     const server = app.listen(PORT, () => {

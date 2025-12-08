@@ -826,6 +826,29 @@ class ApiClient {
     eventEndedAt: string
     imageUrl?: string
     paymentPending: boolean
+    // Self-managed payment info
+    paymentMode: 'integrated' | 'self_managed'
+    paymentInstructions?: string
+    paymentLink?: string
+    paymentQrCodeUrl?: string
+    paymentDueDays?: number
+    organizationName?: string
+    // Item-level payment/fulfillment tracking
+    paymentStatus: 'pending' | 'paid' | 'payment_issue' | 'waived' | 'refunded'
+    fulfillmentStatus: 'pending' | 'processing' | 'ready_for_pickup' | 'shipped' | 'out_for_delivery' | 'delivered' | 'picked_up' | 'issue'
+    fulfillmentType?: 'shipping' | 'pickup' | 'digital'
+    trackingNumber?: string
+    trackingCarrier?: string
+    trackingUrl?: string
+    pickupReadyAt?: string
+    // Event-level pickup info
+    pickupInstructions?: string
+    pickupLocation?: string
+    pickupAddress?: {
+      line1: string
+      city: string
+      state: string
+    }
   }[]> {
     return this.request('/platform-fees/my-wins')
   }
@@ -1314,6 +1337,172 @@ class ApiClient {
       method: 'POST',
       body: JSON.stringify({ status, notes }),
     })
+  }
+
+  // =====================================================
+  // Self-Managed Payment & Fulfillment Management
+  // =====================================================
+
+  async updateItemPaymentStatus(
+    itemId: string,
+    data: {
+      paymentStatus: 'pending' | 'paid' | 'payment_issue' | 'waived' | 'refunded'
+      paymentMethodUsed?: string
+      paymentNotes?: string
+    }
+  ): Promise<EventItem> {
+    return this.request(`/event-items/${itemId}/payment-status`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async updateItemFulfillmentStatus(
+    itemId: string,
+    data: {
+      fulfillmentStatus: 'pending' | 'processing' | 'ready_for_pickup' | 'shipped' | 'out_for_delivery' | 'delivered' | 'picked_up' | 'issue'
+      fulfillmentType?: 'shipping' | 'pickup' | 'digital'
+      trackingNumber?: string
+      trackingCarrier?: string
+      trackingUrl?: string
+      estimatedDelivery?: string
+      digitalDeliveryInfo?: string
+      fulfillmentNotes?: string
+    }
+  ): Promise<EventItem> {
+    return this.request(`/event-items/${itemId}/fulfillment-status`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async getEventPaymentSummary(eventId: string): Promise<{
+    totalItems: number
+    pending: number
+    paid: number
+    paymentIssue: number
+    waived: number
+    refunded: number
+    totalAmount: number
+    paidAmount: number
+  }> {
+    return this.request(`/event-items/events/${eventId}/payment-summary`)
+  }
+
+  async getEventFulfillmentSummary(eventId: string): Promise<{
+    totalItems: number
+    pending: number
+    processing: number
+    readyForPickup: number
+    shipped: number
+    outForDelivery: number
+    delivered: number
+    pickedUp: number
+    issue: number
+  }> {
+    return this.request(`/event-items/events/${eventId}/fulfillment-summary`)
+  }
+
+  async bulkUpdatePaymentStatus(
+    eventId: string,
+    data: {
+      itemIds: string[]
+      paymentStatus: 'pending' | 'paid' | 'payment_issue' | 'waived' | 'refunded'
+      paymentMethodUsed?: string
+      paymentNotes?: string
+    }
+  ): Promise<{ success: boolean; updatedCount: number }> {
+    return this.request(`/event-items/events/${eventId}/bulk-payment-status`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async bulkUpdateFulfillmentStatus(
+    eventId: string,
+    data: {
+      itemIds: string[]
+      fulfillmentStatus: 'pending' | 'processing' | 'ready_for_pickup' | 'shipped' | 'out_for_delivery' | 'delivered' | 'picked_up' | 'issue'
+      fulfillmentType?: 'shipping' | 'pickup' | 'digital'
+      fulfillmentNotes?: string
+    }
+  ): Promise<{ success: boolean; updatedCount: number }> {
+    return this.request(`/event-items/events/${eventId}/bulk-fulfillment-status`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async getEventWonItems(eventId: string): Promise<EventItem[]> {
+    return this.request(`/event-items/events/${eventId}/won-items`)
+  }
+
+  // =====================================================
+  // Feature Flags (Admin)
+  // =====================================================
+
+  async getFeatureFlags(): Promise<{
+    flags: Array<{
+      id: string
+      flagKey: string
+      flagValue: boolean
+      description: string | null
+      updatedBy: string | null
+      createdAt: string
+      updatedAt: string
+    }>
+  }> {
+    return this.request('/admin/feature-flags')
+  }
+
+  async updateFeatureFlag(
+    flagKey: string,
+    data: { value: boolean; reason?: string }
+  ): Promise<{
+    id: string
+    flagKey: string
+    flagValue: boolean
+    description: string | null
+    updatedBy: string | null
+    createdAt: string
+    updatedAt: string
+  }> {
+    return this.request(`/admin/feature-flags/${flagKey}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async getFeatureFlagAuditLog(params?: {
+    flagKey?: string
+    limit?: number
+  }): Promise<{
+    entries: Array<{
+      id: string
+      flagKey: string
+      oldValue: boolean | null
+      newValue: boolean
+      changedByUserId: string
+      changedByEmail: string
+      reason: string | null
+      createdAt: string
+    }>
+  }> {
+    const queryParams = new URLSearchParams()
+    if (params?.flagKey) queryParams.set('flagKey', params.flagKey)
+    if (params?.limit) queryParams.set('limit', String(params.limit))
+    const queryString = queryParams.toString()
+    return this.request(`/admin/feature-flags/audit-log${queryString ? `?${queryString}` : ''}`)
+  }
+
+  async getPublicFeatureFlags(): Promise<{
+    integrated_payments_enabled: boolean
+    self_managed_payments_enabled: boolean
+    free_mode_enabled: boolean
+    silent_auctions_enabled: boolean
+    standard_auctions_enabled: boolean
+  }> {
+    return this.request('/admin/feature-flags/public')
   }
 }
 
