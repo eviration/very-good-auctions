@@ -1987,6 +1987,173 @@ class ApiClient {
       body: JSON.stringify({ userId, name }),
     })
   }
+
+  // ==========================================
+  // Event Invitations (Private Auctions)
+  // ==========================================
+
+  async inviteToEvent(params: {
+    eventId: string
+    emails: string | string[]
+    role?: 'bidder' | 'submitter' | 'both'
+    message?: string
+  }): Promise<{
+    success: boolean
+    results: Array<{ email: string; status: string; invitationId?: string }>
+    summary: { invited: number; alreadyInvited: number; alreadyParticipant: number }
+  }> {
+    const { eventId, ...body } = params
+    return this.request(`/events/${eventId}/invitations`, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    })
+  }
+
+  async getEventInvitations(eventId: string): Promise<{
+    invitations: Array<{
+      id: string
+      email: string
+      name: string | null
+      role: string
+      status: string
+      invited_at: string
+      invited_by_name: string | null
+      accepted_at: string | null
+      expires_at: string | null
+    }>
+    counts: {
+      pending: number
+      accepted: number
+      declined: number
+      revoked: number
+      total: number
+    }
+  }> {
+    return this.request(`/events/${eventId}/invitations`)
+  }
+
+  async getEventParticipants(eventId: string): Promise<{
+    participants: Array<{
+      id: string
+      user_id: string
+      display_name: string
+      email: string
+      can_bid: boolean
+      can_submit_items: boolean
+      joined_via: string
+      joined_at: string
+      last_activity_at: string | null
+      is_active: boolean
+    }>
+    counts: {
+      active: number
+      removed: number
+      total: number
+    }
+  }> {
+    return this.request(`/events/${eventId}/participants`)
+  }
+
+  async resendEventInvitation(
+    eventId: string,
+    invitationId: string
+  ): Promise<{ success: boolean }> {
+    return this.request(`/events/${eventId}/invitations/${invitationId}/resend`, {
+      method: 'POST',
+    })
+  }
+
+  async revokeEventInvitation(
+    eventId: string,
+    invitationId: string
+  ): Promise<{ success: boolean }> {
+    return this.request(`/events/${eventId}/invitations/${invitationId}`, {
+      method: 'DELETE',
+    })
+  }
+
+  async removeEventParticipant(
+    eventId: string,
+    participantId: string,
+    reason?: string
+  ): Promise<{ success: boolean }> {
+    return this.request(`/events/${eventId}/participants/${participantId}`, {
+      method: 'DELETE',
+      body: JSON.stringify({ reason }),
+    })
+  }
+
+  async validateEventInvitation(token: string): Promise<{
+    invitation: {
+      id: string
+      email: string
+      name: string | null
+      role: string
+      status: string
+    }
+    event: {
+      id: string
+      title: string
+      organization_name: string
+      start_date: string
+      end_date: string
+    }
+  }> {
+    return this.request(`/events/invitations/validate/${token}`)
+  }
+
+  async acceptEventInvitation(
+    token: string,
+    userId: string
+  ): Promise<{
+    success: boolean
+    participantId: string
+    eventId: string
+    canBid: boolean
+    canSubmitItems: boolean
+  }> {
+    return this.request(`/events/invitations/accept/${token}`, {
+      method: 'POST',
+      body: JSON.stringify({ userId }),
+    })
+  }
+
+  async joinEventWithCode(
+    eventId: string,
+    inviteCode: string,
+    userId: string
+  ): Promise<{
+    success: boolean
+    participantId: string
+    canBid: boolean
+    canSubmitItems: boolean
+  }> {
+    return this.request(`/events/${eventId}/join`, {
+      method: 'POST',
+      body: JSON.stringify({ inviteCode, userId }),
+    })
+  }
+
+  async generateEventInviteCode(eventId: string): Promise<{
+    success: boolean
+    inviteCode: string
+  }> {
+    return this.request(`/events/${eventId}/generate-invite-code`, {
+      method: 'POST',
+    })
+  }
+
+  async checkEventAccess(eventId: string): Promise<{
+    hasAccess: boolean
+    isPublic: boolean
+    isParticipant: boolean
+    isOrganizer: boolean
+    canBid: boolean
+    canSubmitItems: boolean
+    participantId: string | null
+  }> {
+    return this.request(`/events/${eventId}/access-check`)
+  }
 }
 
 export const apiClient = new ApiClient()

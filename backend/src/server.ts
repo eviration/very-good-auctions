@@ -20,6 +20,7 @@ import { adminRoutes } from './routes/admin.js'
 import { donateRoutes } from './routes/donate.js'
 import { submissionRoutes } from './routes/submissions.js'
 import { uatRoutes } from './routes/uat/index.js'
+import { eventInvitationsRouter } from './routes/eventInvitations.js'
 import { errorHandler } from './middleware/errorHandler.js'
 import { requestLogger } from './middleware/requestLogger.js'
 import { generalLimiter, adminLimiter, paymentLimiter } from './middleware/rateLimit.js'
@@ -114,6 +115,7 @@ app.use('/api/webhooks', webhookRoutes) // Webhooks have their own verification
 app.use('/api/organizations', organizationRoutes)
 app.use('/api/invitations', invitationRoutes)
 app.use('/api/events', eventRoutes)
+app.use('/api/events', eventInvitationsRouter) // Event invitations for private auctions
 app.use('/api', eventItemRoutes)
 app.use('/api', eventBidRoutes)
 app.use('/api/platform-fees', platformFeeRoutes)

@@ -309,13 +309,16 @@ router.post(
       // Generate access code
       const accessCode = generateAccessCode()
 
+      // Get visibility (default to public)
+      const visibility = req.body.visibility || 'public'
+
       // Create event (no tier/maxItems - unlimited items, fees taken from proceeds)
       const result = await dbQuery(
         `INSERT INTO auction_events (
           organization_id, name, slug, description,
           start_time, end_time, submission_deadline,
           auction_type, is_multi_item, increment_type, increment_value,
-          buy_now_enabled, access_code, status,
+          buy_now_enabled, access_code, status, visibility,
           payment_mode, payment_instructions, payment_link, payment_qr_code_url,
           fulfillment_type, pickup_instructions, pickup_location,
           pickup_address_line1, pickup_address_line2, pickup_city, pickup_state, pickup_postal_code,
@@ -326,7 +329,7 @@ router.post(
           @organizationId, @name, @slug, @description,
           @startTime, @endTime, @submissionDeadline,
           @auctionType, @isMultiItem, @incrementType, @incrementValue,
-          @buyNowEnabled, @accessCode, 'draft',
+          @buyNowEnabled, @accessCode, 'draft', @visibility,
           @paymentMode, @paymentInstructions, @paymentLink, @paymentQrCodeUrl,
           @fulfillmentType, @pickupInstructions, @pickupLocation,
           @pickupAddressLine1, @pickupAddressLine2, @pickupCity, @pickupState, @pickupPostalCode,
@@ -347,6 +350,7 @@ router.post(
           incrementValue,
           buyNowEnabled: buyNowEnabled ? 1 : 0,
           accessCode,
+          visibility,
           paymentMode,
           paymentInstructions: paymentInstructions || null,
           paymentLink: paymentLink || null,
@@ -378,11 +382,13 @@ router.post(
         endTime: event.end_time,
         submissionDeadline: event.submission_deadline,
         auctionType: event.auction_type,
+        visibility: event.visibility,
         isMultiItem: event.is_multi_item,
         incrementType: event.increment_type,
         incrementValue: event.increment_value,
         buyNowEnabled: event.buy_now_enabled,
         accessCode: event.access_code,
+        inviteCode: event.invite_code,
         status: event.status,
         paymentMode: event.payment_mode,
         paymentInstructions: event.payment_instructions,
@@ -430,11 +436,12 @@ router.get(
       const offset = (page - 1) * pageSize
 
       // Use 'e.' prefix for column names to avoid ambiguity with JOINed tables
-      let whereClause = "WHERE e.status IN ('scheduled', 'active', 'ended')"
+      // Only show public events in the main listing (private events require invitation)
+      let whereClause = "WHERE e.status IN ('scheduled', 'active', 'ended') AND (e.visibility = 'public' OR e.visibility IS NULL)"
       const params: Record<string, any> = {}
 
       if (status) {
-        whereClause = "WHERE e.status = @status"
+        whereClause = "WHERE e.status = @status AND (e.visibility = 'public' OR e.visibility IS NULL)"
         params.status = status
       }
 
