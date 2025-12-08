@@ -9,6 +9,12 @@ import {
   sendResubmitRequestedEmail,
   sendAuctionLostEmail,
   sendBidConfirmationEmail,
+  // Self-managed payment emails
+  sendSelfManagedAuctionWonEmail,
+  sendSelfManagedPaymentConfirmedEmail,
+  sendReadyForPickupEmail,
+  sendItemShippedEmail,
+  sendPaymentReminderEmail,
 } from './email.js'
 
 // Notification types matching database constraint
@@ -188,6 +194,46 @@ async function getEventInfo(eventId: string): Promise<{
     slug: result.recordset[0].slug,
     organizationName: result.recordset[0].org_name || 'Unknown Organization',
     endTime: new Date(result.recordset[0].end_time),
+  }
+}
+
+// Helper to get extended event info including self-managed payment details
+async function getExtendedEventInfo(eventId: string): Promise<{
+  name: string
+  slug: string
+  organizationName: string
+  endTime: Date
+  paymentMode: 'integrated' | 'self_managed'
+  paymentInstructions?: string
+  paymentLink?: string
+  paymentDueDays?: number
+  fulfillmentType?: 'shipping' | 'pickup' | 'both' | 'digital'
+  pickupLocation?: string
+  pickupInstructions?: string
+} | null> {
+  const result = await dbQuery(
+    `SELECT ae.name, ae.slug, ae.end_time, o.name as org_name,
+            ae.payment_mode, ae.payment_instructions, ae.payment_link, ae.payment_due_days,
+            ae.fulfillment_type, ae.pickup_location, ae.pickup_instructions
+     FROM auction_events ae
+     LEFT JOIN organizations o ON ae.organization_id = o.id
+     WHERE ae.id = @eventId`,
+    { eventId }
+  )
+  if (result.recordset.length === 0) return null
+  const row = result.recordset[0]
+  return {
+    name: row.name,
+    slug: row.slug,
+    organizationName: row.org_name || 'Unknown Organization',
+    endTime: new Date(row.end_time),
+    paymentMode: row.payment_mode || 'integrated',
+    paymentInstructions: row.payment_instructions,
+    paymentLink: row.payment_link,
+    paymentDueDays: row.payment_due_days,
+    fulfillmentType: row.fulfillment_type,
+    pickupLocation: row.pickup_location,
+    pickupInstructions: row.pickup_instructions,
   }
 }
 
@@ -372,20 +418,40 @@ export async function notifyAuctionWon(
     itemId,
   })
 
-  // Send email
+  // Send email - use different template for self-managed vs integrated payments
   getUserInfo(userId).then(async (user) => {
     if (user) {
-      const event = await getEventInfo(eventId)
+      const event = await getExtendedEventInfo(eventId)
       if (event) {
-        sendAuctionWonEmail({
-          recipientEmail: user.email,
-          recipientName: user.name,
-          itemTitle,
-          winningBid: winningAmount,
-          eventName: event.name,
-          organizationName: event.organizationName,
-          eventSlug: event.slug,
-        }).catch((err) => console.error('Failed to send auction won email:', err))
+        if (event.paymentMode === 'self_managed') {
+          // Use self-managed payment email with payment instructions
+          sendSelfManagedAuctionWonEmail({
+            recipientEmail: user.email,
+            recipientName: user.name,
+            itemTitle,
+            winningBid: winningAmount,
+            eventName: event.name,
+            organizationName: event.organizationName,
+            eventSlug: event.slug,
+            paymentInstructions: event.paymentInstructions,
+            paymentLink: event.paymentLink,
+            paymentDueDays: event.paymentDueDays,
+            fulfillmentType: event.fulfillmentType,
+            pickupLocation: event.pickupLocation,
+            pickupInstructions: event.pickupInstructions,
+          }).catch((err) => console.error('Failed to send self-managed auction won email:', err))
+        } else {
+          // Use standard integrated payment email
+          sendAuctionWonEmail({
+            recipientEmail: user.email,
+            recipientName: user.name,
+            itemTitle,
+            winningBid: winningAmount,
+            eventName: event.name,
+            organizationName: event.organizationName,
+            eventSlug: event.slug,
+          }).catch((err) => console.error('Failed to send auction won email:', err))
+        }
       }
     }
   })
@@ -627,6 +693,7 @@ export async function notifyPaymentConfirmed(
   itemTitle: string,
   eventId: string,
   itemId: string,
+  amount: number,
   paymentMethod?: string
 ): Promise<string> {
   const message = paymentMethod
@@ -642,12 +709,22 @@ export async function notifyPaymentConfirmed(
     itemId,
   })
 
-  // TODO: Add email sending when email template is ready
-  // getUserInfo(userId).then(async (user) => {
-  //   if (user) {
-  //     sendPaymentConfirmedEmail({...}).catch(err => console.error(...))
-  //   }
-  // })
+  // Send payment confirmation email
+  getUserInfo(userId).then(async (user) => {
+    if (user) {
+      const event = await getEventInfo(eventId)
+      if (event) {
+        sendSelfManagedPaymentConfirmedEmail({
+          recipientEmail: user.email,
+          recipientName: user.name,
+          itemTitle,
+          amount,
+          eventName: event.name,
+          organizationName: event.organizationName,
+        }).catch((err) => console.error('Failed to send payment confirmed email:', err))
+      }
+    }
+  })
 
   return notificationId
 }
@@ -674,7 +751,24 @@ export async function notifyItemShipped(
     itemId,
   })
 
-  // TODO: Add email sending when email template is ready
+  // Send item shipped email
+  getUserInfo(userId).then(async (user) => {
+    if (user) {
+      const event = await getEventInfo(eventId)
+      if (event) {
+        sendItemShippedEmail({
+          recipientEmail: user.email,
+          recipientName: user.name,
+          itemTitle,
+          eventName: event.name,
+          organizationName: event.organizationName,
+          trackingNumber: tracking?.number,
+          trackingCarrier: tracking?.carrier,
+          trackingUrl: tracking?.url || undefined,
+        }).catch((err) => console.error('Failed to send item shipped email:', err))
+      }
+    }
+  })
 
   return notificationId
 }
@@ -685,7 +779,8 @@ export async function notifyReadyForPickup(
   itemTitle: string,
   eventId: string,
   itemId: string,
-  pickupLocation?: string
+  pickupLocation?: string,
+  pickupInstructions?: string
 ): Promise<string> {
   let message = `Your item "${itemTitle}" is ready for pickup!`
   if (pickupLocation) {
@@ -701,7 +796,23 @@ export async function notifyReadyForPickup(
     itemId,
   })
 
-  // TODO: Add email sending when email template is ready
+  // Send ready for pickup email
+  getUserInfo(userId).then(async (user) => {
+    if (user) {
+      const event = await getEventInfo(eventId)
+      if (event) {
+        sendReadyForPickupEmail({
+          recipientEmail: user.email,
+          recipientName: user.name,
+          itemTitle,
+          eventName: event.name,
+          organizationName: event.organizationName,
+          pickupLocation,
+          pickupInstructions,
+        }).catch((err) => console.error('Failed to send ready for pickup email:', err))
+      }
+    }
+  })
 
   return notificationId
 }
@@ -722,7 +833,8 @@ export async function notifyDigitalDelivered(
     itemId,
   })
 
-  // TODO: Add email sending when email template is ready
+  // Note: Digital delivery typically includes the content/link in the email,
+  // which would be passed separately. For now, just in-app notification.
 
   return notificationId
 }
@@ -750,7 +862,25 @@ export async function notifyPaymentReminder(
     itemId,
   })
 
-  // TODO: Add email sending when email template is ready
+  // Send payment reminder email
+  getUserInfo(userId).then(async (user) => {
+    if (user) {
+      const event = await getExtendedEventInfo(eventId)
+      if (event) {
+        sendPaymentReminderEmail({
+          recipientEmail: user.email,
+          recipientName: user.name,
+          itemTitle,
+          amount: amountOwed,
+          eventName: event.name,
+          organizationName: event.organizationName,
+          paymentInstructions: event.paymentInstructions,
+          paymentLink: event.paymentLink,
+          daysOverdue: daysOverdue || 0,
+        }).catch((err) => console.error('Failed to send payment reminder email:', err))
+      }
+    }
+  })
 
   return notificationId
 }

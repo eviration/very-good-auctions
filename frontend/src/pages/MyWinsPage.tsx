@@ -19,6 +19,29 @@ interface WonItem {
   eventEndedAt: string
   imageUrl?: string
   paymentPending: boolean
+  // Self-managed payment info
+  paymentMode: 'integrated' | 'self_managed'
+  paymentInstructions?: string
+  paymentLink?: string
+  paymentQrCodeUrl?: string
+  paymentDueDays?: number
+  organizationName?: string
+  // Item-level payment/fulfillment tracking
+  paymentStatus: 'pending' | 'paid' | 'payment_issue' | 'waived' | 'refunded'
+  fulfillmentStatus: 'pending' | 'processing' | 'ready_for_pickup' | 'shipped' | 'out_for_delivery' | 'delivered' | 'picked_up' | 'issue'
+  fulfillmentType?: 'shipping' | 'pickup' | 'digital'
+  trackingNumber?: string
+  trackingCarrier?: string
+  trackingUrl?: string
+  pickupReadyAt?: string
+  // Event-level pickup info
+  pickupInstructions?: string
+  pickupLocation?: string
+  pickupAddress?: {
+    line1: string
+    city: string
+    state: string
+  }
 }
 
 function PaymentForm({ itemId, onSuccess, onCancel }: {
@@ -155,8 +178,21 @@ export default function MyWinsPage() {
     })
   }
 
-  const pendingWins = wins.filter(w => w.paymentPending)
-  const paidWins = wins.filter(w => !w.paymentPending)
+  // Separate integrated and self-managed payment items
+  const integratedWins = wins.filter(w => w.paymentMode !== 'self_managed')
+  const selfManagedWins = wins.filter(w => w.paymentMode === 'self_managed')
+
+  // Within integrated: pending vs paid
+  const pendingIntegratedWins = integratedWins.filter(w => w.paymentPending)
+  const paidIntegratedWins = integratedWins.filter(w => !w.paymentPending)
+
+  // Within self-managed: pending vs confirmed
+  const pendingSelfManagedWins = selfManagedWins.filter(w => w.paymentStatus === 'pending' || w.paymentStatus === 'payment_issue')
+  const confirmedSelfManagedWins = selfManagedWins.filter(w => w.paymentStatus !== 'pending' && w.paymentStatus !== 'payment_issue')
+
+  // Legacy compatibility
+  const pendingWins = pendingIntegratedWins
+  const paidWins = paidIntegratedWins
 
   if (loading) {
     return (
@@ -331,6 +367,294 @@ export default function MyWinsPage() {
                           </Elements>
                         </div>
                       )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Self-Managed Pending Payments */}
+            {pendingSelfManagedWins.length > 0 && (
+              <div>
+                <div className="clay-badge bg-clay-butter mb-4">
+                  <span className="font-black">Pay Directly to Organization</span>
+                  <span className="text-charcoal-light">({pendingSelfManagedWins.length})</span>
+                </div>
+                <div className="space-y-4">
+                  {pendingSelfManagedWins.map((item) => (
+                    <div
+                      key={item.id}
+                      className="clay-card p-6"
+                    >
+                      <div className="flex items-start gap-4">
+                        {/* Image */}
+                        {item.imageUrl ? (
+                          <img
+                            src={item.imageUrl}
+                            alt={item.title}
+                            className="w-24 h-24 object-cover rounded-clay shadow-clay-sm flex-shrink-0"
+                          />
+                        ) : (
+                          <div className="w-24 h-24 bg-clay-lavender/30 rounded-clay shadow-clay-sm flex items-center justify-center flex-shrink-0">
+                            <svg
+                              className="w-8 h-8 text-charcoal-light"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                              />
+                            </svg>
+                          </div>
+                        )}
+
+                        {/* Details */}
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-bold text-charcoal truncate">{item.title}</h3>
+                          <Link
+                            to={`/events/${item.eventSlug}`}
+                            className="text-sm text-charcoal-light font-medium hover:text-charcoal"
+                          >
+                            {item.eventName}
+                          </Link>
+                          <p className="text-sm text-charcoal-light mt-1">
+                            Won on {formatDate(item.eventEndedAt)}
+                          </p>
+                          {item.organizationName && (
+                            <p className="text-sm font-medium text-charcoal mt-1">
+                              From: {item.organizationName}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Price & Status */}
+                        <div className="text-right flex-shrink-0">
+                          <div className="text-sm text-charcoal-light font-medium">Amount due</div>
+                          <div className="text-2xl font-black text-charcoal">${item.winningAmount.toFixed(2)}</div>
+                          {item.paymentStatus === 'payment_issue' && (
+                            <span className="clay-badge text-xs bg-clay-coral mt-2">
+                              Payment Issue
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Payment Instructions */}
+                      <div className="mt-6 pt-6 border-t-2 border-white/60">
+                        <h4 className="font-bold text-charcoal mb-3">Payment Instructions</h4>
+                        <div className="bg-clay-butter/20 rounded-clay p-4">
+                          {item.paymentInstructions ? (
+                            <p className="text-charcoal whitespace-pre-wrap">{item.paymentInstructions}</p>
+                          ) : (
+                            <p className="text-charcoal-light italic">
+                              Contact the organization for payment details.
+                            </p>
+                          )}
+
+                          {item.paymentLink && (
+                            <a
+                              href={item.paymentLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="mt-4 clay-button bg-clay-mint text-sm py-2 inline-flex items-center gap-2"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                              </svg>
+                              Pay Now
+                            </a>
+                          )}
+
+                          {item.paymentQrCodeUrl && (
+                            <div className="mt-4">
+                              <p className="text-sm text-charcoal-light mb-2">Scan to pay:</p>
+                              <img
+                                src={item.paymentQrCodeUrl}
+                                alt="Payment QR Code"
+                                className="w-32 h-32 rounded-clay shadow-clay-sm"
+                              />
+                            </div>
+                          )}
+
+                          {item.paymentDueDays && (
+                            <p className="mt-4 text-sm text-charcoal-light">
+                              Payment due within {item.paymentDueDays} days of auction end.
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Pickup/Fulfillment Info */}
+                      {(item.pickupLocation || item.pickupInstructions || item.pickupAddress) && (
+                        <div className="mt-4 pt-4 border-t-2 border-white/60">
+                          <h4 className="font-bold text-charcoal mb-3">Pickup Information</h4>
+                          <div className="bg-clay-lavender/20 rounded-clay p-4 space-y-2">
+                            {item.pickupLocation && (
+                              <p className="text-charcoal">
+                                <span className="font-medium">Location:</span> {item.pickupLocation}
+                              </p>
+                            )}
+                            {item.pickupAddress && (
+                              <p className="text-charcoal">
+                                <span className="font-medium">Address:</span>{' '}
+                                {item.pickupAddress.line1}, {item.pickupAddress.city}, {item.pickupAddress.state}
+                              </p>
+                            )}
+                            {item.pickupInstructions && (
+                              <p className="text-charcoal whitespace-pre-wrap">
+                                <span className="font-medium">Instructions:</span> {item.pickupInstructions}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Self-Managed Confirmed Items */}
+            {confirmedSelfManagedWins.length > 0 && (
+              <div>
+                <div className="clay-badge bg-clay-mint mb-4">
+                  <span className="font-black">Confirmed Purchases</span>
+                  <span className="text-charcoal-light">({confirmedSelfManagedWins.length})</span>
+                </div>
+                <div className="space-y-4">
+                  {confirmedSelfManagedWins.map((item) => (
+                    <div
+                      key={item.id}
+                      className="clay-card p-6"
+                    >
+                      <div className="flex items-start gap-4">
+                        {/* Image */}
+                        {item.imageUrl ? (
+                          <img
+                            src={item.imageUrl}
+                            alt={item.title}
+                            className="w-20 h-20 object-cover rounded-clay shadow-clay-sm flex-shrink-0"
+                          />
+                        ) : (
+                          <div className="w-20 h-20 bg-clay-lavender/30 rounded-clay shadow-clay-sm flex items-center justify-center flex-shrink-0">
+                            <svg
+                              className="w-6 h-6 text-charcoal-light"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                              />
+                            </svg>
+                          </div>
+                        )}
+
+                        {/* Details */}
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-bold text-charcoal truncate">{item.title}</h3>
+                          <Link
+                            to={`/events/${item.eventSlug}`}
+                            className="text-sm text-charcoal-light font-medium hover:text-charcoal"
+                          >
+                            {item.eventName}
+                          </Link>
+                          {item.organizationName && (
+                            <p className="text-sm text-charcoal-light">
+                              From: {item.organizationName}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Status */}
+                        <div className="text-right flex-shrink-0">
+                          <div className="text-lg font-black text-charcoal">${item.winningAmount.toFixed(2)}</div>
+                          <span className={`clay-badge text-xs ${
+                            item.paymentStatus === 'paid' ? 'bg-clay-mint' :
+                            item.paymentStatus === 'waived' ? 'bg-clay-lavender' :
+                            'bg-clay-peach'
+                          }`}>
+                            {item.paymentStatus === 'paid' ? 'Paid' :
+                             item.paymentStatus === 'waived' ? 'Waived' :
+                             item.paymentStatus === 'refunded' ? 'Refunded' : 'Paid'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Fulfillment Status */}
+                      <div className="mt-4 pt-4 border-t-2 border-white/60">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-charcoal">Fulfillment Status</span>
+                          <span className={`clay-badge text-xs ${
+                            item.fulfillmentStatus === 'delivered' || item.fulfillmentStatus === 'picked_up' ? 'bg-clay-mint' :
+                            item.fulfillmentStatus === 'shipped' || item.fulfillmentStatus === 'out_for_delivery' ? 'bg-clay-sky' :
+                            item.fulfillmentStatus === 'ready_for_pickup' ? 'bg-clay-butter' :
+                            item.fulfillmentStatus === 'processing' ? 'bg-clay-lavender' :
+                            item.fulfillmentStatus === 'issue' ? 'bg-clay-coral' :
+                            'bg-clay-surface'
+                          }`}>
+                            {item.fulfillmentStatus === 'pending' ? 'Pending' :
+                             item.fulfillmentStatus === 'processing' ? 'Processing' :
+                             item.fulfillmentStatus === 'ready_for_pickup' ? 'Ready for Pickup' :
+                             item.fulfillmentStatus === 'shipped' ? 'Shipped' :
+                             item.fulfillmentStatus === 'out_for_delivery' ? 'Out for Delivery' :
+                             item.fulfillmentStatus === 'delivered' ? 'Delivered' :
+                             item.fulfillmentStatus === 'picked_up' ? 'Picked Up' :
+                             item.fulfillmentStatus === 'issue' ? 'Issue' : 'Pending'}
+                          </span>
+                        </div>
+
+                        {/* Tracking Info */}
+                        {item.trackingNumber && (
+                          <div className="mt-3 bg-clay-sky/20 rounded-clay p-3">
+                            <p className="text-sm text-charcoal">
+                              <span className="font-medium">Tracking:</span>{' '}
+                              {item.trackingUrl ? (
+                                <a
+                                  href={item.trackingUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-clay-sky hover:underline"
+                                >
+                                  {item.trackingNumber}
+                                </a>
+                              ) : (
+                                item.trackingNumber
+                              )}
+                              {item.trackingCarrier && (
+                                <span className="text-charcoal-light"> ({item.trackingCarrier})</span>
+                              )}
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Ready for Pickup */}
+                        {item.fulfillmentStatus === 'ready_for_pickup' && item.pickupReadyAt && (
+                          <div className="mt-3 bg-clay-butter/20 rounded-clay p-3">
+                            <p className="text-sm text-charcoal">
+                              <span className="font-medium">Ready since:</span>{' '}
+                              {formatDate(item.pickupReadyAt)}
+                            </p>
+                            {item.pickupLocation && (
+                              <p className="text-sm text-charcoal mt-1">
+                                <span className="font-medium">Location:</span> {item.pickupLocation}
+                              </p>
+                            )}
+                            {item.pickupInstructions && (
+                              <p className="text-sm text-charcoal mt-1">
+                                <span className="font-medium">Instructions:</span> {item.pickupInstructions}
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>

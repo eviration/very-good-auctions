@@ -30,7 +30,7 @@ export interface FeatureFlagAuditEntry {
 }
 
 // In-memory cache for feature flags (refreshed on updates)
-let flagCache: Map<FeatureFlagKey, boolean> = new Map()
+const flagCache: Map<FeatureFlagKey, boolean> = new Map()
 let cacheInitialized = false
 
 /**

@@ -12,9 +12,6 @@ import {
   notifyItemRemoved,
   notifyBidCancelled,
   notifyAllBiddersOnItem,
-  notifyPaymentConfirmed,
-  notifyItemShipped,
-  notifyReadyForPickup,
 } from '../services/notifications.js'
 import { v4 as uuidv4 } from 'uuid'
 
@@ -1514,7 +1511,7 @@ router.get(
 
       for (const row of summaryResult.recordset) {
         const status = row.fulfillment_status || 'pending'
-        if (byStatus.hasOwnProperty(status)) {
+        if (Object.prototype.hasOwnProperty.call(byStatus, status)) {
           byStatus[status] = row.count
         }
       }
@@ -1723,6 +1720,117 @@ router.post(
         message: `Updated ${itemIds.length} items to ${status}`,
         count: itemIds.length,
       })
+    } catch (error) {
+      next(error)
+    }
+  }
+)
+
+// Get won items for an event (org admin only)
+router.get(
+  '/events/:eventId/won-items',
+  authenticate,
+  param('eventId').isString(),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { eventId: eventIdOrSlug } = req.params
+      const userId = req.user!.id
+
+      // Resolve event ID from ID or slug
+      const eventId = await resolveEventId(eventIdOrSlug)
+      if (!eventId) {
+        throw notFound('Event not found')
+      }
+
+      // Check admin access
+      const access = await checkEventAccess(eventId, userId)
+      if (!access) {
+        throw forbidden('Only event admins can view won items')
+      }
+
+      // Get all items with winners
+      const itemsResult = await dbQuery(
+        `SELECT i.*,
+                u.display_name as winner_name,
+                u.email as winner_email,
+                e.payment_mode,
+                e.payment_instructions,
+                e.payment_link,
+                e.fulfillment_type as event_fulfillment_type
+         FROM event_items i
+         LEFT JOIN users u ON i.winner_id = u.id
+         LEFT JOIN auction_events e ON i.event_id = e.id
+         WHERE i.event_id = @eventId
+           AND i.winner_id IS NOT NULL
+         ORDER BY i.updated_at DESC`,
+        { eventId }
+      )
+
+      // Get images for items
+      const itemIds = itemsResult.recordset.map((i: any) => i.id)
+      let images: any[] = []
+      if (itemIds.length > 0) {
+        const imageResult = await dbQuery(
+          `SELECT * FROM event_item_images
+           WHERE item_id IN (${itemIds.map((_: any, idx: number) => `@id${idx}`).join(',')})
+           ORDER BY display_order`,
+          itemIds.reduce((acc: any, id: string, idx: number) => ({ ...acc, [`id${idx}`]: id }), {})
+        )
+        images = imageResult.recordset
+      }
+
+      const items = itemsResult.recordset.map((item: any) => {
+        const itemImages = images
+          .filter((img: any) => img.item_id === item.id)
+          .map((img: any) => ({
+            id: img.id,
+            blobUrl: img.blob_url,
+            displayOrder: img.display_order,
+            isPrimary: img.is_primary,
+          }))
+
+        return {
+          id: item.id,
+          eventId: item.event_id,
+          title: item.title,
+          description: item.description,
+          condition: item.condition,
+          currentBid: item.current_bid ? parseFloat(item.current_bid) : null,
+          bidCount: item.bid_count,
+          status: item.status,
+          images: itemImages,
+          // Winner info
+          winnerId: item.winner_id,
+          winnerName: item.winner_name,
+          winnerEmail: item.winner_email,
+          winningBid: item.current_bid ? parseFloat(item.current_bid) : null,
+          // Payment tracking
+          paymentStatus: item.payment_status || 'pending',
+          paymentConfirmedAt: item.payment_confirmed_at,
+          paymentConfirmedBy: item.payment_confirmed_by,
+          paymentMethodUsed: item.payment_method_used,
+          paymentNotes: item.payment_notes,
+          // Fulfillment tracking
+          fulfillmentStatus: item.fulfillment_status || 'pending',
+          fulfillmentType: item.fulfillment_type || item.event_fulfillment_type,
+          trackingNumber: item.tracking_number,
+          trackingCarrier: item.tracking_carrier,
+          trackingUrl: item.tracking_url,
+          shippedAt: item.shipped_at,
+          estimatedDelivery: item.estimated_delivery,
+          pickupReadyAt: item.pickup_ready_at,
+          pickupCompletedAt: item.pickup_completed_at,
+          pickupCompletedBy: item.pickup_completed_by,
+          digitalDeliveryInfo: item.digital_delivery_info,
+          digitalDeliveredAt: item.digital_delivered_at,
+          fulfillmentNotes: item.fulfillment_notes,
+          fulfilledAt: item.fulfilled_at,
+          fulfilledBy: item.fulfilled_by,
+          createdAt: item.created_at,
+        }
+      })
+
+      res.json(items)
     } catch (error) {
       next(error)
     }

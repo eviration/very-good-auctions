@@ -1173,6 +1173,497 @@ If you have questions, please contact our support team.
   })
 }
 
+// =============================================
+// Self-Managed Payment Emails
+// =============================================
+
+// Auction won email for self-managed payments - includes payment instructions
+export async function sendSelfManagedAuctionWonEmail(params: {
+  recipientEmail: string
+  recipientName: string
+  itemTitle: string
+  winningBid: number
+  eventName: string
+  organizationName: string
+  eventSlug: string
+  paymentInstructions?: string
+  paymentLink?: string
+  paymentDueDays?: number
+  fulfillmentType?: 'shipping' | 'pickup' | 'both' | 'digital'
+  pickupLocation?: string
+  pickupInstructions?: string
+}): Promise<boolean> {
+  const {
+    recipientEmail,
+    recipientName,
+    itemTitle,
+    winningBid,
+    eventName,
+    organizationName,
+    // eventSlug is available but not currently used
+    paymentInstructions,
+    paymentLink,
+    paymentDueDays,
+    fulfillmentType,
+    pickupLocation,
+    pickupInstructions,
+  } = params
+
+  const myWinsUrl = `${frontendUrl}/my-wins`
+
+  const subject = `Congratulations! You won "${itemTitle}" at ${eventName}`
+
+  // Build payment section
+  let paymentSection = ''
+  if (paymentInstructions || paymentLink) {
+    paymentSection = `
+      <div style="background-color: #fff8e6; border-radius: 8px; padding: 20px; margin: 20px 0; border-left: 4px solid #f59e0b;">
+        <h3 style="margin: 0 0 15px 0; color: #1a1a1a; font-size: 16px; font-weight: 600;">Payment Instructions</h3>
+        ${paymentInstructions ? `<p style="margin: 0 0 15px 0; color: #4a4a4a; font-size: 14px; line-height: 1.6; white-space: pre-wrap;">${paymentInstructions}</p>` : ''}
+        ${paymentLink ? `
+          <a href="${paymentLink}"
+             style="display: inline-block; background-color: #5A7C6F; color: #ffffff; text-decoration: none; padding: 10px 20px; border-radius: 6px; font-size: 14px; font-weight: 600;">
+            Pay Now
+          </a>
+        ` : ''}
+        ${paymentDueDays ? `<p style="margin: 15px 0 0 0; color: #888888; font-size: 12px;">Payment is due within ${paymentDueDays} days.</p>` : ''}
+      </div>
+    `
+  }
+
+  // Build fulfillment section
+  let fulfillmentSection = ''
+  if (fulfillmentType === 'pickup' || fulfillmentType === 'both') {
+    fulfillmentSection = `
+      <div style="background-color: #e8f4fd; border-radius: 8px; padding: 20px; margin: 20px 0; border-left: 4px solid #2196f3;">
+        <h3 style="margin: 0 0 15px 0; color: #1a1a1a; font-size: 16px; font-weight: 600;">Pickup Information</h3>
+        ${pickupLocation ? `<p style="margin: 0 0 10px 0; color: #4a4a4a; font-size: 14px;"><strong>Location:</strong> ${pickupLocation}</p>` : ''}
+        ${pickupInstructions ? `<p style="margin: 0; color: #4a4a4a; font-size: 14px; line-height: 1.6;"><strong>Instructions:</strong> ${pickupInstructions}</p>` : ''}
+      </div>
+    `
+  }
+
+  const content = `
+    <h2 style="margin: 0 0 20px 0; color: #1a1a1a; font-size: 20px; font-weight: 600;">
+      Congratulations, ${recipientName}!
+    </h2>
+
+    <p style="margin: 0 0 20px 0; color: #4a4a4a; font-size: 16px; line-height: 1.6;">
+      Great news! You've won the auction for <strong>${itemTitle}</strong> with your winning bid of <strong>$${winningBid.toFixed(2)}</strong>.
+    </p>
+
+    <div style="background-color: #f0f7f4; border-radius: 8px; padding: 20px; margin: 20px 0;">
+      <p style="margin: 0 0 10px 0; color: #4a4a4a; font-size: 14px;">
+        <strong>Event:</strong> ${eventName}
+      </p>
+      <p style="margin: 0 0 10px 0; color: #4a4a4a; font-size: 14px;">
+        <strong>Organization:</strong> ${organizationName}
+      </p>
+      <p style="margin: 0; color: #4a4a4a; font-size: 14px;">
+        <strong>Your Winning Bid:</strong> $${winningBid.toFixed(2)}
+      </p>
+    </div>
+
+    ${paymentSection}
+    ${fulfillmentSection}
+
+    <!-- CTA Button -->
+    <table role="presentation" style="width: 100%; border-collapse: collapse;">
+      <tr>
+        <td style="text-align: center; padding: 20px 0;">
+          <a href="${myWinsUrl}"
+             style="display: inline-block; background-color: #5A7C6F; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 6px; font-size: 16px; font-weight: 600;">
+            View My Wins
+          </a>
+        </td>
+      </tr>
+    </table>
+
+    <p style="margin: 20px 0 0 0; color: #888888; font-size: 14px; line-height: 1.6;">
+      Thank you for supporting ${organizationName}!
+    </p>
+  `
+
+  const plainTextContent = `
+Congratulations, ${recipientName}!
+
+Great news! You've won the auction for "${itemTitle}" with your winning bid of $${winningBid.toFixed(2)}.
+
+Event: ${eventName}
+Organization: ${organizationName}
+Your Winning Bid: $${winningBid.toFixed(2)}
+
+${paymentInstructions ? `PAYMENT INSTRUCTIONS:\n${paymentInstructions}\n` : ''}
+${paymentLink ? `Pay online: ${paymentLink}\n` : ''}
+${paymentDueDays ? `Payment is due within ${paymentDueDays} days.\n` : ''}
+
+${pickupLocation ? `PICKUP LOCATION: ${pickupLocation}\n` : ''}
+${pickupInstructions ? `PICKUP INSTRUCTIONS: ${pickupInstructions}\n` : ''}
+
+View your wins: ${myWinsUrl}
+
+Thank you for supporting ${organizationName}!
+
+© ${new Date().getFullYear()} Very Good Auctions. All rights reserved.
+`
+
+  return sendEmail({
+    to: recipientEmail,
+    subject,
+    htmlContent: emailWrapper('Auction Won', content),
+    plainTextContent,
+  })
+}
+
+// Payment confirmation email for self-managed payments - sent by org when they confirm payment
+export async function sendSelfManagedPaymentConfirmedEmail(params: {
+  recipientEmail: string
+  recipientName: string
+  itemTitle: string
+  amount: number
+  eventName: string
+  organizationName: string
+}): Promise<boolean> {
+  const { recipientEmail, recipientName, itemTitle, amount, eventName, organizationName } = params
+
+  const myWinsUrl = `${frontendUrl}/my-wins`
+
+  const subject = `Payment confirmed for "${itemTitle}"`
+
+  const content = `
+    <h2 style="margin: 0 0 20px 0; color: #2e7d32; font-size: 20px; font-weight: 600;">
+      Payment Confirmed!
+    </h2>
+
+    <p style="margin: 0 0 20px 0; color: #4a4a4a; font-size: 16px; line-height: 1.6;">
+      Hi ${recipientName},
+    </p>
+
+    <p style="margin: 0 0 20px 0; color: #4a4a4a; font-size: 16px; line-height: 1.6;">
+      <strong>${organizationName}</strong> has confirmed your payment for <strong>"${itemTitle}"</strong> from the ${eventName} auction.
+    </p>
+
+    <div style="background-color: #e8f5e9; border-radius: 8px; padding: 20px; margin: 20px 0; text-align: center;">
+      <p style="margin: 0 0 5px 0; color: #4a4a4a; font-size: 14px;">Payment Confirmed</p>
+      <p style="margin: 0; color: #2e7d32; font-size: 24px; font-weight: 700;">$${amount.toFixed(2)}</p>
+    </div>
+
+    <p style="margin: 0 0 30px 0; color: #4a4a4a; font-size: 16px; line-height: 1.6;">
+      The organization will contact you regarding pickup/delivery of your item.
+    </p>
+
+    <!-- CTA Button -->
+    <table role="presentation" style="width: 100%; border-collapse: collapse;">
+      <tr>
+        <td style="text-align: center; padding: 20px 0;">
+          <a href="${myWinsUrl}"
+             style="display: inline-block; background-color: #5A7C6F; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 6px; font-size: 16px; font-weight: 600;">
+            View My Wins
+          </a>
+        </td>
+      </tr>
+    </table>
+
+    <p style="margin: 20px 0 0 0; color: #888888; font-size: 14px; line-height: 1.6;">
+      Thank you for supporting ${organizationName}!
+    </p>
+  `
+
+  const plainTextContent = `
+Payment Confirmed!
+
+Hi ${recipientName},
+
+${organizationName} has confirmed your payment for "${itemTitle}" from the ${eventName} auction.
+
+Payment Confirmed: $${amount.toFixed(2)}
+
+The organization will contact you regarding pickup/delivery of your item.
+
+View your wins: ${myWinsUrl}
+
+Thank you for supporting ${organizationName}!
+
+© ${new Date().getFullYear()} Very Good Auctions. All rights reserved.
+`
+
+  return sendEmail({
+    to: recipientEmail,
+    subject,
+    htmlContent: emailWrapper('Payment Confirmed', content),
+    plainTextContent,
+  })
+}
+
+// Ready for pickup email - sent when item is ready to be picked up
+export async function sendReadyForPickupEmail(params: {
+  recipientEmail: string
+  recipientName: string
+  itemTitle: string
+  eventName: string
+  organizationName: string
+  pickupLocation?: string
+  pickupInstructions?: string
+}): Promise<boolean> {
+  const { recipientEmail, recipientName, itemTitle, eventName, organizationName, pickupLocation, pickupInstructions } = params
+
+  const myWinsUrl = `${frontendUrl}/my-wins`
+
+  const subject = `Your item "${itemTitle}" is ready for pickup!`
+
+  const content = `
+    <h2 style="margin: 0 0 20px 0; color: #1a1a1a; font-size: 20px; font-weight: 600;">
+      Ready for Pickup!
+    </h2>
+
+    <p style="margin: 0 0 20px 0; color: #4a4a4a; font-size: 16px; line-height: 1.6;">
+      Hi ${recipientName},
+    </p>
+
+    <p style="margin: 0 0 20px 0; color: #4a4a4a; font-size: 16px; line-height: 1.6;">
+      Your item <strong>"${itemTitle}"</strong> from the ${eventName} auction is now ready for pickup!
+    </p>
+
+    <div style="background-color: #e8f4fd; border-radius: 8px; padding: 20px; margin: 20px 0; border-left: 4px solid #2196f3;">
+      <h3 style="margin: 0 0 15px 0; color: #1a1a1a; font-size: 16px; font-weight: 600;">Pickup Details</h3>
+      ${pickupLocation ? `<p style="margin: 0 0 10px 0; color: #4a4a4a; font-size: 14px;"><strong>Location:</strong> ${pickupLocation}</p>` : ''}
+      ${pickupInstructions ? `<p style="margin: 0; color: #4a4a4a; font-size: 14px; line-height: 1.6;"><strong>Instructions:</strong> ${pickupInstructions}</p>` : ''}
+      ${!pickupLocation && !pickupInstructions ? `<p style="margin: 0; color: #4a4a4a; font-size: 14px;">Please contact ${organizationName} for pickup details.</p>` : ''}
+    </div>
+
+    <!-- CTA Button -->
+    <table role="presentation" style="width: 100%; border-collapse: collapse;">
+      <tr>
+        <td style="text-align: center; padding: 20px 0;">
+          <a href="${myWinsUrl}"
+             style="display: inline-block; background-color: #5A7C6F; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 6px; font-size: 16px; font-weight: 600;">
+            View My Wins
+          </a>
+        </td>
+      </tr>
+    </table>
+
+    <p style="margin: 20px 0 0 0; color: #888888; font-size: 14px; line-height: 1.6;">
+      Thank you for supporting ${organizationName}!
+    </p>
+  `
+
+  const plainTextContent = `
+Ready for Pickup!
+
+Hi ${recipientName},
+
+Your item "${itemTitle}" from the ${eventName} auction is now ready for pickup!
+
+PICKUP DETAILS:
+${pickupLocation ? `Location: ${pickupLocation}\n` : ''}
+${pickupInstructions ? `Instructions: ${pickupInstructions}\n` : ''}
+${!pickupLocation && !pickupInstructions ? `Please contact ${organizationName} for pickup details.\n` : ''}
+
+View your wins: ${myWinsUrl}
+
+Thank you for supporting ${organizationName}!
+
+© ${new Date().getFullYear()} Very Good Auctions. All rights reserved.
+`
+
+  return sendEmail({
+    to: recipientEmail,
+    subject,
+    htmlContent: emailWrapper('Ready for Pickup', content),
+    plainTextContent,
+  })
+}
+
+// Item shipped email - sent when item has been shipped
+export async function sendItemShippedEmail(params: {
+  recipientEmail: string
+  recipientName: string
+  itemTitle: string
+  eventName: string
+  organizationName: string
+  trackingNumber?: string
+  trackingCarrier?: string
+  trackingUrl?: string
+}): Promise<boolean> {
+  const { recipientEmail, recipientName, itemTitle, eventName, organizationName, trackingNumber, trackingCarrier, trackingUrl } = params
+
+  const myWinsUrl = `${frontendUrl}/my-wins`
+
+  const subject = `Your item "${itemTitle}" has shipped!`
+
+  let trackingSection = ''
+  if (trackingNumber) {
+    trackingSection = `
+      <div style="background-color: #e8f4fd; border-radius: 8px; padding: 20px; margin: 20px 0; border-left: 4px solid #2196f3;">
+        <h3 style="margin: 0 0 15px 0; color: #1a1a1a; font-size: 16px; font-weight: 600;">Tracking Information</h3>
+        ${trackingCarrier ? `<p style="margin: 0 0 10px 0; color: #4a4a4a; font-size: 14px;"><strong>Carrier:</strong> ${trackingCarrier}</p>` : ''}
+        <p style="margin: 0 0 10px 0; color: #4a4a4a; font-size: 14px;">
+          <strong>Tracking Number:</strong> ${trackingUrl ? `<a href="${trackingUrl}" style="color: #5A7C6F;">${trackingNumber}</a>` : trackingNumber}
+        </p>
+        ${trackingUrl ? `
+          <a href="${trackingUrl}"
+             style="display: inline-block; background-color: #5A7C6F; color: #ffffff; text-decoration: none; padding: 10px 20px; border-radius: 6px; font-size: 14px; font-weight: 600; margin-top: 10px;">
+            Track Package
+          </a>
+        ` : ''}
+      </div>
+    `
+  }
+
+  const content = `
+    <h2 style="margin: 0 0 20px 0; color: #1a1a1a; font-size: 20px; font-weight: 600;">
+      Your Item Has Shipped!
+    </h2>
+
+    <p style="margin: 0 0 20px 0; color: #4a4a4a; font-size: 16px; line-height: 1.6;">
+      Hi ${recipientName},
+    </p>
+
+    <p style="margin: 0 0 20px 0; color: #4a4a4a; font-size: 16px; line-height: 1.6;">
+      Great news! Your item <strong>"${itemTitle}"</strong> from the ${eventName} auction has been shipped by ${organizationName}.
+    </p>
+
+    ${trackingSection}
+
+    <!-- CTA Button -->
+    <table role="presentation" style="width: 100%; border-collapse: collapse;">
+      <tr>
+        <td style="text-align: center; padding: 20px 0;">
+          <a href="${myWinsUrl}"
+             style="display: inline-block; background-color: #5A7C6F; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 6px; font-size: 16px; font-weight: 600;">
+            View My Wins
+          </a>
+        </td>
+      </tr>
+    </table>
+
+    <p style="margin: 20px 0 0 0; color: #888888; font-size: 14px; line-height: 1.6;">
+      Thank you for supporting ${organizationName}!
+    </p>
+  `
+
+  const plainTextContent = `
+Your Item Has Shipped!
+
+Hi ${recipientName},
+
+Great news! Your item "${itemTitle}" from the ${eventName} auction has been shipped by ${organizationName}.
+
+${trackingNumber ? `TRACKING INFORMATION:\n` : ''}
+${trackingCarrier ? `Carrier: ${trackingCarrier}\n` : ''}
+${trackingNumber ? `Tracking Number: ${trackingNumber}\n` : ''}
+${trackingUrl ? `Track your package: ${trackingUrl}\n` : ''}
+
+View your wins: ${myWinsUrl}
+
+Thank you for supporting ${organizationName}!
+
+© ${new Date().getFullYear()} Very Good Auctions. All rights reserved.
+`
+
+  return sendEmail({
+    to: recipientEmail,
+    subject,
+    htmlContent: emailWrapper('Item Shipped', content),
+    plainTextContent,
+  })
+}
+
+// Payment reminder email - sent when payment is overdue for self-managed
+export async function sendPaymentReminderEmail(params: {
+  recipientEmail: string
+  recipientName: string
+  itemTitle: string
+  amount: number
+  eventName: string
+  organizationName: string
+  paymentInstructions?: string
+  paymentLink?: string
+  daysOverdue: number
+}): Promise<boolean> {
+  const { recipientEmail, recipientName, itemTitle, amount, eventName, organizationName, paymentInstructions, paymentLink, daysOverdue } = params
+
+  const myWinsUrl = `${frontendUrl}/my-wins`
+
+  const subject = `Payment reminder for "${itemTitle}"`
+
+  const content = `
+    <h2 style="margin: 0 0 20px 0; color: #f57c00; font-size: 20px; font-weight: 600;">
+      Payment Reminder
+    </h2>
+
+    <p style="margin: 0 0 20px 0; color: #4a4a4a; font-size: 16px; line-height: 1.6;">
+      Hi ${recipientName},
+    </p>
+
+    <p style="margin: 0 0 20px 0; color: #4a4a4a; font-size: 16px; line-height: 1.6;">
+      This is a friendly reminder that payment is still pending for <strong>"${itemTitle}"</strong> that you won at the ${eventName} auction.
+    </p>
+
+    <div style="background-color: #fff3e0; border-radius: 8px; padding: 20px; margin: 20px 0; border-left: 4px solid #f57c00;">
+      <p style="margin: 0 0 10px 0; color: #4a4a4a; font-size: 14px;">
+        <strong>Amount Due:</strong> $${amount.toFixed(2)}
+      </p>
+      <p style="margin: 0; color: #4a4a4a; font-size: 14px;">
+        <strong>Days Overdue:</strong> ${daysOverdue} day${daysOverdue !== 1 ? 's' : ''}
+      </p>
+    </div>
+
+    ${paymentInstructions ? `
+    <div style="background-color: #f5f5f5; border-radius: 8px; padding: 20px; margin: 20px 0;">
+      <h3 style="margin: 0 0 15px 0; color: #1a1a1a; font-size: 16px; font-weight: 600;">Payment Instructions</h3>
+      <p style="margin: 0; color: #4a4a4a; font-size: 14px; line-height: 1.6; white-space: pre-wrap;">${paymentInstructions}</p>
+    </div>
+    ` : ''}
+
+    ${paymentLink ? `
+    <!-- Pay Now Button -->
+    <table role="presentation" style="width: 100%; border-collapse: collapse;">
+      <tr>
+        <td style="text-align: center; padding: 20px 0;">
+          <a href="${paymentLink}"
+             style="display: inline-block; background-color: #f57c00; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 6px; font-size: 16px; font-weight: 600;">
+            Pay Now
+          </a>
+        </td>
+      </tr>
+    </table>
+    ` : ''}
+
+    <p style="margin: 20px 0 0 0; color: #888888; font-size: 14px; line-height: 1.6;">
+      Please complete your payment as soon as possible. If you have any questions, please contact ${organizationName} directly.
+    </p>
+  `
+
+  const plainTextContent = `
+Payment Reminder
+
+Hi ${recipientName},
+
+This is a friendly reminder that payment is still pending for "${itemTitle}" that you won at the ${eventName} auction.
+
+Amount Due: $${amount.toFixed(2)}
+Days Overdue: ${daysOverdue} day${daysOverdue !== 1 ? 's' : ''}
+
+${paymentInstructions ? `PAYMENT INSTRUCTIONS:\n${paymentInstructions}\n` : ''}
+${paymentLink ? `Pay online: ${paymentLink}\n` : ''}
+
+Please complete your payment as soon as possible. If you have any questions, please contact ${organizationName} directly.
+
+View your wins: ${myWinsUrl}
+
+© ${new Date().getFullYear()} Very Good Auctions. All rights reserved.
+`
+
+  return sendEmail({
+    to: recipientEmail,
+    subject,
+    htmlContent: emailWrapper('Payment Reminder', content),
+    plainTextContent,
+  })
+}
+
 // Reserve released email - sent when the 10% reserve is released
 export async function sendReserveReleasedEmail(params: {
   recipientEmail: string
