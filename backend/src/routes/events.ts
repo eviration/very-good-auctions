@@ -148,6 +148,22 @@ router.post(
     body('incrementType').optional().isIn(['fixed', 'percent']),
     body('incrementValue').optional().isFloat({ min: 0.01 }),
     body('buyNowEnabled').optional().isBoolean(),
+    // Self-managed payments fields
+    body('paymentMode').optional().isIn(['self_managed', 'integrated']),
+    body('paymentInstructions').optional().isString(),
+    body('paymentLink').optional().isURL().withMessage('Payment link must be a valid URL'),
+    body('paymentQrCodeUrl').optional().isURL().withMessage('QR code URL must be a valid URL'),
+    body('fulfillmentType').optional().isIn(['shipping', 'pickup', 'both', 'digital']),
+    body('pickupInstructions').optional().isString(),
+    body('pickupLocation').optional().isString(),
+    body('pickupAddressLine1').optional().isString(),
+    body('pickupAddressLine2').optional().isString(),
+    body('pickupCity').optional().isString(),
+    body('pickupState').optional().isString(),
+    body('pickupPostalCode').optional().isString(),
+    body('pickupDates').optional().isString(),
+    body('paymentDueDays').optional().isInt({ min: 1, max: 90 }),
+    body('sendPaymentReminders').optional().isBoolean(),
   ],
   async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -171,6 +187,22 @@ router.post(
         incrementType = 'fixed',
         incrementValue = 1.0,
         buyNowEnabled = false,
+        // Self-managed payments fields
+        paymentMode = 'integrated',
+        paymentInstructions,
+        paymentLink,
+        paymentQrCodeUrl,
+        fulfillmentType = 'shipping',
+        pickupInstructions,
+        pickupLocation,
+        pickupAddressLine1,
+        pickupAddressLine2,
+        pickupCity,
+        pickupState,
+        pickupPostalCode,
+        pickupDates,
+        paymentDueDays = 7,
+        sendPaymentReminders = true,
       } = req.body
 
       // Ensure user exists in database
@@ -182,7 +214,7 @@ router.post(
         throw forbidden('Only organization owners and admins can create events')
       }
 
-      // Check if organization has completed Stripe Connect verification
+      // Check if organization exists and validate Stripe for integrated payments
       const orgResult = await dbQuery(
         `SELECT stripe_charges_enabled, stripe_payouts_enabled, name
          FROM organizations WHERE id = @orgId`,
@@ -194,11 +226,24 @@ router.post(
       }
 
       const org = orgResult.recordset[0]
-      if (!org.stripe_charges_enabled || !org.stripe_payouts_enabled) {
-        throw badRequest(
-          `Cannot create an auction for "${org.name}" until Stripe Connect setup is complete. ` +
-          'Please complete the payment verification process in your organization settings.'
-        )
+
+      // For integrated payments, Stripe Connect must be set up
+      if (paymentMode === 'integrated') {
+        if (!org.stripe_charges_enabled || !org.stripe_payouts_enabled) {
+          throw badRequest(
+            `Cannot create an auction with integrated payments for "${org.name}" until Stripe Connect setup is complete. ` +
+            'Please complete the payment verification process in your organization settings, or use self-managed payments.'
+          )
+        }
+      }
+
+      // For self-managed payments, require at least one payment method
+      if (paymentMode === 'self_managed') {
+        if (!paymentInstructions && !paymentLink && !paymentQrCodeUrl) {
+          throw badRequest(
+            'Self-managed payment events require at least one of: payment instructions, payment link, or payment QR code.'
+          )
+        }
       }
 
       // Validate dates
@@ -247,6 +292,10 @@ router.post(
           start_time, end_time, submission_deadline,
           auction_type, is_multi_item, increment_type, increment_value,
           buy_now_enabled, access_code, status,
+          payment_mode, payment_instructions, payment_link, payment_qr_code_url,
+          fulfillment_type, pickup_instructions, pickup_location,
+          pickup_address_line1, pickup_address_line2, pickup_city, pickup_state, pickup_postal_code,
+          pickup_dates, payment_due_days, send_payment_reminders,
           created_by, created_at, updated_at
         ) OUTPUT INSERTED.*
         VALUES (
@@ -254,6 +303,10 @@ router.post(
           @startTime, @endTime, @submissionDeadline,
           @auctionType, @isMultiItem, @incrementType, @incrementValue,
           @buyNowEnabled, @accessCode, 'draft',
+          @paymentMode, @paymentInstructions, @paymentLink, @paymentQrCodeUrl,
+          @fulfillmentType, @pickupInstructions, @pickupLocation,
+          @pickupAddressLine1, @pickupAddressLine2, @pickupCity, @pickupState, @pickupPostalCode,
+          @pickupDates, @paymentDueDays, @sendPaymentReminders,
           @createdBy, GETUTCDATE(), GETUTCDATE()
         )`,
         {
@@ -270,6 +323,21 @@ router.post(
           incrementValue,
           buyNowEnabled: buyNowEnabled ? 1 : 0,
           accessCode,
+          paymentMode,
+          paymentInstructions: paymentInstructions || null,
+          paymentLink: paymentLink || null,
+          paymentQrCodeUrl: paymentQrCodeUrl || null,
+          fulfillmentType,
+          pickupInstructions: pickupInstructions || null,
+          pickupLocation: pickupLocation || null,
+          pickupAddressLine1: pickupAddressLine1 || null,
+          pickupAddressLine2: pickupAddressLine2 || null,
+          pickupCity: pickupCity || null,
+          pickupState: pickupState || null,
+          pickupPostalCode: pickupPostalCode || null,
+          pickupDates: pickupDates || null,
+          paymentDueDays,
+          sendPaymentReminders: sendPaymentReminders ? 1 : 0,
           createdBy: userId,
         }
       )
@@ -292,6 +360,23 @@ router.post(
         buyNowEnabled: event.buy_now_enabled,
         accessCode: event.access_code,
         status: event.status,
+        paymentMode: event.payment_mode,
+        paymentInstructions: event.payment_instructions,
+        paymentLink: event.payment_link,
+        paymentQrCodeUrl: event.payment_qr_code_url,
+        fulfillmentType: event.fulfillment_type,
+        pickupInstructions: event.pickup_instructions,
+        pickupLocation: event.pickup_location,
+        pickupAddress: {
+          line1: event.pickup_address_line1,
+          line2: event.pickup_address_line2,
+          city: event.pickup_city,
+          state: event.pickup_state,
+          postalCode: event.pickup_postal_code,
+        },
+        pickupDates: event.pickup_dates,
+        paymentDueDays: event.payment_due_days,
+        sendPaymentReminders: event.send_payment_reminders,
         createdAt: event.created_at,
       })
     } catch (error) {
@@ -488,6 +573,24 @@ router.get(
         totalBids: event.total_bids,
         totalRaised: parseFloat(event.total_raised || 0),
         createdAt: event.created_at,
+        // Self-managed payments fields
+        paymentMode: event.payment_mode,
+        paymentInstructions: event.payment_instructions,
+        paymentLink: event.payment_link,
+        paymentQrCodeUrl: event.payment_qr_code_url,
+        fulfillmentType: event.fulfillment_type,
+        pickupInstructions: event.pickup_instructions,
+        pickupLocation: event.pickup_location,
+        pickupAddress: {
+          line1: event.pickup_address_line1,
+          line2: event.pickup_address_line2,
+          city: event.pickup_city,
+          state: event.pickup_state,
+          postalCode: event.pickup_postal_code,
+        },
+        pickupDates: event.pickup_dates,
+        paymentDueDays: event.payment_due_days,
+        sendPaymentReminders: event.send_payment_reminders,
         // Only show access code to admins
         ...(isAdmin ? { accessCode } : {}),
         isAdmin,
@@ -582,6 +685,24 @@ router.get(
         totalBids: event.total_bids,
         totalRaised: parseFloat(event.total_raised || 0),
         createdAt: event.created_at,
+        // Self-managed payments fields
+        paymentMode: event.payment_mode,
+        paymentInstructions: event.payment_instructions,
+        paymentLink: event.payment_link,
+        paymentQrCodeUrl: event.payment_qr_code_url,
+        fulfillmentType: event.fulfillment_type,
+        pickupInstructions: event.pickup_instructions,
+        pickupLocation: event.pickup_location,
+        pickupAddress: {
+          line1: event.pickup_address_line1,
+          line2: event.pickup_address_line2,
+          city: event.pickup_city,
+          state: event.pickup_state,
+          postalCode: event.pickup_postal_code,
+        },
+        pickupDates: event.pickup_dates,
+        paymentDueDays: event.payment_due_days,
+        sendPaymentReminders: event.send_payment_reminders,
         ...(isAdmin ? { accessCode } : {}),
         isAdmin,
       })
@@ -605,6 +726,22 @@ router.put(
     body('incrementType').optional().isIn(['fixed', 'percent']),
     body('incrementValue').optional().isFloat({ min: 0.01 }),
     body('buyNowEnabled').optional().isBoolean(),
+    // Self-managed payments fields
+    body('paymentMode').optional().isIn(['self_managed', 'integrated']),
+    body('paymentInstructions').optional().isString(),
+    body('paymentLink').optional().isURL().withMessage('Payment link must be a valid URL'),
+    body('paymentQrCodeUrl').optional().isURL().withMessage('QR code URL must be a valid URL'),
+    body('fulfillmentType').optional().isIn(['shipping', 'pickup', 'both', 'digital']),
+    body('pickupInstructions').optional().isString(),
+    body('pickupLocation').optional().isString(),
+    body('pickupAddressLine1').optional().isString(),
+    body('pickupAddressLine2').optional().isString(),
+    body('pickupCity').optional().isString(),
+    body('pickupState').optional().isString(),
+    body('pickupPostalCode').optional().isString(),
+    body('pickupDates').optional().isString(),
+    body('paymentDueDays').optional().isInt({ min: 1, max: 90 }),
+    body('sendPaymentReminders').optional().isBoolean(),
   ],
   async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -638,7 +775,36 @@ router.put(
         incrementType,
         incrementValue,
         buyNowEnabled,
+        // Self-managed payments fields
+        paymentMode,
+        paymentInstructions,
+        paymentLink,
+        paymentQrCodeUrl,
+        fulfillmentType,
+        pickupInstructions,
+        pickupLocation,
+        pickupAddressLine1,
+        pickupAddressLine2,
+        pickupCity,
+        pickupState,
+        pickupPostalCode,
+        pickupDates,
+        paymentDueDays,
+        sendPaymentReminders,
       } = req.body
+
+      // Validate self-managed payment requirements
+      const effectivePaymentMode = paymentMode || event.payment_mode
+      if (effectivePaymentMode === 'self_managed') {
+        const effectiveInstructions = paymentInstructions !== undefined ? paymentInstructions : event.payment_instructions
+        const effectiveLink = paymentLink !== undefined ? paymentLink : event.payment_link
+        const effectiveQr = paymentQrCodeUrl !== undefined ? paymentQrCodeUrl : event.payment_qr_code_url
+        if (!effectiveInstructions && !effectiveLink && !effectiveQr) {
+          throw badRequest(
+            'Self-managed payment events require at least one of: payment instructions, payment link, or payment QR code.'
+          )
+        }
+      }
 
       await dbQuery(
         `UPDATE auction_events SET
@@ -650,6 +816,21 @@ router.put(
           increment_type = COALESCE(@incrementType, increment_type),
           increment_value = COALESCE(@incrementValue, increment_value),
           buy_now_enabled = COALESCE(@buyNowEnabled, buy_now_enabled),
+          payment_mode = COALESCE(@paymentMode, payment_mode),
+          payment_instructions = COALESCE(@paymentInstructions, payment_instructions),
+          payment_link = COALESCE(@paymentLink, payment_link),
+          payment_qr_code_url = COALESCE(@paymentQrCodeUrl, payment_qr_code_url),
+          fulfillment_type = COALESCE(@fulfillmentType, fulfillment_type),
+          pickup_instructions = COALESCE(@pickupInstructions, pickup_instructions),
+          pickup_location = COALESCE(@pickupLocation, pickup_location),
+          pickup_address_line1 = COALESCE(@pickupAddressLine1, pickup_address_line1),
+          pickup_address_line2 = COALESCE(@pickupAddressLine2, pickup_address_line2),
+          pickup_city = COALESCE(@pickupCity, pickup_city),
+          pickup_state = COALESCE(@pickupState, pickup_state),
+          pickup_postal_code = COALESCE(@pickupPostalCode, pickup_postal_code),
+          pickup_dates = COALESCE(@pickupDates, pickup_dates),
+          payment_due_days = COALESCE(@paymentDueDays, payment_due_days),
+          send_payment_reminders = COALESCE(@sendPaymentReminders, send_payment_reminders),
           updated_at = GETUTCDATE()
          WHERE id = @id`,
         {
@@ -662,6 +843,21 @@ router.put(
           incrementType: incrementType || null,
           incrementValue: incrementValue || null,
           buyNowEnabled: buyNowEnabled !== undefined ? (buyNowEnabled ? 1 : 0) : null,
+          paymentMode: paymentMode || null,
+          paymentInstructions: paymentInstructions !== undefined ? paymentInstructions : null,
+          paymentLink: paymentLink !== undefined ? paymentLink : null,
+          paymentQrCodeUrl: paymentQrCodeUrl !== undefined ? paymentQrCodeUrl : null,
+          fulfillmentType: fulfillmentType || null,
+          pickupInstructions: pickupInstructions !== undefined ? pickupInstructions : null,
+          pickupLocation: pickupLocation !== undefined ? pickupLocation : null,
+          pickupAddressLine1: pickupAddressLine1 !== undefined ? pickupAddressLine1 : null,
+          pickupAddressLine2: pickupAddressLine2 !== undefined ? pickupAddressLine2 : null,
+          pickupCity: pickupCity !== undefined ? pickupCity : null,
+          pickupState: pickupState !== undefined ? pickupState : null,
+          pickupPostalCode: pickupPostalCode !== undefined ? pickupPostalCode : null,
+          pickupDates: pickupDates !== undefined ? pickupDates : null,
+          paymentDueDays: paymentDueDays || null,
+          sendPaymentReminders: sendPaymentReminders !== undefined ? (sendPaymentReminders ? 1 : 0) : null,
         }
       )
 
