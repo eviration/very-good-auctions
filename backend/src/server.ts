@@ -19,6 +19,7 @@ import { feedbackRoutes } from './routes/feedback.js'
 import { adminRoutes } from './routes/admin.js'
 import { donateRoutes } from './routes/donate.js'
 import { submissionRoutes } from './routes/submissions.js'
+import { uatRoutes } from './routes/uat/index.js'
 import { errorHandler } from './middleware/errorHandler.js'
 import { requestLogger } from './middleware/requestLogger.js'
 import { generalLimiter, adminLimiter, paymentLimiter } from './middleware/rateLimit.js'
@@ -123,6 +124,7 @@ app.use('/api/feedback', feedbackRoutes)
 app.use('/api/admin', adminLimiter, adminRoutes) // Admin rate limit
 app.use('/api/donate', donateRoutes) // Public donation endpoints - no auth required
 app.use('/api', submissionRoutes) // Submission management endpoints - auth required
+app.use('/api/uat', uatRoutes) // UAT (User Acceptance Testing) endpoints
 
 // Error handling
 app.use(errorHandler)

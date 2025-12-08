@@ -43,6 +43,8 @@ import FeedbackPage from './pages/FeedbackPage'
 import AdminFeedbackPage from './pages/AdminFeedbackPage'
 import ManageAdminsPage from './pages/ManageAdminsPage'
 import AdminDashboardPage from './pages/AdminDashboardPage'
+import { UatAdminPage } from './pages/UatAdminPage'
+import { UatInvitePage } from './pages/UatInvitePage'
 
 // Auth
 import { AuthCallback } from './auth/AuthCallback'
@@ -261,6 +263,14 @@ function App() {
           <Route path="/admin" element={
             <ProtectedRoute>
               <AdminDashboardPage />
+            </ProtectedRoute>
+          } />
+
+          {/* UAT Routes */}
+          <Route path="/uat/invite/:token" element={<UatInvitePage />} />
+          <Route path="/uat/admin" element={
+            <ProtectedRoute>
+              <UatAdminPage />
             </ProtectedRoute>
           } />
 

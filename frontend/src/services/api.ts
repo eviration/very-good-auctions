@@ -1743,6 +1743,250 @@ class ApiClient {
       body: JSON.stringify(options || {}),
     })
   }
+
+  // =============================================
+  // UAT (User Acceptance Testing) Methods
+  // =============================================
+
+  // UAT Time Control
+  async getUatTime(): Promise<{
+    realTime: string
+    effectiveTime: string
+    isFrozen: boolean
+    frozenAt: string | null
+    offsetSeconds: number
+    offsetHuman: string
+  }> {
+    return this.request('/uat/time')
+  }
+
+  async setUatTimeOffset(offset: string | number): Promise<{
+    success: boolean
+    offsetSeconds: number
+    effectiveTime: string
+  }> {
+    return this.request('/uat/time/offset', {
+      method: 'POST',
+      body: JSON.stringify({ offset }),
+    })
+  }
+
+  async freezeUatTime(at?: string): Promise<{
+    success: boolean
+    frozenAt: string
+  }> {
+    return this.request('/uat/time/freeze', {
+      method: 'POST',
+      body: JSON.stringify({ at }),
+    })
+  }
+
+  async unfreezeUatTime(): Promise<{ success: boolean }> {
+    return this.request('/uat/time/unfreeze', {
+      method: 'POST',
+    })
+  }
+
+  async resetUatTime(): Promise<{
+    success: boolean
+    effectiveTime: string
+  }> {
+    return this.request('/uat/time/reset', {
+      method: 'POST',
+    })
+  }
+
+  async advanceUatTime(duration: string): Promise<{
+    success: boolean
+    advanced: string
+    newOffsetSeconds: number
+    effectiveTime: string
+  }> {
+    return this.request('/uat/time/advance', {
+      method: 'POST',
+      body: JSON.stringify({ duration }),
+    })
+  }
+
+  // UAT Feedback
+  async submitUatFeedback(feedback: {
+    feedbackType: 'bug' | 'suggestion' | 'question' | 'praise' | 'other'
+    title: string
+    description: string
+    stepsToReproduce?: string
+    expectedBehavior?: string
+    actualBehavior?: string
+    pageUrl?: string
+    featureArea?: string
+    screenshotUrls?: string[]
+    browserInfo?: string
+    deviceInfo?: string
+    screenResolution?: string
+    sessionId?: string
+  }): Promise<{ success: boolean; feedbackId: string }> {
+    return this.request('/uat/feedback', {
+      method: 'POST',
+      body: JSON.stringify(feedback),
+    })
+  }
+
+  async getMyUatFeedback(): Promise<{
+    feedback: Array<{
+      id: string
+      feedback_type: string
+      title: string
+      description: string
+      status: string
+      priority: string | null
+      submitted_at: string
+      session_name: string | null
+    }>
+  }> {
+    return this.request('/uat/feedback/my')
+  }
+
+  async getAllUatFeedback(filters?: {
+    status?: string
+    type?: string
+    sessionId?: string
+    priority?: string
+    featureArea?: string
+  }): Promise<{
+    feedback: Array<{
+      id: string
+      tester_email: string | null
+      tester_name: string | null
+      feedback_type: string
+      title: string
+      description: string
+      status: string
+      priority: string | null
+      submitted_at: string
+      session_name: string | null
+    }>
+    counts: {
+      byStatus: Record<string, number>
+      byType: Record<string, number>
+      total: number
+    }
+  }> {
+    const params = new URLSearchParams()
+    if (filters?.status) params.set('status', filters.status)
+    if (filters?.type) params.set('type', filters.type)
+    if (filters?.sessionId) params.set('sessionId', filters.sessionId)
+    if (filters?.priority) params.set('priority', filters.priority)
+    if (filters?.featureArea) params.set('featureArea', filters.featureArea)
+    const queryString = params.toString()
+    return this.request(`/uat/feedback${queryString ? `?${queryString}` : ''}`)
+  }
+
+  async updateUatFeedback(
+    feedbackId: string,
+    updates: {
+      status?: string
+      priority?: string
+      assignedTo?: string
+      resolutionNotes?: string
+    }
+  ): Promise<{ success: boolean }> {
+    return this.request(`/uat/feedback/${feedbackId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(updates),
+    })
+  }
+
+  // UAT Testers
+  async inviteUatTesters(params: {
+    emails: string | string[]
+    sessionId?: string
+    role?: 'tester' | 'power_tester' | 'admin'
+    message?: string
+  }): Promise<{
+    success: boolean
+    results: Array<{ email: string; status: string; testerId?: string }>
+    summary: { invited: number; alreadyInvited: number }
+  }> {
+    return this.request('/uat/testers/invite', {
+      method: 'POST',
+      body: JSON.stringify(params),
+    })
+  }
+
+  async getUatTesters(filters?: {
+    status?: string
+    sessionId?: string
+  }): Promise<{
+    testers: Array<{
+      id: string
+      email: string
+      name: string | null
+      status: string
+      role: string
+      session_name: string | null
+      feedback_count: number
+      created_at: string
+    }>
+    counts: {
+      invited: number
+      registered: number
+      active: number
+      inactive: number
+      total: number
+    }
+  }> {
+    const params = new URLSearchParams()
+    if (filters?.status) params.set('status', filters.status)
+    if (filters?.sessionId) params.set('sessionId', filters.sessionId)
+    const queryString = params.toString()
+    return this.request(`/uat/testers${queryString ? `?${queryString}` : ''}`)
+  }
+
+  async resendUatInvitation(testerId: string): Promise<{ success: boolean }> {
+    return this.request(`/uat/testers/${testerId}/resend`, {
+      method: 'POST',
+    })
+  }
+
+  async updateUatTesterRole(
+    testerId: string,
+    role: 'tester' | 'power_tester' | 'admin'
+  ): Promise<{ success: boolean }> {
+    return this.request(`/uat/testers/${testerId}/role`, {
+      method: 'PATCH',
+      body: JSON.stringify({ role }),
+    })
+  }
+
+  async removeUatTester(testerId: string): Promise<{ success: boolean }> {
+    return this.request(`/uat/testers/${testerId}`, {
+      method: 'DELETE',
+    })
+  }
+
+  // UAT Invitation (public)
+  async validateUatInvitation(token: string): Promise<{
+    email: string
+    name: string | null
+    session: { name: string; description: string | null } | null
+  }> {
+    return this.request(`/uat/invite/${token}`)
+  }
+
+  async acceptUatInvitation(
+    token: string,
+    userId: string,
+    name?: string
+  ): Promise<{
+    success: boolean
+    testerId: string
+    role: string
+    redirectTo: string
+  }> {
+    return this.request(`/uat/invite/${token}/accept`, {
+      method: 'POST',
+      body: JSON.stringify({ userId, name }),
+    })
+  }
 }
 
 export const apiClient = new ApiClient()

@@ -1881,3 +1881,103 @@ Log in to your dashboard to review, approve, or reject this submission.
     plainTextContent,
   })
 }
+
+// =============================================
+// UAT (User Acceptance Testing) Emails
+// =============================================
+
+// UAT invitation email - sent to invite testers
+export async function sendUatInvitationEmail(params: {
+  to: string
+  inviteUrl: string
+  expiresAt: Date
+  customMessage?: string
+  sessionName?: string | null
+}): Promise<boolean> {
+  const { to, inviteUrl, expiresAt, customMessage, sessionName } = params
+
+  const formattedExpires = expiresAt.toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  })
+
+  const subject = sessionName
+    ? `You're invited to test Very Good Auctions - ${sessionName}`
+    : `You're invited to test Very Good Auctions`
+
+  const content = `
+    <h2 style="margin: 0 0 20px 0; color: #1a1a1a; font-size: 20px; font-weight: 600;">
+      You're Invited to Test!
+    </h2>
+
+    <p style="margin: 0 0 20px 0; color: #4a4a4a; font-size: 16px; line-height: 1.6;">
+      You've been invited to participate in User Acceptance Testing (UAT) for Very Good Auctions.
+    </p>
+
+    ${sessionName ? `
+    <div style="background-color: #f0f7f4; border-radius: 8px; padding: 20px; margin: 20px 0;">
+      <p style="margin: 0; color: #4a4a4a; font-size: 14px;">
+        <strong>Testing Session:</strong> ${sessionName}
+      </p>
+    </div>
+    ` : ''}
+
+    ${customMessage ? `
+    <div style="background-color: #f5f5f5; border-radius: 8px; padding: 20px; margin: 20px 0; border-left: 4px solid #5A7C6F;">
+      <p style="margin: 0; color: #4a4a4a; font-size: 14px; line-height: 1.6; white-space: pre-wrap;">${customMessage}</p>
+    </div>
+    ` : ''}
+
+    <p style="margin: 0 0 30px 0; color: #4a4a4a; font-size: 16px; line-height: 1.6;">
+      As a tester, you'll help us identify bugs, provide feedback, and ensure the best experience for our users.
+    </p>
+
+    <!-- CTA Button -->
+    <table role="presentation" style="width: 100%; border-collapse: collapse;">
+      <tr>
+        <td style="text-align: center; padding: 20px 0;">
+          <a href="${inviteUrl}"
+             style="display: inline-block; background-color: #5A7C6F; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 6px; font-size: 16px; font-weight: 600;">
+            Accept Invitation
+          </a>
+        </td>
+      </tr>
+    </table>
+
+    <p style="margin: 30px 0 0 0; color: #888888; font-size: 14px; line-height: 1.6;">
+      This invitation expires on ${formattedExpires}. If you didn't expect this invitation, you can safely ignore this email.
+    </p>
+
+    <!-- Fallback link -->
+    <p style="margin: 20px 0 0 0; color: #888888; font-size: 12px; line-height: 1.6;">
+      If the button doesn't work, copy and paste this link into your browser:<br>
+      <a href="${inviteUrl}" style="color: #5A7C6F; word-break: break-all;">${inviteUrl}</a>
+    </p>
+  `
+
+  const plainTextContent = `
+You're Invited to Test Very Good Auctions!
+
+You've been invited to participate in User Acceptance Testing (UAT) for Very Good Auctions.
+
+${sessionName ? `Testing Session: ${sessionName}\n` : ''}
+${customMessage ? `Message from the team:\n${customMessage}\n` : ''}
+
+As a tester, you'll help us identify bugs, provide feedback, and ensure the best experience for our users.
+
+Accept your invitation here: ${inviteUrl}
+
+This invitation expires on ${formattedExpires}. If you didn't expect this invitation, you can safely ignore this email.
+
+© ${new Date().getFullYear()} Very Good Auctions. All rights reserved.
+`
+
+  return sendEmail({
+    to,
+    subject,
+    htmlContent: emailWrapper('UAT Invitation', content),
+    plainTextContent,
+  })
+}
