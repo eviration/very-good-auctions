@@ -686,11 +686,36 @@ router.delete(
 
       // Delete related records that don't have ON DELETE CASCADE
       // Order matters due to foreign key relationships
+      console.log(`Starting cleanup of related tables for org ${id}`)
+
+      // First, clear the fee_id reference from events (events.fee_id -> platform_fees)
+      try {
+        await dbQuery(`
+          UPDATE auction_events SET fee_id = NULL WHERE organization_id = @id
+        `, { id })
+        console.log('Cleared fee_id references from auction_events')
+      } catch (err) {
+        console.error('Error clearing fee_id from auction_events:', err)
+      }
+
+      // Delete platform_fees for events belonging to this org
+      try {
+        await dbQuery(`
+          IF OBJECT_ID('platform_fees', 'U') IS NOT NULL
+            DELETE pf FROM platform_fees pf
+            INNER JOIN auction_events ae ON pf.event_id = ae.id
+            WHERE ae.organization_id = @id
+        `, { id })
+        console.log('Deleted platform_fees for org events')
+      } catch (err) {
+        console.error('Error deleting platform_fees:', err)
+      }
+
+      // Now delete other tables that reference organizations directly
       const tablesToClean = [
         'payout_reserves',      // 004_payouts.sql - no cascade
         'chargebacks',          // 004_payouts.sql - no cascade
         'organization_payouts', // 004_payouts.sql - no cascade
-        'platform_fees',        // 002_events.sql - no cascade
         'tax_information',      // 005_compliance.sql - no cascade
         'platform_agreements',  // 005_compliance.sql - no cascade
         'nonprofit_verification', // 005_compliance.sql - has cascade, but clean anyway
@@ -698,7 +723,6 @@ router.delete(
         'auction_feedback',     // 006_feedback.sql - no cascade
       ]
 
-      console.log(`Starting cleanup of related tables for org ${id}`)
       for (const table of tablesToClean) {
         try {
           console.log(`Cleaning table: ${table}`)
