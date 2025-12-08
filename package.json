@@ -4,7 +4,8 @@
   "private": true,
   "description": "A modern auction platform hosted on Azure",
   "dependencies": {
-    "express": "^5.1.0"
+    "express": "^5.1.0",
+    "mssql": "^12.2.0"
   },
   "scripts": {
     "frontend:dev": "npm run dev --workspace=frontend",
