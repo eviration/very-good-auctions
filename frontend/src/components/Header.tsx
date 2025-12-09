@@ -11,6 +11,7 @@ export default function Header() {
   const [accountMenuOpen, setAccountMenuOpen] = useState(false)
   const accountMenuRef = useRef<HTMLDivElement>(null)
   const [isAdmin, setIsAdmin] = useState(false)
+  const [showLoginModal, setShowLoginModal] = useState(false)
 
   const isActive = (path: string) => location.pathname === path
 
@@ -63,8 +64,16 @@ export default function Header() {
   const navLinks = [
     { path: '/', label: 'Browse Events' },
     { path: '/how-it-works', label: 'How It Works' },
-    ...(isAuthenticated ? [{ path: '/events/create', label: 'Create Auction' }] : []),
+    { path: '/events/create', label: 'Create Auction', requiresAuth: true },
   ]
+
+  // Handle Create Auction click - show modal if not authenticated
+  const handleCreateAuctionClick = (e: React.MouseEvent, requiresAuth?: boolean) => {
+    if (requiresAuth && !isAuthenticated) {
+      e.preventDefault()
+      setShowLoginModal(true)
+    }
+  }
 
   // Account dropdown menu items
   const accountMenuItems = [
@@ -129,6 +138,7 @@ export default function Header() {
               <Link
                 key={link.path}
                 to={link.path}
+                onClick={(e) => handleCreateAuctionClick(e, link.requiresAuth)}
                 className={`clay-button text-base transition-all ${
                   isActive(link.path)
                     ? 'bg-clay-mint shadow-clay scale-105'
@@ -283,7 +293,15 @@ export default function Header() {
                 <Link
                   key={link.path}
                   to={link.path}
-                  onClick={() => setMobileMenuOpen(false)}
+                  onClick={(e) => {
+                    if (link.requiresAuth && !isAuthenticated) {
+                      e.preventDefault()
+                      setMobileMenuOpen(false)
+                      setShowLoginModal(true)
+                    } else {
+                      setMobileMenuOpen(false)
+                    }
+                  }}
                   className={`block clay-button w-full text-left ${
                     isActive(link.path) ? 'bg-clay-mint shadow-clay' : 'bg-clay-surface'
                   }`}
@@ -347,6 +365,63 @@ export default function Header() {
           </nav>
         )}
       </div>
+
+      {/* Login Required Modal */}
+      {showLoginModal && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="clay-section max-w-md w-full p-8 relative animate-scale-in">
+            <button
+              onClick={() => setShowLoginModal(false)}
+              className="absolute top-4 right-4 w-8 h-8 rounded-clay bg-clay-surface hover:bg-clay-butter shadow-clay-sm flex items-center justify-center transition-colors"
+              aria-label="Close"
+            >
+              <svg className="w-4 h-4 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            <div className="text-center">
+              <div className="w-16 h-16 rounded-clay bg-clay-mint shadow-clay mx-auto mb-6 flex items-center justify-center">
+                <svg className="w-8 h-8 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              </div>
+
+              <h2 className="font-display text-2xl font-black text-charcoal mb-3">
+                Sign in to create auctions
+              </h2>
+              <p className="text-charcoal-light mb-8">
+                You'll need an account to create and manage auctions. It only takes a moment to get started.
+              </p>
+
+              <div className="space-y-3">
+                <button
+                  onClick={() => {
+                    setShowLoginModal(false)
+                    login()
+                  }}
+                  className="w-full clay-button bg-clay-mint hover:bg-clay-peach font-bold py-3"
+                >
+                  Sign In
+                </button>
+                <button
+                  onClick={() => {
+                    setShowLoginModal(false)
+                    login()
+                  }}
+                  className="w-full clay-button bg-clay-surface hover:bg-clay-butter font-bold py-3"
+                >
+                  Create an Account
+                </button>
+              </div>
+
+              <p className="text-sm text-charcoal-light mt-6">
+                Free to sign up. No credit card required.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   )
 }
