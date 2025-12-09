@@ -5,42 +5,72 @@ export default function HowItWorksPage() {
     {
       number: 1,
       title: 'Create your organization',
-      description: 'Set up your school, church, nonprofit, or community group. It takes a few minutes and there\'s no approval process to wait for.',
+      description: 'Set up your school, church, nonprofit, or community group in minutes. No approval process, no waiting.',
     },
     {
       number: 2,
-      title: 'Set up an auction event',
-      description: 'Pick your start and end dates, add a description, and configure your settings. You can run standard auctions or silent auctions.',
+      title: 'Choose your auction style',
+      description: 'Run a standard auction with live bidding, a silent auction where bids are hidden, or a private invite-only event.',
     },
     {
       number: 3,
-      title: 'Collect item donations',
-      description: 'Invite your community to submit items. You review each submission and decide what gets included in your auction.',
+      title: 'Collect items from your community',
+      description: 'Invite supporters to submit items for your auction. You review and approve what gets included.',
     },
     {
       number: 4,
-      title: 'Go live',
-      description: 'When you\'re ready, open bidding. Share your auction link and people can browse and bid from any device.',
+      title: 'Open bidding',
+      description: 'Share your auction link. People browse and bid from any device. You focus on spreading the word.',
     },
     {
       number: 5,
-      title: 'Collect funds',
-      description: 'Winners pay securely through the site. You receive your funds and can focus on your organization\'s mission.',
+      title: 'Get your funds',
+      description: 'Winners pay through the platform. Money goes directly to your organization. Simple as that.',
+    },
+  ]
+
+  const auctionTypes = [
+    {
+      title: 'Standard Auction',
+      description: 'Traditional bidding where everyone sees current bids. Creates excitement as people compete.',
+      icon: (
+        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+        </svg>
+      ),
+    },
+    {
+      title: 'Silent Auction',
+      description: 'Bids are hidden from other bidders. Great for galas and in-person events with an online component.',
+      icon: (
+        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+        </svg>
+      ),
+    },
+    {
+      title: 'Private Auction',
+      description: 'Invite-only events for your inner circle. Share a link or QR code. Perfect for member-exclusive fundraising.',
+      icon: (
+        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+        </svg>
+      ),
     },
   ]
 
   const features = [
     {
       title: 'Simple by design',
-      description: 'If you can send an email, you can run an auction here. No training required.',
+      description: 'If you can send an email, you can run an auction. No training manuals, no complicated setup.',
     },
     {
-      title: 'Predictable pricing',
-      description: 'A flat fee based on event size. You\'ll know the exact cost before you start. No percentages, no surprises.',
+      title: 'Keep more of what you raise',
+      description: 'Low, transparent fees. No percentages of your hard-earned donations. What you raise is yours.',
     },
     {
-      title: 'Built for real groups',
-      description: 'Schools, churches, PTAs, clubs. This is for organizations that need an auction, not enterprise software.',
+      title: 'Built for real organizations',
+      description: 'Schools, churches, PTAs, clubs. Made for groups that need results, not enterprise features.',
     },
   ]
 
@@ -50,19 +80,18 @@ export default function HowItWorksPage() {
         {/* Hero Section */}
         <div className="clay-section text-center mb-16">
           <h1 className="font-display text-4xl font-black text-charcoal mb-4">
-            A straightforward way to run online auctions
+            Online auctions, simplified
           </h1>
           <p className="text-lg text-charcoal-light font-medium max-w-2xl mx-auto mb-6">
-            Most fundraising tools are either overly complicated or way too expensive
-            for what small organizations actually need.
+            Most fundraising platforms are overbuilt and overpriced. We built something different.
           </p>
           <p className="text-lg text-charcoal-light font-medium max-w-2xl mx-auto">
-            This does one thing well: helps you run an online auction to raise money
-            for your group. Nothing more, nothing less.
+            One tool that helps you run online auctions and raise money for your group.
+            Easy to use. Easy to afford.
           </p>
         </div>
 
-        {/* Features */}
+        {/* Core Value Props */}
         <div className="mb-16">
           <div className="grid gap-6 md:grid-cols-3">
             {features.map((feature, index) => (
@@ -72,6 +101,30 @@ export default function HowItWorksPage() {
               >
                 <h3 className="font-bold text-charcoal mb-3">{feature.title}</h3>
                 <p className="text-charcoal-light text-sm">{feature.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Auction Types */}
+        <div className="mb-16">
+          <h2 className="font-display text-2xl font-black text-charcoal mb-2 text-center">
+            Pick the right format for your event
+          </h2>
+          <p className="text-charcoal-light text-center mb-8 max-w-xl mx-auto">
+            Different events call for different approaches. Choose what works for you.
+          </p>
+          <div className="grid gap-6 md:grid-cols-3">
+            {auctionTypes.map((type, index) => (
+              <div
+                key={index}
+                className="clay-card p-6"
+              >
+                <div className="w-12 h-12 rounded-clay bg-clay-mint shadow-clay flex items-center justify-center text-charcoal mb-4">
+                  {type.icon}
+                </div>
+                <h3 className="font-bold text-charcoal mb-2">{type.title}</h3>
+                <p className="text-charcoal-light text-sm">{type.description}</p>
               </div>
             ))}
           </div>
@@ -107,21 +160,35 @@ export default function HowItWorksPage() {
         {/* Pricing Section */}
         <div className="clay-section bg-clay-mint/30 mb-16">
           <h2 className="font-display text-2xl font-black text-charcoal mb-4 text-center">
-            Clear, simple pricing
+            Pricing that makes sense
           </h2>
           <div className="text-center max-w-2xl mx-auto">
-            <p className="text-charcoal-light mb-6">
-              There's a flat fee based on how many items are in your auction.
-              You see the exact amount before you commit. No percentage of your bids,
-              no hidden charges, no subscription required.
+            <p className="text-charcoal-light mb-8">
+              We believe in straightforward pricing. Choose the option that fits your organization.
             </p>
-            <div className="clay-card p-6 inline-block">
-              <p className="text-sm text-charcoal-light mb-2">You pay</p>
-              <p className="font-display text-2xl font-black text-charcoal">A flat fee</p>
-              <p className="text-sm text-charcoal-light mt-2">based on your auction size</p>
+
+            <div className="grid gap-6 md:grid-cols-2 mb-8">
+              <div className="clay-card p-6">
+                <div className="text-sm text-charcoal-light mb-2">Integrated Payments</div>
+                <div className="font-display text-xl font-black text-charcoal mb-2">5% of funds raised</div>
+                <p className="text-sm text-charcoal-light">
+                  We handle all payment processing. Winners pay through the platform, you receive the funds.
+                  Simple and hands-off.
+                </p>
+              </div>
+
+              <div className="clay-card p-6">
+                <div className="text-sm text-charcoal-light mb-2">Self-Managed Payments</div>
+                <div className="font-display text-xl font-black text-charcoal mb-2">$0</div>
+                <p className="text-sm text-charcoal-light">
+                  Handle payments your own way. Use the platform for bidding, collect payments directly
+                  from winners yourself.
+                </p>
+              </div>
             </div>
-            <p className="text-sm text-charcoal-light mt-4">
-              The more you raise, the more you keep.
+
+            <p className="text-sm text-charcoal-light">
+              No hidden fees. No monthly subscriptions. No percentages you don't see coming.
             </p>
           </div>
         </div>
@@ -129,15 +196,16 @@ export default function HowItWorksPage() {
         {/* About Section */}
         <div className="clay-card p-8 mb-16">
           <h2 className="font-display text-xl font-black text-charcoal mb-4">
-            About this project
+            Why we built this
           </h2>
           <p className="text-charcoal-light mb-4">
-            This isn't a venture-backed startup trying to dominate the market.
-            It's a simple, affordable auction tool that exists for everyday organizations
-            like schools, churches, and community groups.
+            We've seen schools and churches struggle with auction software that costs too much
+            and does too little. Big platforms want enterprise contracts. DIY solutions are
+            a nightmare to manage.
           </p>
           <p className="text-charcoal-light">
-            If you run into any issues or have questions, feel free to reach out.
+            So we built something in between: a tool that's genuinely easy to use,
+            doesn't take a huge cut of your fundraising, and just works.
           </p>
         </div>
 
