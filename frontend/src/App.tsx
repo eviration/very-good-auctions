@@ -40,6 +40,7 @@ import MyItemsPage from './pages/MyItemsPage'
 import MyOrganizationsPage from './pages/MyOrganizationsPage'
 import TaxInformationPage from './pages/TaxInformationPage'
 import FeedbackPage from './pages/FeedbackPage'
+import LoginPage from './pages/LoginPage'
 import AdminFeedbackPage from './pages/AdminFeedbackPage'
 import ManageAdminsPage from './pages/ManageAdminsPage'
 import AdminDashboardPage from './pages/AdminDashboardPage'
@@ -183,6 +184,8 @@ function App() {
           <Route path="/terms" element={<TermsOfServicePage />} />
           <Route path="/data-deletion" element={<DataDeletionPage />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<LoginPage />} />
           <Route path="/organizations/:slug" element={<OrganizationDetailPage />} />
           <Route path="/invitations/:token" element={<InvitationAcceptPage />} />
           <Route path="/donate/:code" element={<DonatePage />} />
