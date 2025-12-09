@@ -50,6 +50,10 @@ coverage/
 # Azure
 .azure/
 
+# Azure Functions
+local.settings.json
+.funcignore
+
 # Secrets (never commit)
 *.pem
 *.key
