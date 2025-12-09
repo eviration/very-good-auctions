@@ -168,9 +168,18 @@ export default function Header() {
                       accountMenuOpen ? 'bg-clay-mint shadow-clay' : 'bg-clay-surface hover:bg-clay-butter'
                     }`}
                   >
-                    <div className="w-8 h-8 rounded-clay-pill bg-clay-peach shadow-clay-sm flex items-center justify-center text-charcoal font-black text-sm">
-                      {user.name.charAt(0).toUpperCase()}
-                    </div>
+                    {user.picture ? (
+                      <img
+                        src={user.picture}
+                        alt={user.name}
+                        className="w-8 h-8 rounded-clay-pill shadow-clay-sm object-cover"
+                        referrerPolicy="no-referrer"
+                      />
+                    ) : (
+                      <div className="w-8 h-8 rounded-clay-pill bg-clay-peach shadow-clay-sm flex items-center justify-center text-charcoal font-black text-sm">
+                        {user.name.charAt(0).toUpperCase()}
+                      </div>
+                    )}
                     <span className="font-bold text-charcoal hidden sm:inline">
                       {user.name}
                     </span>
@@ -192,9 +201,18 @@ export default function Header() {
                         to="/profile"
                         className="flex items-center gap-3 p-3 rounded-clay hover:bg-clay-mint/30 transition-colors"
                       >
-                        <div className="w-12 h-12 rounded-clay bg-clay-peach shadow-clay-sm flex items-center justify-center text-charcoal font-black">
-                          {user.name.charAt(0).toUpperCase()}
-                        </div>
+                        {user.picture ? (
+                          <img
+                            src={user.picture}
+                            alt={user.name}
+                            className="w-12 h-12 rounded-clay shadow-clay-sm object-cover"
+                            referrerPolicy="no-referrer"
+                          />
+                        ) : (
+                          <div className="w-12 h-12 rounded-clay bg-clay-peach shadow-clay-sm flex items-center justify-center text-charcoal font-black">
+                            {user.name.charAt(0).toUpperCase()}
+                          </div>
+                        )}
                         <div>
                           <p className="font-bold text-charcoal">{user.name}</p>
                           <p className="text-sm text-charcoal-light font-medium">View Profile</p>

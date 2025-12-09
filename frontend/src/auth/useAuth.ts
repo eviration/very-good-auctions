@@ -49,10 +49,14 @@ export function useAuth() {
     }
   }
 
+  // Extract user info including profile picture from ID token claims
   const user = accounts.length > 0 ? {
     id: accounts[0].localAccountId,
     email: accounts[0].username,
     name: accounts[0].name || accounts[0].username,
+    // Profile picture URL comes from the 'picture' claim in the ID token
+    // This is populated by social identity providers (Google, Facebook, etc.)
+    picture: (accounts[0].idTokenClaims as Record<string, unknown>)?.picture as string | undefined,
   } : null
 
   return {
