@@ -1,6 +1,5 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import { QRCodeSVG } from 'qrcode.react'
 import { apiClient } from '../services/api'
 import type { AuctionEvent, EventItem, UpdateEventRequest, ItemSubmissionStatus, ItemPaymentStatus, ItemFulfillmentStatus } from '../types'
 import ImageDropZone from '../components/ImageDropZone'
@@ -133,20 +132,6 @@ export default function EventDashboardPage() {
   const [coverImagePreview, setCoverImagePreview] = useState<string | null>(null)
   const [uploadingCoverImage, setUploadingCoverImage] = useState(false)
 
-  // Add item modal state
-  const [showAddItemModal, setShowAddItemModal] = useState(false)
-  const [addItemData, setAddItemData] = useState({
-    title: '',
-    description: '',
-    condition: '',
-    startingPrice: '',
-    buyNowPrice: '',
-    category: '',
-    donorName: '',
-    donorEmail: '',
-  })
-  const [addingItem, setAddingItem] = useState(false)
-
   const fetchData = useCallback(async () => {
     if (!slug) return
 
@@ -210,43 +195,6 @@ export default function EventDashboardPage() {
       )
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Failed to approve item')
-    }
-  }
-
-  const handleAddItem = async () => {
-    if (!event || !addItemData.title.trim()) return
-
-    setAddingItem(true)
-    try {
-      const newItem = await apiClient.createEventItemAdmin(event.id, {
-        title: addItemData.title.trim(),
-        description: addItemData.description.trim() || undefined,
-        condition: addItemData.condition.trim() || undefined,
-        startingPrice: addItemData.startingPrice ? parseFloat(addItemData.startingPrice) : undefined,
-        buyNowPrice: addItemData.buyNowPrice ? parseFloat(addItemData.buyNowPrice) : undefined,
-        category: addItemData.category.trim() || undefined,
-        donorName: addItemData.donorName.trim() || undefined,
-        donorEmail: addItemData.donorEmail.trim() || undefined,
-      })
-      // Add the new item to the list with default values for missing fields
-      setItems((prev) => [...prev, { ...newItem, images: [], bids: [] }])
-      setShowAddItemModal(false)
-      setAddItemData({
-        title: '',
-        description: '',
-        condition: '',
-        startingPrice: '',
-        buyNowPrice: '',
-        category: '',
-        donorName: '',
-        donorEmail: '',
-      })
-      setSuccessMessage('Item added successfully!')
-      setTimeout(() => setSuccessMessage(null), 5000)
-    } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to add item')
-    } finally {
-      setAddingItem(false)
     }
   }
 
@@ -831,39 +779,26 @@ export default function EventDashboardPage() {
       {/* Items Tab */}
       {activeTab === 'items' && (
         <div className="space-y-6">
-          {/* Item Filters and Add Button */}
-          <div className="flex items-center justify-between gap-4 flex-wrap">
-            <div className="flex gap-2 overflow-x-auto pb-2">
-              {(['all', 'pending', 'approved', 'rejected', 'resubmit_requested'] as const).map((status) => (
-                <button
-                  key={status}
-                  onClick={() => setItemFilter(status)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
-                    itemFilter === status
-                      ? 'bg-sage text-white'
-                      : 'bg-sage/10 text-charcoal hover:bg-sage/20'
-                  }`}
-                >
-                  {status === 'all' ? 'All Items' : status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                  {status !== 'all' && (
-                    <span className="ml-1 opacity-70">
-                      ({items.filter((i) => i.submissionStatus === status).length})
-                    </span>
-                  )}
-                </button>
-              ))}
-            </div>
-            {event?.status !== 'active' && event?.status !== 'ended' && (
+          {/* Item Filters */}
+          <div className="flex gap-2 overflow-x-auto pb-2">
+            {(['all', 'pending', 'approved', 'rejected', 'resubmit_requested'] as const).map((status) => (
               <button
-                onClick={() => setShowAddItemModal(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-sage text-white rounded-lg hover:bg-sage/90 font-medium text-sm"
+                key={status}
+                onClick={() => setItemFilter(status)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
+                  itemFilter === status
+                    ? 'bg-sage text-white'
+                    : 'bg-sage/10 text-charcoal hover:bg-sage/20'
+                }`}
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-                Add Item
+                {status === 'all' ? 'All Items' : status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                {status !== 'all' && (
+                  <span className="ml-1 opacity-70">
+                    ({items.filter((i) => i.submissionStatus === status).length})
+                  </span>
+                )}
               </button>
-            )}
+            ))}
           </div>
 
           {filteredItems.length === 0 ? (
@@ -883,27 +818,14 @@ export default function EventDashboardPage() {
               </svg>
               <h2 className="text-xl font-semibold text-charcoal mb-2">No items yet</h2>
               <p className="text-gray-500 mb-4">
-                Share your submission link to start collecting items, or add items manually
+                Share your submission link to start collecting items
               </p>
-              <div className="flex gap-3 justify-center flex-wrap">
-                <button
-                  onClick={handleGetSubmissionLink}
-                  className="inline-block bg-sage text-white px-6 py-3 rounded-xl font-semibold hover:bg-sage/90"
-                >
-                  Get Submission Link
-                </button>
-                {event?.status !== 'active' && event?.status !== 'ended' && (
-                  <button
-                    onClick={() => setShowAddItemModal(true)}
-                    className="inline-flex items-center gap-2 bg-white border-2 border-sage text-sage px-6 py-3 rounded-xl font-semibold hover:bg-sage/10"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                    </svg>
-                    Add Item Manually
-                  </button>
-                )}
-              </div>
+              <button
+                onClick={handleGetSubmissionLink}
+                className="inline-block bg-sage text-white px-6 py-3 rounded-xl font-semibold hover:bg-sage/90"
+              >
+                Get Submission Link
+              </button>
             </div>
           ) : (
             <div className="bg-white rounded-lg shadow-sm border border-sage/20 overflow-hidden">
@@ -1709,64 +1631,21 @@ export default function EventDashboardPage() {
       {/* Share Modal */}
       {showShareModal && submissionLink && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-lg mx-4">
             <h2 className="text-lg font-semibold text-charcoal mb-4">Share Submission Link</h2>
             <p className="text-gray-600 mb-4">
-              Share this link or QR code with people who want to submit items to your auction.
+              Share this link with people who want to submit items to your auction.
             </p>
 
             <div className="space-y-4">
-              {/* QR Code */}
-              <div className="flex flex-col items-center py-4 bg-gray-50 rounded-lg">
-                <div id="qr-code-container" className="bg-white p-4 rounded-lg shadow-sm">
-                  <QRCodeSVG
-                    value={submissionLink.url}
-                    size={180}
-                    level="H"
-                    includeMargin={true}
-                  />
-                </div>
-                <p className="text-sm text-gray-500 mt-3">Scan to submit items</p>
-                <button
-                  onClick={() => {
-                    const svg = document.querySelector('#qr-code-container svg')
-                    if (svg) {
-                      const svgData = new XMLSerializer().serializeToString(svg)
-                      const canvas = document.createElement('canvas')
-                      const ctx = canvas.getContext('2d')
-                      const img = new Image()
-                      img.onload = () => {
-                        canvas.width = img.width
-                        canvas.height = img.height
-                        ctx?.drawImage(img, 0, 0)
-                        const pngUrl = canvas.toDataURL('image/png')
-                        const downloadLink = document.createElement('a')
-                        downloadLink.href = pngUrl
-                        downloadLink.download = `${event?.name || 'auction'}-submission-qr.png`
-                        document.body.appendChild(downloadLink)
-                        downloadLink.click()
-                        document.body.removeChild(downloadLink)
-                      }
-                      img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)))
-                    }
-                  }}
-                  className="mt-3 px-4 py-2 text-sm bg-sage text-white rounded-lg hover:bg-sage/90 inline-flex items-center gap-2"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                  </svg>
-                  Download QR Code
-                </button>
-              </div>
-
-              <div className="border-t border-gray-200 pt-4">
+              <div>
                 <label className="block text-sm font-medium text-charcoal mb-1">Submission URL</label>
                 <div className="flex gap-2">
                   <input
                     type="text"
                     readOnly
                     value={submissionLink.url}
-                    className="flex-1 px-4 py-2 border border-sage/30 rounded-lg bg-gray-50 text-sm"
+                    className="flex-1 px-4 py-2 border border-sage/30 rounded-lg bg-gray-50"
                   />
                   <button
                     onClick={() => copyToClipboard(submissionLink.url)}
@@ -1805,153 +1684,6 @@ export default function EventDashboardPage() {
                 className="px-4 py-2 border border-sage/30 rounded-lg hover:bg-sage/10"
               >
                 Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Add Item Modal */}
-      {showAddItemModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
-            <h2 className="text-lg font-semibold text-charcoal mb-4">Add Item</h2>
-            <p className="text-gray-600 mb-4 text-sm">
-              Add an item directly to your auction. It will be automatically approved.
-            </p>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-charcoal mb-1">
-                  Item Title <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={addItemData.title}
-                  onChange={(e) => setAddItemData((prev) => ({ ...prev, title: e.target.value }))}
-                  placeholder="e.g., Vintage Wine Collection"
-                  className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-sage/50"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-charcoal mb-1">Description</label>
-                <textarea
-                  value={addItemData.description}
-                  onChange={(e) => setAddItemData((prev) => ({ ...prev, description: e.target.value }))}
-                  placeholder="Describe the item..."
-                  rows={3}
-                  className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-sage/50"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-charcoal mb-1">Starting Price ($)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={addItemData.startingPrice}
-                    onChange={(e) => setAddItemData((prev) => ({ ...prev, startingPrice: e.target.value }))}
-                    placeholder="0.00"
-                    className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-sage/50"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-charcoal mb-1">Buy Now Price ($)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={addItemData.buyNowPrice}
-                    onChange={(e) => setAddItemData((prev) => ({ ...prev, buyNowPrice: e.target.value }))}
-                    placeholder="0.00"
-                    className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-sage/50"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-charcoal mb-1">Condition</label>
-                  <select
-                    value={addItemData.condition}
-                    onChange={(e) => setAddItemData((prev) => ({ ...prev, condition: e.target.value }))}
-                    className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-sage/50"
-                  >
-                    <option value="">Select condition</option>
-                    <option value="New">New</option>
-                    <option value="Like New">Like New</option>
-                    <option value="Good">Good</option>
-                    <option value="Fair">Fair</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-charcoal mb-1">Category</label>
-                  <input
-                    type="text"
-                    value={addItemData.category}
-                    onChange={(e) => setAddItemData((prev) => ({ ...prev, category: e.target.value }))}
-                    placeholder="e.g., Art, Electronics"
-                    className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-sage/50"
-                  />
-                </div>
-              </div>
-
-              <div className="border-t border-gray-200 pt-4">
-                <h3 className="text-sm font-medium text-charcoal mb-3">Donor Information (Optional)</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-charcoal mb-1">Donor Name</label>
-                    <input
-                      type="text"
-                      value={addItemData.donorName}
-                      onChange={(e) => setAddItemData((prev) => ({ ...prev, donorName: e.target.value }))}
-                      placeholder="John Smith"
-                      className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-sage/50"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-charcoal mb-1">Donor Email</label>
-                    <input
-                      type="email"
-                      value={addItemData.donorEmail}
-                      onChange={(e) => setAddItemData((prev) => ({ ...prev, donorEmail: e.target.value }))}
-                      placeholder="donor@example.com"
-                      className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-sage/50"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-3 mt-6">
-              <button
-                onClick={() => {
-                  setShowAddItemModal(false)
-                  setAddItemData({
-                    title: '',
-                    description: '',
-                    condition: '',
-                    startingPrice: '',
-                    buyNowPrice: '',
-                    category: '',
-                    donorName: '',
-                    donorEmail: '',
-                  })
-                }}
-                className="px-4 py-2 border border-sage/30 rounded-lg hover:bg-sage/10"
-                disabled={addingItem}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleAddItem}
-                disabled={!addItemData.title.trim() || addingItem}
-                className="px-4 py-2 bg-sage text-white rounded-lg hover:bg-sage/90 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {addingItem ? 'Adding...' : 'Add Item'}
               </button>
             </div>
           </div>

@@ -1837,4 +1837,111 @@ router.get(
   }
 )
 
+// Admin: Create item directly (no access code required)
+router.post(
+  '/events/:eventId/items/admin',
+  authenticate,
+  [
+    param('eventId').notEmpty(),
+    body('title').isString().isLength({ min: 2, max: 255 }),
+    body('description').optional().isString(),
+    body('condition').optional().isString(),
+    body('startingPrice').optional().isFloat({ min: 0 }),
+    body('buyNowPrice').optional().isFloat({ min: 0 }),
+    body('category').optional().isString(),
+    body('donorName').optional().isString(),
+    body('donorEmail').optional().isEmail(),
+  ],
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const errors = validationResult(req)
+      if (!errors.isEmpty()) {
+        throw badRequest('Validation failed', errors.mapped())
+      }
+
+      const { eventId } = req.params
+      const userId = req.user!.id
+
+      // Resolve event ID (could be slug)
+      const resolvedEventId = await resolveEventId(eventId)
+      if (!resolvedEventId) {
+        throw notFound('Event not found')
+      }
+
+      // Verify admin access
+      const access = await checkEventAccess(resolvedEventId, userId)
+      if (!access) {
+        throw forbidden('You do not have permission to add items to this event')
+      }
+
+      const { title, description, condition, startingPrice, buyNowPrice, category, donorName, donorEmail } = req.body
+
+      // Ensure user exists
+      await ensureUserExists(userId, req.user!.email, req.user!.name || '')
+
+      // Check event status - only allow adding to draft/scheduled events
+      if (access.event.status === 'cancelled') {
+        throw badRequest('This event has been cancelled')
+      }
+
+      if (access.event.status === 'ended') {
+        throw badRequest('This event has ended')
+      }
+
+      if (access.event.status === 'active') {
+        throw badRequest('Cannot add items to an active event')
+      }
+
+      // Create item with approved status (admin bypass)
+      const result = await dbQuery(
+        `INSERT INTO event_items (
+          event_id, title, description, condition, category,
+          starting_price, buy_now_price, submitted_by,
+          donor_name, donor_email,
+          submission_status, status, created_at, updated_at
+        ) OUTPUT INSERTED.*
+        VALUES (
+          @eventId, @title, @description, @condition, @category,
+          @startingPrice, @buyNowPrice, @submittedBy,
+          @donorName, @donorEmail,
+          'approved', 'pending', GETUTCDATE(), GETUTCDATE()
+        )`,
+        {
+          eventId: resolvedEventId,
+          title,
+          description: description || null,
+          condition: condition || null,
+          category: category || null,
+          startingPrice: startingPrice || null,
+          buyNowPrice: buyNowPrice || null,
+          submittedBy: userId,
+          donorName: donorName || null,
+          donorEmail: donorEmail || null,
+        }
+      )
+
+      const item = result.recordset[0]
+
+      res.status(201).json({
+        id: item.id,
+        eventId: item.event_id,
+        title: item.title,
+        description: item.description,
+        condition: item.condition,
+        category: item.category,
+        startingPrice: item.starting_price,
+        buyNowPrice: item.buy_now_price,
+        submissionStatus: item.submission_status,
+        status: item.status,
+        donorName: item.donor_name,
+        donorEmail: item.donor_email,
+        createdAt: item.created_at,
+        updatedAt: item.updated_at,
+      })
+    } catch (error) {
+      next(error)
+    }
+  }
+)
+
 export { router as eventItemRoutes }

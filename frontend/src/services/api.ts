@@ -650,6 +650,25 @@ class ApiClient {
     })
   }
 
+  async createEventItemAdmin(
+    eventId: string,
+    data: {
+      title: string
+      description?: string
+      condition?: string
+      startingPrice?: number
+      buyNowPrice?: number
+      category?: string
+      donorName?: string
+      donorEmail?: string
+    }
+  ): Promise<EventItem> {
+    return this.request(`/events/${eventId}/items/admin`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+  }
+
   async approveEventItem(eventId: string, itemId: string): Promise<EventItem> {
     return this.request(`/events/${eventId}/items/${itemId}/approve`, {
       method: 'POST',
