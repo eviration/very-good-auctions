@@ -5,7 +5,7 @@ import NotificationBell from './NotificationBell'
 import { apiClient } from '../services/api'
 
 export default function Header() {
-  const { isAuthenticated, user, logout, isLoading } = useAuth()
+  const { isAuthenticated, user, login, logout, isLoading } = useAuth()
   const location = useLocation()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [accountMenuOpen, setAccountMenuOpen] = useState(false)
@@ -271,18 +271,18 @@ export default function Header() {
               </div>
             ) : (
               <div className="flex items-center gap-3">
-                <Link
-                  to="/login"
+                <button
+                  onClick={() => login()}
                   className="clay-button bg-clay-surface hover:bg-clay-butter"
                 >
                   Sign In
-                </Link>
-                <Link
-                  to="/signup"
+                </button>
+                <button
+                  onClick={() => login()}
                   className="clay-button bg-clay-mint hover:bg-clay-peach"
                 >
                   Sign Up
-                </Link>
+                </button>
               </div>
             )}
 
@@ -360,20 +360,24 @@ export default function Header() {
 
             {!isAuthenticated && (
               <div className="mt-6 space-y-3 pt-4 border-t-2 border-white/60">
-                <Link
-                  to="/login"
-                  onClick={() => setMobileMenuOpen(false)}
+                <button
+                  onClick={() => {
+                    setMobileMenuOpen(false)
+                    login()
+                  }}
                   className="block w-full clay-button bg-clay-surface text-center"
                 >
                   Sign In
-                </Link>
-                <Link
-                  to="/signup"
-                  onClick={() => setMobileMenuOpen(false)}
+                </button>
+                <button
+                  onClick={() => {
+                    setMobileMenuOpen(false)
+                    login()
+                  }}
                   className="block w-full clay-button bg-clay-mint text-center"
                 >
                   Sign Up
-                </Link>
+                </button>
               </div>
             )}
           </nav>
@@ -409,20 +413,28 @@ export default function Header() {
               </p>
 
               <div className="space-y-3">
-                <Link
-                  to="/login?returnUrl=/events/create"
-                  onClick={() => setShowLoginModal(false)}
+                <button
+                  onClick={() => {
+                    setShowLoginModal(false)
+                    // Store return URL for after auth
+                    sessionStorage.setItem('auth_return_url', '/events/create')
+                    login()
+                  }}
                   className="block w-full clay-button bg-clay-mint hover:bg-clay-peach font-bold py-3 text-center"
                 >
                   Sign In
-                </Link>
-                <Link
-                  to="/signup?returnUrl=/events/create"
-                  onClick={() => setShowLoginModal(false)}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowLoginModal(false)
+                    // Store return URL for after auth
+                    sessionStorage.setItem('auth_return_url', '/events/create')
+                    login()
+                  }}
                   className="block w-full clay-button bg-clay-surface hover:bg-clay-butter font-bold py-3 text-center"
                 >
                   Create an Account
-                </Link>
+                </button>
               </div>
 
               <p className="text-sm text-charcoal-light mt-6">
