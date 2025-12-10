@@ -368,67 +368,32 @@ export default function CreateEventPage() {
         <WizardOptionGrid columns={1}>
 
           {myOrganizations.map((org) => {
-            const isStripeVerified = org.stripeChargesEnabled && org.stripePayoutsEnabled
+            const orgTypeLabel = org.orgType.charAt(0).toUpperCase() + org.orgType.slice(1)
             return (
-              <div key={org.id} className="relative">
-                <WizardOptionCard
-                  title={org.name}
-                  description={
-                    isStripeVerified
-                      ? `${org.orgType.charAt(0).toUpperCase() + org.orgType.slice(1)} organization`
-                      : 'Complete Stripe Connect setup to create auctions'
-                  }
-                  selected={selectedOrgId === org.id && !createNewOrg}
-                  onClick={() => {
-                    if (isStripeVerified) {
-                      setSelectedOrgId(org.id)
-                      setCreateNewOrg(false)
-                    }
-                  }}
-                  badge={isStripeVerified ? undefined : 'Setup Required'}
-                  badgeColor={isStripeVerified ? undefined : 'peach'}
-                  disabled={!isStripeVerified}
-                />
-                {!isStripeVerified && (
-                  <Link
-                    to={`/organizations/${org.slug}/dashboard`}
-                    className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-sage hover:text-sage/80 transition-colors"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
-                    Complete Stripe Setup
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </Link>
-                )}
-              </div>
+              <WizardOptionCard
+                key={org.id}
+                title={org.name}
+                description={`${orgTypeLabel} organization`}
+                selected={selectedOrgId === org.id && !createNewOrg}
+                onClick={() => {
+                  setSelectedOrgId(org.id)
+                  setCreateNewOrg(false)
+                }}
+              />
             )
           })}
 
-          <div>
-            <WizardOptionCard
-              title="Create New Organization"
-              description="Set up a new organization for this auction"
-              selected={createNewOrg}
-              onClick={() => {
-                setCreateNewOrg(true)
-                setSelectedOrgId(null)
-              }}
-              badge="New"
-              badgeColor="mint"
-            />
-            {createNewOrg && (
-              <p className="mt-2 text-sm text-charcoal-light flex items-center gap-1">
-                <svg className="w-4 h-4 text-clay-peach" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                You'll need to complete Stripe Connect setup after creating your organization to receive payments.
-              </p>
-            )}
-          </div>
+          <WizardOptionCard
+            title="Create New Organization"
+            description="Set up a new organization for this auction"
+            selected={createNewOrg}
+            onClick={() => {
+              setCreateNewOrg(true)
+              setSelectedOrgId(null)
+            }}
+            badge="New"
+            badgeColor="mint"
+          />
         </WizardOptionGrid>
 
         {createNewOrg && (
