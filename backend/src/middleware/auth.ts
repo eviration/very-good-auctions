@@ -155,7 +155,7 @@ export function optionalAuth(
 /**
  * Middleware to require platform admin access.
  * Must be used after authenticate middleware.
- * Checks if the user's email is in the platform_admins table.
+ * Checks if the user has is_platform_admin=1 in the users table.
  */
 export async function requirePlatformAdmin(
   req: Request,
@@ -168,9 +168,9 @@ export async function requirePlatformAdmin(
   }
 
   try {
-    // Check if user is a platform admin
+    // Check if user is a platform admin (using users table)
     const result = await dbQuery(
-      `SELECT 1 FROM platform_admins WHERE email = @email AND is_active = 1`,
+      `SELECT 1 FROM users WHERE LOWER(email) = @email AND is_platform_admin = 1`,
       { email: req.user.email.toLowerCase() }
     )
 
