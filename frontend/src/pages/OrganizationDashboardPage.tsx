@@ -275,37 +275,8 @@ export default function OrganizationDashboardPage() {
         </div>
       </div>
 
-      {/* Status Banner */}
-      {organization.status === 'pending' && (
-        <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-lg mb-6 flex items-center justify-between flex-wrap gap-3">
-          <div>
-            <strong>Stripe Setup Needed:</strong> Complete Stripe Connect setup to create auctions. This is required
-            to process platform fees when your auctions make sales.
-          </div>
-          <button
-            onClick={handleStripeConnect}
-            disabled={stripeLoading}
-            className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg font-medium text-sm flex items-center gap-2 disabled:opacity-50 transition-colors"
-          >
-            {stripeLoading ? (
-              <>
-                <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                </svg>
-                <span>Connecting...</span>
-              </>
-            ) : (
-              <>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-                <span>Complete Setup</span>
-              </>
-            )}
-          </button>
-        </div>
-      )}
+      {/* Stripe Info Banner - only show if they have auctions that need integrated payments but no Stripe setup */}
+      {/* Removed: No longer show aggressive Stripe banner since self-managed payments don't need Stripe */}
 
       {/* Success Banner */}
       {successMessage && (
@@ -371,7 +342,7 @@ export default function OrganizationDashboardPage() {
           <div className="bg-white rounded-lg shadow-sm border border-sage/20 p-6">
             <h2 className="text-lg font-semibold text-charcoal mb-4">Quick Actions</h2>
             <div className="flex flex-wrap gap-4">
-              {isAdmin && organization?.stripeChargesEnabled && organization?.stripePayoutsEnabled ? (
+              {isAdmin && (
                 <Link
                   to="/events/create"
                   className="bg-sage text-white px-4 py-2 rounded-lg hover:bg-sage/90 inline-flex items-center gap-2"
@@ -381,18 +352,7 @@ export default function OrganizationDashboardPage() {
                   </svg>
                   Create Auction
                 </Link>
-              ) : isAdmin ? (
-                <button
-                  onClick={handleStripeConnect}
-                  disabled={stripeLoading}
-                  className="bg-amber-500 text-white px-4 py-2 rounded-lg hover:bg-amber-600 inline-flex items-center gap-2 disabled:opacity-50"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                  {stripeLoading ? 'Connecting...' : 'Complete Stripe Setup'}
-                </button>
-              ) : null}
+              )}
               {canManageMembers && (
                 <button
                   onClick={() => setShowInviteModal(true)}
@@ -412,7 +372,7 @@ export default function OrganizationDashboardPage() {
           {/* Header with Create button */}
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-charcoal">Your Auctions</h2>
-            {isAdmin && organization?.stripeChargesEnabled && organization?.stripePayoutsEnabled && (
+            {isAdmin && (
               <Link
                 to="/events/create"
                 className="bg-sage text-white px-4 py-2 rounded-lg hover:bg-sage/90 inline-flex items-center gap-2"
@@ -424,25 +384,6 @@ export default function OrganizationDashboardPage() {
               </Link>
             )}
           </div>
-
-          {/* Stripe setup warning */}
-          {isAdmin && (!organization?.stripeChargesEnabled || !organization?.stripePayoutsEnabled) && (
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-                <span className="text-amber-800">Complete Stripe Connect setup to create auctions. This is required to process platform fees.</span>
-              </div>
-              <button
-                onClick={handleStripeConnect}
-                disabled={stripeLoading}
-                className="bg-amber-500 text-white px-4 py-2 rounded-lg hover:bg-amber-600 text-sm font-medium disabled:opacity-50"
-              >
-                {stripeLoading ? 'Connecting...' : 'Complete Setup'}
-              </button>
-            </div>
-          )}
 
           {/* Loading state */}
           {loadingEvents && (
@@ -459,7 +400,7 @@ export default function OrganizationDashboardPage() {
               </svg>
               <h3 className="text-lg font-semibold text-charcoal mb-2">No auctions yet</h3>
               <p className="text-gray-500 mb-6">Create your first auction to start fundraising!</p>
-              {isAdmin && organization?.stripeChargesEnabled && organization?.stripePayoutsEnabled && (
+              {isAdmin && (
                 <Link
                   to="/events/create"
                   className="bg-sage text-white px-6 py-3 rounded-lg hover:bg-sage/90 inline-flex items-center gap-2"
