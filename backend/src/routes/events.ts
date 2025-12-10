@@ -312,13 +312,14 @@ router.post(
       // Get visibility (default to public)
       const visibility = req.body.visibility || 'public'
 
-      // Create event (no tier/maxItems - unlimited items, fees taken from proceeds)
+      // Create event (tier/maxItems set to 'unlimited' for legacy compatibility)
       const result = await dbQuery(
         `INSERT INTO auction_events (
           organization_id, name, slug, description,
           start_time, end_time, submission_deadline,
           auction_type, is_multi_item, increment_type, increment_value,
           buy_now_enabled, access_code, status, visibility,
+          tier, max_items,
           payment_mode, payment_instructions, payment_link, payment_qr_code_url,
           fulfillment_type, pickup_instructions, pickup_location,
           pickup_address_line1, pickup_address_line2, pickup_city, pickup_state, pickup_postal_code,
@@ -330,6 +331,7 @@ router.post(
           @startTime, @endTime, @submissionDeadline,
           @auctionType, @isMultiItem, @incrementType, @incrementValue,
           @buyNowEnabled, @accessCode, 'draft', @visibility,
+          'unlimited', 999999,
           @paymentMode, @paymentInstructions, @paymentLink, @paymentQrCodeUrl,
           @fulfillmentType, @pickupInstructions, @pickupLocation,
           @pickupAddressLine1, @pickupAddressLine2, @pickupCity, @pickupState, @pickupPostalCode,
