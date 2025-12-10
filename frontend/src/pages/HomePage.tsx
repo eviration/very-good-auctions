@@ -7,6 +7,62 @@ import { useAuth } from '../auth/useAuth'
 
 type EventFilter = 'all' | 'live' | 'upcoming' | 'ended'
 
+function PlatformStory() {
+  return (
+    <div className="clay-section bg-gradient-to-br from-clay-mint/30 via-clay-surface to-clay-lavender/20">
+      <div className="max-w-3xl mx-auto text-center px-4 py-8">
+        <div className="inline-flex items-center gap-2 bg-clay-butter/50 px-4 py-1.5 rounded-full mb-4">
+          <span className="text-xl">&#9829;</span>
+          <span className="font-bold text-sm text-charcoal">Our Story</span>
+        </div>
+
+        <h2 className="font-display text-2xl md:text-3xl font-black text-charcoal mb-4">
+          Built for the little guys
+        </h2>
+
+        <p className="text-charcoal-light font-medium leading-relaxed mb-4">
+          Very Good Auctions started when our small church wanted to run a silent auction fundraiser.
+          We tried the big auction platforms, but they were overwhelming&mdash;dozens of features we'd never use,
+          confusing dashboards, and fees that ate into our fundraising goals.
+        </p>
+
+        <p className="text-charcoal-light font-medium leading-relaxed mb-6">
+          So we built something simpler. A platform where volunteers can set up an auction in minutes,
+          donors can bid from their phones during the event, and every dollar raised goes further.
+          No complexity, no headaches&mdash;just a very good auction.
+        </p>
+
+        <div className="flex flex-wrap justify-center gap-6 text-sm">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-clay-mint rounded-full flex items-center justify-center">
+              <svg className="w-4 h-4 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <span className="font-bold text-charcoal">Simple setup</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-clay-peach rounded-full flex items-center justify-center">
+              <svg className="w-4 h-4 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <span className="font-bold text-charcoal">Mobile-friendly bidding</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-clay-lavender rounded-full flex items-center justify-center">
+              <svg className="w-4 h-4 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+              </svg>
+            </div>
+            <span className="font-bold text-charcoal">Made with love</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function HomePage() {
   const { isAuthenticated } = useAuth()
   const [events, setEvents] = useState<AuctionEvent[]>([])
@@ -147,50 +203,62 @@ export default function HomePage() {
               ))}
             </div>
           ) : filteredEvents.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              {filteredEvents.map((event, index) => (
-                <div
-                  key={event.id}
-                  className="animate-slide-up opacity-0"
-                  style={{ animationDelay: `${index * 100}ms`, animationFillMode: 'forwards' }}
-                >
-                  <EventCard event={event} />
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="clay-section text-center py-16">
-              <div className="w-20 h-20 bg-clay-peach rounded-full flex items-center justify-center mx-auto mb-6 shadow-clay">
-                <svg
-                  className="w-10 h-10 text-charcoal"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-                  />
-                </svg>
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                {filteredEvents.map((event, index) => (
+                  <div
+                    key={event.id}
+                    className="animate-slide-up opacity-0"
+                    style={{ animationDelay: `${index * 100}ms`, animationFillMode: 'forwards' }}
+                  >
+                    <EventCard event={event} />
+                  </div>
+                ))}
               </div>
-              <p className="text-2xl font-bold text-charcoal mb-2">No events found</p>
-              <p className="text-charcoal-light font-medium mb-6">
-                {searchQuery ? 'Try adjusting your search' : 'Check back soon for new auction events!'}
-              </p>
-              {isAuthenticated && (
-                <Link
-                  to="/events/create"
-                  className="clay-button bg-sage text-white font-bold inline-flex items-center gap-2"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              {/* Platform Story - shown below events */}
+              <div className="mt-12">
+                <PlatformStory />
+              </div>
+            </>
+          ) : (
+            <>
+              {/* Platform Story - shown above empty state when no events */}
+              <div className="mb-8">
+                <PlatformStory />
+              </div>
+              <div className="clay-section text-center py-16">
+                <div className="w-20 h-20 bg-clay-peach rounded-full flex items-center justify-center mx-auto mb-6 shadow-clay">
+                  <svg
+                    className="w-10 h-10 text-charcoal"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                    />
                   </svg>
-                  Create Your First Event
-                </Link>
-              )}
-            </div>
+                </div>
+                <p className="text-2xl font-bold text-charcoal mb-2">No public auctions right now</p>
+                <p className="text-charcoal-light font-medium mb-6">
+                  {searchQuery ? 'Try adjusting your search' : 'Check back soon, or start your own!'}
+                </p>
+                {isAuthenticated && (
+                  <Link
+                    to="/events/create"
+                    className="clay-button bg-sage text-white font-bold inline-flex items-center gap-2"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                    Create Your First Event
+                  </Link>
+                )}
+              </div>
+            </>
           )}
         </section>
       </div>
