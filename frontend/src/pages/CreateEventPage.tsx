@@ -165,7 +165,7 @@ export default function CreateEventPage() {
   }
 
   // State to track if we need Stripe setup after org creation
-  const [needsStripeSetup, setNeedsStripeSetup] = useState<{ orgSlug: string; orgName: string } | null>(null)
+  const [needsStripeSetup, setNeedsStripeSetup] = useState<{ orgSlug: string; orgName: string; paymentMode: 'integrated' | 'self_managed' } | null>(null)
 
   const handleSubmit = async () => {
     setIsSubmitting(true)
@@ -181,8 +181,9 @@ export default function CreateEventPage() {
           orgType: newOrgType,
           contactEmail: newOrgEmail.trim(),
         })
-        // New organizations need Stripe Connect setup before creating auctions
-        setNeedsStripeSetup({ orgSlug: org.slug, orgName: org.name })
+        // New organizations need Stripe Connect setup before creating auctions (for integrated payments)
+        // or before publishing (for self-managed payments with platform fees)
+        setNeedsStripeSetup({ orgSlug: org.slug, orgName: org.name, paymentMode })
         setCurrentStep(TOTAL_STEPS + 1) // Go to success/Stripe setup step
         setIsSubmitting(false)
         return
@@ -249,37 +250,73 @@ export default function CreateEventPage() {
 
   // Stripe setup required screen (when new org was created)
   if (needsStripeSetup) {
+    const isSelfManaged = needsStripeSetup.paymentMode === 'self_managed'
+
     return (
       <WizardSuccess
         title="Organization created!"
-        message={`"${needsStripeSetup.orgName}" has been created. Before you can create auctions, you need to complete Stripe Connect setup to receive payments.`}
+        message={
+          isSelfManaged
+            ? `"${needsStripeSetup.orgName}" has been created successfully! You can proceed to create your auction now.`
+            : `"${needsStripeSetup.orgName}" has been created. Before you can create auctions with integrated payments, you need to complete Stripe Connect setup.`
+        }
       >
-        <Link
-          to={`/organizations/${needsStripeSetup.orgSlug}/dashboard`}
-          className="clay-button bg-clay-mint text-charcoal font-bold px-8 py-4 text-lg inline-flex items-center gap-2"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-          </svg>
-          Complete Stripe Setup
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
-          </svg>
-        </Link>
-        <p className="text-charcoal-light mt-4 text-sm">
-          After completing Stripe setup, you can return here to create your auction.
-        </p>
-        <Link
-          to="/events/create"
-          onClick={() => {
-            setNeedsStripeSetup(null)
-            setCurrentStep(1)
-            setCreateNewOrg(false)
-          }}
-          className="block text-charcoal-light font-bold hover:text-charcoal transition-colors mt-2"
-        >
-          Start over
-        </Link>
+        {isSelfManaged ? (
+          <>
+            <Link
+              to="/events/create"
+              onClick={() => {
+                setNeedsStripeSetup(null)
+                setCurrentStep(1)
+                setCreateNewOrg(false)
+              }}
+              className="clay-button bg-clay-mint text-charcoal font-bold px-8 py-4 text-lg inline-flex items-center gap-2"
+            >
+              Continue Creating Auction
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
+            <p className="text-charcoal-light mt-4 text-sm max-w-md">
+              Since you're using self-managed payments, you don't need Stripe setup to create auctions.
+            </p>
+            <Link
+              to={`/organizations/${needsStripeSetup.orgSlug}/manage`}
+              className="block text-charcoal-light font-bold hover:text-charcoal transition-colors mt-2"
+            >
+              Go to organization dashboard instead
+            </Link>
+          </>
+        ) : (
+          <>
+            <Link
+              to={`/organizations/${needsStripeSetup.orgSlug}/manage`}
+              className="clay-button bg-clay-mint text-charcoal font-bold px-8 py-4 text-lg inline-flex items-center gap-2"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              Complete Stripe Setup
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
+            <p className="text-charcoal-light mt-4 text-sm">
+              After completing Stripe setup, you can return here to create your auction.
+            </p>
+            <Link
+              to="/events/create"
+              onClick={() => {
+                setNeedsStripeSetup(null)
+                setCurrentStep(1)
+                setCreateNewOrg(false)
+              }}
+              className="block text-charcoal-light font-bold hover:text-charcoal transition-colors mt-2"
+            >
+              Start over
+            </Link>
+          </>
+        )}
       </WizardSuccess>
     )
   }
