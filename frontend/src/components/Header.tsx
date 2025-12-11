@@ -195,7 +195,7 @@ export default function Header() {
 
                   {/* Dropdown Menu */}
                   {accountMenuOpen && (
-                    <div className="absolute right-0 mt-3 w-64 glass-section p-3 z-50">
+                    <div className="absolute right-0 mt-3 w-64 p-3 z-50 rounded-glass-xl shadow-glass-lg border border-white/20 bg-[#1a1a2e]/95 backdrop-blur-xl">
                       {/* Profile link */}
                       <Link
                         to="/profile"
