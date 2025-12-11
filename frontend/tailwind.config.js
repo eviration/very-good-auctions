@@ -7,53 +7,94 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Claymorphism candy pastels
-        clay: {
-          bg: '#E8F4F0',
-          surface: '#F2F9F7',
-          mint: '#A8E6CF',
-          peach: '#FFB5A7',
-          lavender: '#D4C1EC',
-          butter: '#FFF3B0',
-          coral: '#FF8B94',
-          sky: '#B8E0FF',
+        // Glassmorphism color palette
+        glass: {
+          bg: '#0f0f23',           // Deep dark blue background
+          surface: 'rgba(255, 255, 255, 0.1)',
+          card: 'rgba(255, 255, 255, 0.08)',
+          border: 'rgba(255, 255, 255, 0.18)',
+          hover: 'rgba(255, 255, 255, 0.15)',
+          accent: {
+            purple: '#a855f7',
+            pink: '#ec4899',
+            blue: '#3b82f6',
+            cyan: '#06b6d4',
+            teal: '#14b8a6',
+            green: '#22c55e',
+            amber: '#f59e0b',
+            rose: '#f43f5e',
+          },
         },
-        cream: '#FDF8F3',
-        'warm-white': '#FFFCF9',
+        // Keep legacy names for compatibility
+        clay: {
+          bg: '#0f0f23',
+          surface: 'rgba(255, 255, 255, 0.1)',
+          mint: '#14b8a6',
+          peach: '#f43f5e',
+          lavender: '#a855f7',
+          butter: '#f59e0b',
+          coral: '#ec4899',
+          sky: '#3b82f6',
+        },
+        cream: '#1a1a2e',
+        'warm-white': '#16162a',
         sage: {
-          DEFAULT: '#4A6741',
-          light: '#6B8F5E',
-          dark: '#3A5233',
+          DEFAULT: '#14b8a6',
+          light: '#2dd4bf',
+          dark: '#0d9488',
         },
         terracotta: {
-          DEFAULT: '#C4704B',
-          light: '#E08A62',
+          DEFAULT: '#f43f5e',
+          light: '#fb7185',
         },
         charcoal: {
-          DEFAULT: '#2D2D2D',
-          light: '#4A4A4A',
+          DEFAULT: '#f8fafc',
+          light: '#cbd5e1',
         },
       },
       fontFamily: {
-        display: ['Nunito', 'Quicksand', 'sans-serif'],
-        body: ['Nunito', 'Quicksand', 'sans-serif'],
+        display: ['Inter', 'Nunito', 'sans-serif'],
+        body: ['Inter', 'Nunito', 'sans-serif'],
       },
       borderRadius: {
-        'clay': '24px',
-        'clay-lg': '32px',
-        'clay-xl': '40px',
+        'glass': '16px',
+        'glass-lg': '24px',
+        'glass-xl': '32px',
+        'glass-pill': '9999px',
+        // Legacy names
+        'clay': '16px',
+        'clay-lg': '24px',
+        'clay-xl': '32px',
         'clay-pill': '9999px',
       },
       boxShadow: {
-        'clay': '8px 8px 16px rgba(163, 177, 198, 0.5), -8px -8px 16px rgba(255, 255, 255, 0.8), inset 2px 2px 4px rgba(255, 255, 255, 0.6)',
-        'clay-sm': '4px 4px 8px rgba(163, 177, 198, 0.4), -4px -4px 8px rgba(255, 255, 255, 0.7), inset 1px 1px 2px rgba(255, 255, 255, 0.5)',
-        'clay-lg': '12px 12px 24px rgba(163, 177, 198, 0.5), -12px -12px 24px rgba(255, 255, 255, 0.9), inset 3px 3px 6px rgba(255, 255, 255, 0.7)',
-        'clay-pressed': 'inset 4px 4px 8px rgba(163, 177, 198, 0.5), inset -4px -4px 8px rgba(255, 255, 255, 0.7)',
-        'clay-float': '16px 16px 32px rgba(163, 177, 198, 0.4), -16px -16px 32px rgba(255, 255, 255, 0.9), inset 4px 4px 8px rgba(255, 255, 255, 0.8)',
+        'glass': '0 8px 32px rgba(0, 0, 0, 0.3)',
+        'glass-sm': '0 4px 16px rgba(0, 0, 0, 0.2)',
+        'glass-lg': '0 16px 48px rgba(0, 0, 0, 0.4)',
+        'glass-glow': '0 0 40px rgba(168, 85, 247, 0.3)',
+        'glass-glow-pink': '0 0 40px rgba(236, 72, 153, 0.3)',
+        'glass-glow-blue': '0 0 40px rgba(59, 130, 246, 0.3)',
+        'glass-glow-teal': '0 0 40px rgba(20, 184, 166, 0.3)',
+        'glass-inner': 'inset 0 1px 1px rgba(255, 255, 255, 0.1)',
+        // Legacy names
+        'clay': '0 8px 32px rgba(0, 0, 0, 0.3)',
+        'clay-sm': '0 4px 16px rgba(0, 0, 0, 0.2)',
+        'clay-lg': '0 16px 48px rgba(0, 0, 0, 0.4)',
+        'clay-pressed': 'inset 0 2px 4px rgba(0, 0, 0, 0.3)',
+        'clay-float': '0 20px 60px rgba(0, 0, 0, 0.5)',
+      },
+      backdropBlur: {
+        'glass': '16px',
+        'glass-lg': '24px',
+        'glass-xl': '40px',
       },
       animation: {
         'fade-in': 'fadeIn 0.4s ease forwards',
         'slide-up': 'slideUp 0.4s ease forwards',
+        'glass-shimmer': 'glassShimmer 2s ease-in-out infinite',
+        'glow-pulse': 'glowPulse 2s ease-in-out infinite',
+        'float': 'float 6s ease-in-out infinite',
+        // Legacy
         'clay-bounce': 'clayBounce 0.3s ease',
         'clay-press': 'clayPress 0.15s ease forwards',
       },
@@ -65,6 +106,18 @@ export default {
         slideUp: {
           from: { opacity: '0', transform: 'translateY(20px)' },
           to: { opacity: '1', transform: 'translateY(0)' },
+        },
+        glassShimmer: {
+          '0%, 100%': { backgroundPosition: '200% center' },
+          '50%': { backgroundPosition: '-200% center' },
+        },
+        glowPulse: {
+          '0%, 100%': { opacity: '0.5' },
+          '50%': { opacity: '1' },
+        },
+        float: {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-10px)' },
         },
         clayBounce: {
           '0%, 100%': { transform: 'scale(1)' },

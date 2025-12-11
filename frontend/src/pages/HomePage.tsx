@@ -9,24 +9,24 @@ type EventFilter = 'all' | 'live' | 'upcoming' | 'ended'
 
 function PlatformStory() {
   return (
-    <div className="clay-section bg-gradient-to-br from-clay-mint/30 via-clay-surface to-clay-lavender/20">
+    <div className="glass-section bg-gradient-to-br from-purple-500/10 via-transparent to-pink-500/10">
       <div className="max-w-3xl mx-auto text-center px-4 py-8">
-        <div className="inline-flex items-center gap-2 bg-clay-butter/50 px-4 py-1.5 rounded-full mb-4">
-          <span className="text-xl">&#9829;</span>
-          <span className="font-bold text-sm text-charcoal">Our Story</span>
+        <div className="inline-flex items-center gap-2 bg-gradient-to-r from-pink-500/20 to-purple-500/20 border border-pink-400/30 px-4 py-1.5 rounded-full mb-4">
+          <span className="text-xl text-pink-400">&#9829;</span>
+          <span className="font-semibold text-sm text-white">Our Story</span>
         </div>
 
-        <h2 className="font-display text-2xl md:text-3xl font-black text-charcoal mb-4">
+        <h2 className="font-display text-2xl md:text-3xl font-bold text-white mb-4">
           Built for the little guys
         </h2>
 
-        <p className="text-charcoal-light font-medium leading-relaxed mb-4">
+        <p className="text-white/70 font-medium leading-relaxed mb-4">
           Very Good Auctions started when our small church wanted to run a silent auction fundraiser.
           We tried the big auction platforms, but they were overwhelming&mdash;dozens of features we'd never use,
           confusing dashboards, and fees that ate into our fundraising goals.
         </p>
 
-        <p className="text-charcoal-light font-medium leading-relaxed mb-6">
+        <p className="text-white/70 font-medium leading-relaxed mb-6">
           So we built something simpler. A platform where volunteers can set up an auction in minutes,
           donors can bid from their phones during the event, and every dollar raised goes further.
           No complexity, no headaches&mdash;just a very good auction.
@@ -34,28 +34,28 @@ function PlatformStory() {
 
         <div className="flex flex-wrap justify-center gap-6 text-sm">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-clay-mint rounded-full flex items-center justify-center">
-              <svg className="w-4 h-4 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-8 h-8 bg-teal-500/30 border border-teal-400/40 rounded-full flex items-center justify-center">
+              <svg className="w-4 h-4 text-teal-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <span className="font-bold text-charcoal">Simple setup</span>
+            <span className="font-semibold text-white">Simple setup</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-clay-peach rounded-full flex items-center justify-center">
-              <svg className="w-4 h-4 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-8 h-8 bg-pink-500/30 border border-pink-400/40 rounded-full flex items-center justify-center">
+              <svg className="w-4 h-4 text-pink-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
               </svg>
             </div>
-            <span className="font-bold text-charcoal">Mobile-friendly bidding</span>
+            <span className="font-semibold text-white">Mobile-friendly bidding</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-clay-lavender rounded-full flex items-center justify-center">
-              <svg className="w-4 h-4 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-8 h-8 bg-purple-500/30 border border-purple-400/40 rounded-full flex items-center justify-center">
+              <svg className="w-4 h-4 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
               </svg>
             </div>
-            <span className="font-bold text-charcoal">Made with love</span>
+            <span className="font-semibold text-white">Made with love</span>
           </div>
         </div>
       </div>
@@ -104,20 +104,20 @@ export default function HomePage() {
   })
 
   return (
-    <div className="min-h-screen bg-clay-bg">
+    <div className="min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Compact Hero with Search */}
         <section className="mb-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             {/* Left: Title and tagline */}
             <div className="flex-1">
-              <h1 className="font-display text-2xl md:text-3xl font-black text-charcoal leading-tight">
+              <h1 className="font-display text-2xl md:text-3xl font-bold text-white leading-tight">
                 A simple way to{' '}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-clay-coral via-clay-peach to-clay-butter">
+                <span className="text-gradient">
                   run an auction
                 </span>
               </h1>
-              <p className="text-sm text-charcoal-light mt-1 hidden sm:block">
+              <p className="text-sm text-white/60 mt-1 hidden sm:block">
                 Raise money for your school, church, or community group
               </p>
             </div>
@@ -127,7 +127,7 @@ export default function HomePage() {
               <div className="relative flex-1">
                 <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
                   <svg
-                    className="w-4 h-4 text-charcoal-light"
+                    className="w-4 h-4 text-white/40"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -145,13 +145,13 @@ export default function HomePage() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search events..."
-                  className="clay-input w-full pl-10 pr-4 py-2.5 text-sm font-medium placeholder:text-charcoal-light/50"
+                  className="glass-input w-full pl-10 pr-4 py-2.5 text-sm font-medium"
                 />
               </div>
               {isAuthenticated && (
                 <Link
                   to="/events/create"
-                  className="clay-button bg-sage text-white font-bold text-sm py-2.5 px-4 inline-flex items-center gap-1.5 hover:bg-sage-dark transition-colors whitespace-nowrap"
+                  className="glass-button text-sm py-2.5 px-4 inline-flex items-center gap-1.5 whitespace-nowrap"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -168,18 +168,18 @@ export default function HomePage() {
         <section className="mb-6">
           <div className="flex flex-wrap gap-2">
             {[
-              { value: 'all', label: 'All', color: 'bg-clay-mint' },
-              { value: 'live', label: 'Live', color: 'bg-green-100' },
-              { value: 'upcoming', label: 'Upcoming', color: 'bg-clay-butter' },
-              { value: 'ended', label: 'Past', color: 'bg-gray-200' },
+              { value: 'all', label: 'All', activeClass: 'bg-gradient-to-r from-purple-500/40 to-pink-500/40 border-purple-400/50' },
+              { value: 'live', label: 'Live', activeClass: 'bg-green-500/30 border-green-400/50 text-green-300' },
+              { value: 'upcoming', label: 'Upcoming', activeClass: 'bg-amber-500/30 border-amber-400/50 text-amber-300' },
+              { value: 'ended', label: 'Past', activeClass: 'bg-white/10 border-white/30 text-white/70' },
             ].map((tab) => (
               <button
                 key={tab.value}
                 onClick={() => setFilter(tab.value as EventFilter)}
-                className={`px-3 py-1.5 rounded-full font-bold text-sm transition-all duration-200 ${
+                className={`px-4 py-2 rounded-full font-semibold text-sm transition-all duration-200 border ${
                   filter === tab.value
-                    ? `${tab.color} shadow-sm`
-                    : 'bg-clay-surface hover:bg-clay-butter text-charcoal-light'
+                    ? tab.activeClass
+                    : 'border-white/10 text-white/60 hover:bg-white/10 hover:border-white/20'
                 }`}
               >
                 {tab.label}
@@ -196,10 +196,8 @@ export default function HomePage() {
               {[...Array(6)].map((_, i) => (
                 <div
                   key={i}
-                  className="clay-card aspect-[4/5] animate-pulse"
-                >
-                  <div className="h-full bg-gradient-to-br from-clay-mint/30 via-clay-peach/20 to-clay-lavender/30 rounded-clay-lg" />
-                </div>
+                  className="glass-card aspect-[4/5] shimmer"
+                />
               ))}
             </div>
           ) : filteredEvents.length > 0 ? (
@@ -226,10 +224,10 @@ export default function HomePage() {
               <div className="mb-8">
                 <PlatformStory />
               </div>
-              <div className="clay-section text-center py-16">
-                <div className="w-20 h-20 bg-clay-peach rounded-full flex items-center justify-center mx-auto mb-6 shadow-clay">
+              <div className="glass-section text-center py-16">
+                <div className="w-20 h-20 bg-gradient-to-br from-pink-500/30 to-purple-500/30 border border-pink-400/30 rounded-full flex items-center justify-center mx-auto mb-6 shadow-glass-glow-pink">
                   <svg
-                    className="w-10 h-10 text-charcoal"
+                    className="w-10 h-10 text-white/70"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -242,14 +240,14 @@ export default function HomePage() {
                     />
                   </svg>
                 </div>
-                <p className="text-2xl font-bold text-charcoal mb-2">No public auctions right now</p>
-                <p className="text-charcoal-light font-medium mb-6">
+                <p className="text-2xl font-bold text-white mb-2">No public auctions right now</p>
+                <p className="text-white/60 font-medium mb-6">
                   {searchQuery ? 'Try adjusting your search' : 'Check back soon, or start your own!'}
                 </p>
                 {isAuthenticated && (
                   <Link
                     to="/events/create"
-                    className="clay-button bg-sage text-white font-bold inline-flex items-center gap-2"
+                    className="glass-button font-semibold inline-flex items-center gap-2"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />

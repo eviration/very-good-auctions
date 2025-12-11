@@ -20,15 +20,15 @@ export default function EventCard({ event }: EventCardProps) {
     const endTime = new Date(event.endTime)
 
     if (event.status === 'ended' || now > endTime) {
-      return { text: 'Ended', color: 'bg-gray-200 text-gray-600' }
+      return { text: 'Ended', color: 'bg-white/10 text-white/60 border-white/20' }
     }
     if (event.status === 'active' || (now >= startTime && now <= endTime)) {
-      return { text: 'Live Now', color: 'bg-green-100 text-green-700' }
+      return { text: 'Live Now', color: 'bg-green-500/30 text-green-300 border-green-400/40' }
     }
     if (event.status === 'scheduled' || now < startTime) {
-      return { text: 'Coming Soon', color: 'bg-clay-butter text-charcoal' }
+      return { text: 'Coming Soon', color: 'bg-amber-500/30 text-amber-300 border-amber-400/40' }
     }
-    return { text: event.status, color: 'bg-gray-200 text-gray-600' }
+    return { text: event.status, color: 'bg-white/10 text-white/60 border-white/20' }
   }
 
   const statusBadge = getStatusBadge()
@@ -37,10 +37,10 @@ export default function EventCard({ event }: EventCardProps) {
   return (
     <Link
       to={`/events/${event.slug}`}
-      className="clay-card group block overflow-hidden transition-all duration-300 hover:shadow-clay-lg hover:-translate-y-1"
+      className="glass-card group block overflow-hidden transition-all duration-300 hover:shadow-glass-lg hover:-translate-y-1 hover:border-white/30"
     >
       {/* Image */}
-      <div className="aspect-[16/9] relative overflow-hidden rounded-t-clay-lg">
+      <div className="aspect-[16/9] relative overflow-hidden rounded-t-glass-lg">
         {event.coverImageUrl ? (
           <img
             src={event.coverImageUrl}
@@ -48,9 +48,9 @@ export default function EventCard({ event }: EventCardProps) {
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-clay-mint via-clay-peach to-clay-lavender flex items-center justify-center">
+          <div className="w-full h-full bg-gradient-to-br from-purple-500/30 via-pink-500/20 to-blue-500/30 flex items-center justify-center">
             <svg
-              className="w-16 h-16 text-charcoal/30"
+              className="w-16 h-16 text-white/30"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -65,9 +65,12 @@ export default function EventCard({ event }: EventCardProps) {
           </div>
         )}
 
+        {/* Gradient overlay for better text readability */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+
         {/* Status Badge */}
         <div className="absolute top-3 left-3">
-          <span className={`px-3 py-1 rounded-full text-sm font-bold ${statusBadge.color} ${isLive ? 'animate-pulse' : ''}`}>
+          <span className={`px-3 py-1 rounded-full text-sm font-semibold border backdrop-blur-sm ${statusBadge.color} ${isLive ? 'animate-pulse' : ''}`}>
             {statusBadge.text}
           </span>
         </div>
@@ -75,7 +78,7 @@ export default function EventCard({ event }: EventCardProps) {
         {/* Auction Type Badge */}
         {event.auctionType === 'silent' && (
           <div className="absolute top-3 right-3">
-            <span className="px-3 py-1 rounded-full text-sm font-bold bg-clay-lavender text-charcoal">
+            <span className="px-3 py-1 rounded-full text-sm font-semibold bg-purple-500/30 text-purple-300 border border-purple-400/40 backdrop-blur-sm">
               Silent
             </span>
           </div>
@@ -84,12 +87,12 @@ export default function EventCard({ event }: EventCardProps) {
 
       {/* Content */}
       <div className="p-5">
-        <h3 className="font-display text-xl font-bold text-charcoal mb-2 group-hover:text-sage transition-colors line-clamp-1">
+        <h3 className="font-display text-xl font-bold text-white mb-2 group-hover:text-purple-300 transition-colors line-clamp-1">
           {event.name}
         </h3>
 
         {event.description && (
-          <p className="text-charcoal-light text-sm mb-4 line-clamp-2">
+          <p className="text-white/60 text-sm mb-4 line-clamp-2">
             {event.description}
           </p>
         )}
@@ -97,31 +100,31 @@ export default function EventCard({ event }: EventCardProps) {
         {/* Stats */}
         <div className="flex items-center gap-4 text-sm">
           <div className="flex items-center gap-1.5">
-            <svg className="w-4 h-4 text-clay-coral" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
             </svg>
-            <span className="font-semibold text-charcoal">{event.itemCount}</span>
-            <span className="text-charcoal-light">items</span>
+            <span className="font-semibold text-white">{event.itemCount}</span>
+            <span className="text-white/50">items</span>
           </div>
 
           {event.totalBids > 0 && (
             <div className="flex items-center gap-1.5">
-              <svg className="w-4 h-4 text-clay-mint" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
               </svg>
-              <span className="font-semibold text-charcoal">{event.totalBids}</span>
-              <span className="text-charcoal-light">bids</span>
+              <span className="font-semibold text-white">{event.totalBids}</span>
+              <span className="text-white/50">bids</span>
             </div>
           )}
         </div>
 
         {/* Dates */}
-        <div className="mt-4 pt-4 border-t border-gray-100">
+        <div className="mt-4 pt-4 border-t border-white/10">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-charcoal-light">
+            <span className="text-white/50">
               {isLive ? 'Ends' : statusBadge.text === 'Coming Soon' ? 'Starts' : 'Ended'}
             </span>
-            <span className="font-semibold text-charcoal">
+            <span className="font-semibold text-white">
               {formatDate(isLive || statusBadge.text === 'Ended' ? event.endTime : event.startTime)}
             </span>
           </div>
