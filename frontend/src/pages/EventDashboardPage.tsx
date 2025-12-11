@@ -797,13 +797,13 @@ export default function EventDashboardPage() {
           <Link to="/my-events" className="text-sage hover:underline">
             &larr; Back to My Events
           </Link>
-          <h1 className="text-2xl font-bold text-charcoal mt-2">{event.name}</h1>
+          <h1 className="text-2xl font-bold text-white mt-2">{event.name}</h1>
           <div className="flex items-center gap-3 mt-1">
             <span className={`text-xs px-2 py-1 rounded-full font-medium ${statusColors[event.status]}`}>
               {event.status.charAt(0).toUpperCase() + event.status.slice(1)}
             </span>
             {event.organization && (
-              <span className="text-gray-500">{event.organization.name}</span>
+              <span className="text-white/70">{event.organization.name}</span>
             )}
           </div>
         </div>
@@ -984,7 +984,7 @@ export default function EventDashboardPage() {
                   className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
                     itemFilter === status
                       ? 'bg-sage text-white'
-                      : 'bg-sage/10 text-charcoal hover:bg-sage/20'
+                      : 'bg-white/10 text-white/80 hover:bg-white/20'
                   }`}
                 >
                   {status === 'all' ? 'All Items' : status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
@@ -1257,7 +1257,7 @@ export default function EventDashboardPage() {
                 className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
                   donorSubmissionFilter === status
                     ? 'bg-sage text-white'
-                    : 'bg-sage/10 text-charcoal hover:bg-sage/20'
+                    : 'bg-white/10 text-white/80 hover:bg-white/20'
                 }`}
               >
                 {status === 'all' ? 'All Donations' : status.charAt(0).toUpperCase() + status.slice(1)}
@@ -1469,7 +1469,7 @@ export default function EventDashboardPage() {
                 className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
                   paymentFilter === status
                     ? 'bg-sage text-white'
-                    : 'bg-sage/10 text-charcoal hover:bg-sage/20'
+                    : 'bg-white/10 text-white/80 hover:bg-white/20'
                 }`}
               >
                 {status === 'all' ? 'All Items' : status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
