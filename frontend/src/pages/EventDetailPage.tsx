@@ -193,16 +193,16 @@ export default function EventDetailPage() {
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
       {/* Event Header */}
-      <div className="bg-white rounded-xl border border-sage/20 p-6 mb-8">
+      <div className="glass-section p-6 mb-8">
         <div className="flex items-start justify-between mb-4">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <h1 className="text-3xl font-bold text-charcoal">{event.name}</h1>
+              <h1 className="text-3xl font-bold text-white">{event.name}</h1>
               <span className={`text-sm px-3 py-1 rounded-full font-medium ${statusColors[event.status]}`}>
                 {event.status === 'active' ? 'Live Now' : event.status.charAt(0).toUpperCase() + event.status.slice(1)}
               </span>
               {event.auctionType === 'silent' && (
-                <span className="text-sm px-3 py-1 rounded-full bg-purple-100 text-purple-800 font-medium">
+                <span className="text-sm px-3 py-1 rounded-full bg-purple-500/30 text-purple-300 border border-purple-400/30 font-medium">
                   Silent Auction
                 </span>
               )}
@@ -211,7 +211,7 @@ export default function EventDetailPage() {
             {event.organization && (
               <Link
                 to={`/organizations/${event.organization.slug}`}
-                className="text-sage hover:underline"
+                className="text-purple-400 hover:text-purple-300 hover:underline font-medium"
               >
                 {event.organization.name}
               </Link>
@@ -221,7 +221,7 @@ export default function EventDetailPage() {
           {event.isAdmin && (
             <Link
               to={`/events/${slug}/manage`}
-              className="px-4 py-2 bg-sage text-white rounded-lg hover:bg-sage/90"
+              className="glass-button text-sm py-2 px-4"
             >
               Manage Event
             </Link>
@@ -229,48 +229,48 @@ export default function EventDetailPage() {
         </div>
 
         {event.description && (
-          <p className="text-gray-600 mb-4">{event.description}</p>
+          <p className="text-white/70 mb-4">{event.description}</p>
         )}
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div>
-            <div className="text-sm text-gray-500">Status</div>
-            <div className="font-semibold text-charcoal">
+            <div className="text-sm text-white/50">Status</div>
+            <div className="font-semibold text-white">
               {event.status === 'active' ? getTimeRemaining() : formatDate(event.endTime)}
             </div>
           </div>
           <div>
-            <div className="text-sm text-gray-500">Items</div>
-            <div className="font-semibold text-charcoal">{event.itemCount}</div>
+            <div className="text-sm text-white/50">Items</div>
+            <div className="font-semibold text-white">{event.itemCount}</div>
           </div>
           <div>
-            <div className="text-sm text-gray-500">Total Bids</div>
-            <div className="font-semibold text-charcoal">{event.totalBids}</div>
+            <div className="text-sm text-white/50">Total Bids</div>
+            <div className="font-semibold text-white">{event.totalBids}</div>
           </div>
           <div>
-            <div className="text-sm text-gray-500">
+            <div className="text-sm text-white/50">
               {event.status === 'ended' ? 'Total Raised' : 'Current Total'}
             </div>
-            <div className="font-semibold text-sage">${event.totalRaised.toLocaleString()}</div>
+            <div className="font-semibold text-teal-400">${event.totalRaised.toLocaleString()}</div>
           </div>
         </div>
       </div>
 
       {/* Event Not Yet Active */}
       {event.status === 'scheduled' && (
-        <div className="bg-blue-50 border border-blue-200 text-blue-800 px-6 py-4 rounded-xl mb-8 text-center">
-          <h2 className="text-xl font-semibold mb-2">Auction starts soon!</h2>
-          <p>Bidding begins on {formatDate(event.startTime)}</p>
+        <div className="glass-section glass-accent-blue px-6 py-4 mb-8 text-center">
+          <h2 className="text-xl font-semibold text-white mb-2">Auction starts soon!</h2>
+          <p className="text-white/70">Bidding begins on {formatDate(event.startTime)}</p>
         </div>
       )}
 
       {/* Draft/Cancelled State */}
       {(event.status === 'draft' || event.status === 'cancelled') && !event.isAdmin && (
-        <div className="bg-gray-50 border border-gray-200 text-gray-800 px-6 py-4 rounded-xl mb-8 text-center">
-          <h2 className="text-xl font-semibold mb-2">
+        <div className="glass-section px-6 py-4 mb-8 text-center">
+          <h2 className="text-xl font-semibold text-white mb-2">
             {event.status === 'draft' ? 'Coming Soon' : 'Event Cancelled'}
           </h2>
-          <p>
+          <p className="text-white/70">
             {event.status === 'draft'
               ? 'This event is being prepared. Check back later!'
               : 'This event has been cancelled.'}
@@ -289,24 +289,24 @@ export default function EventDetailPage() {
                 placeholder="Search items..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-sage focus:ring-0"
+                className="glass-input w-full"
               />
             </div>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-              className="px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-sage focus:ring-0"
+              className="glass-input bg-white/5"
             >
-              <option value="title">Sort by Name</option>
-              <option value="price">Sort by Price</option>
-              <option value="bids">Sort by Bids</option>
+              <option value="title" className="bg-[#1a1a2e] text-white">Sort by Name</option>
+              <option value="price" className="bg-[#1a1a2e] text-white">Sort by Price</option>
+              <option value="bids" className="bg-[#1a1a2e] text-white">Sort by Bids</option>
             </select>
           </div>
 
           {filteredAndSortedItems.length === 0 ? (
-            <div className="text-center py-12 bg-white rounded-xl border border-sage/20">
+            <div className="text-center py-12 glass-section">
               <svg
-                className="w-16 h-16 text-gray-300 mx-auto mb-4"
+                className="w-16 h-16 text-white/30 mx-auto mb-4"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -318,10 +318,10 @@ export default function EventDetailPage() {
                   d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
                 />
               </svg>
-              <h2 className="text-xl font-semibold text-charcoal mb-2">
+              <h2 className="text-xl font-semibold text-white mb-2">
                 {searchQuery ? 'No items match your search' : 'No items yet'}
               </h2>
-              <p className="text-gray-500">
+              <p className="text-white/60">
                 {searchQuery
                   ? 'Try a different search term'
                   : 'Check back later for auction items'}
@@ -333,10 +333,10 @@ export default function EventDetailPage() {
                 <Link
                   key={item.id}
                   to={`/events/${slug}/items/${item.id}`}
-                  className="bg-white rounded-xl border border-sage/20 overflow-hidden hover:shadow-lg transition-shadow"
+                  className="glass-card overflow-hidden"
                 >
                   {/* Item Image */}
-                  <div className="aspect-square bg-gray-100 relative">
+                  <div className="aspect-square bg-white/5 relative">
                     {item.images.length > 0 ? (
                       <img
                         src={item.images[0].blobUrl}
@@ -346,7 +346,7 @@ export default function EventDetailPage() {
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
                         <svg
-                          className="w-16 h-16 text-gray-300"
+                          className="w-16 h-16 text-white/20"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -363,12 +363,12 @@ export default function EventDetailPage() {
 
                     {/* Status Badge */}
                     {item.status === 'sold' && (
-                      <div className="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full">
+                      <div className="absolute top-2 right-2 bg-green-500/90 text-white text-xs px-2 py-1 rounded-full font-medium">
                         Sold
                       </div>
                     )}
                     {item.buyNowPrice && event.buyNowEnabled && item.status !== 'sold' && (
-                      <div className="absolute top-2 right-2 bg-amber-500 text-white text-xs px-2 py-1 rounded-full">
+                      <div className="absolute top-2 right-2 bg-amber-500/90 text-white text-xs px-2 py-1 rounded-full font-medium">
                         Buy Now ${item.buyNowPrice}
                       </div>
                     )}
@@ -376,24 +376,24 @@ export default function EventDetailPage() {
 
                   {/* Item Details */}
                   <div className="p-4">
-                    <h3 className="font-semibold text-charcoal mb-1 truncate">{item.title}</h3>
+                    <h3 className="font-semibold text-white mb-1 truncate">{item.title}</h3>
 
                     {event.auctionType === 'silent' ? (
-                      <div className="text-gray-500 text-sm">
+                      <div className="text-white/60 text-sm">
                         {item.bidCount > 0 ? `${item.bidCount} bid${item.bidCount !== 1 ? 's' : ''}` : 'No bids yet'}
                       </div>
                     ) : (
                       <div className="flex items-center justify-between">
                         <div>
-                          <div className="text-xs text-gray-500">
+                          <div className="text-xs text-white/50">
                             {item.currentBid ? 'Current bid' : 'Starting price'}
                           </div>
-                          <div className="text-lg font-bold text-sage">
+                          <div className="text-lg font-bold text-teal-400">
                             ${item.currentBid || item.startingPrice || 0}
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="text-sm text-gray-500">
+                          <div className="text-sm text-white/60">
                             {item.bidCount} bid{item.bidCount !== 1 ? 's' : ''}
                           </div>
                         </div>
@@ -409,11 +409,11 @@ export default function EventDetailPage() {
 
       {/* Not Logged In CTA */}
       {!isAuthenticated && event.status === 'active' && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-sage/20 p-4 shadow-lg">
+        <div className="fixed bottom-0 left-0 right-0 bg-[#1a1a2e]/95 backdrop-blur-xl border-t border-white/10 p-4 shadow-glass-lg">
           <div className="max-w-6xl mx-auto flex items-center justify-between">
             <div>
-              <div className="font-semibold text-charcoal">Ready to bid?</div>
-              <div className="text-sm text-gray-500">Sign in to place bids on auction items</div>
+              <div className="font-semibold text-white">Ready to bid?</div>
+              <div className="text-sm text-white/60">Sign in to place bids on auction items</div>
             </div>
             <button
               onClick={() => {
@@ -421,7 +421,7 @@ export default function EventDetailPage() {
                 const loginButton = document.querySelector('[data-testid="login-button"]') as HTMLButtonElement
                 loginButton?.click()
               }}
-              className="px-6 py-3 bg-sage text-white font-semibold rounded-xl hover:bg-sage/90"
+              className="glass-button"
             >
               Sign In to Bid
             </button>
