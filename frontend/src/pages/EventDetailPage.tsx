@@ -194,43 +194,65 @@ export default function EventDetailPage() {
     <div className="max-w-6xl mx-auto px-4 py-8">
       {/* Event Header */}
       <div className="glass-section p-6 mb-8">
-        <div className="flex items-start justify-between mb-4">
-          <div>
-            <div className="flex items-center gap-3 mb-2">
-              <h1 className="text-3xl font-bold text-white">{event.name}</h1>
-              <span className={`text-sm px-3 py-1 rounded-full font-medium ${statusColors[event.status]}`}>
-                {event.status === 'active' ? 'Live Now' : event.status.charAt(0).toUpperCase() + event.status.slice(1)}
-              </span>
-              {event.auctionType === 'silent' && (
-                <span className="text-sm px-3 py-1 rounded-full bg-purple-500/30 text-purple-300 border border-purple-400/30 font-medium">
-                  Silent Auction
+        <div className="flex gap-6 mb-4">
+          {/* Event Image */}
+          {event.coverImageUrl ? (
+            <div className="flex-shrink-0">
+              <img
+                src={event.coverImageUrl}
+                alt={event.name}
+                className="w-32 h-32 md:w-40 md:h-40 object-cover rounded-glass-lg border border-white/20"
+              />
+            </div>
+          ) : (
+            <div className="flex-shrink-0 w-32 h-32 md:w-40 md:h-40 bg-white/5 rounded-glass-lg border border-white/20 flex items-center justify-center">
+              <svg className="w-12 h-12 text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </div>
+          )}
+
+          {/* Event Info */}
+          <div className="flex-1 flex flex-col justify-between">
+            <div>
+              <div className="flex items-center gap-3 mb-2 flex-wrap">
+                <h1 className="text-2xl md:text-3xl font-bold text-white">{event.name}</h1>
+                <span className={`text-sm px-3 py-1 rounded-full font-medium ${statusColors[event.status]}`}>
+                  {event.status === 'active' ? 'Live Now' : event.status.charAt(0).toUpperCase() + event.status.slice(1)}
                 </span>
+                {event.auctionType === 'silent' && (
+                  <span className="text-sm px-3 py-1 rounded-full bg-purple-500/30 text-purple-300 border border-purple-400/30 font-medium">
+                    Silent Auction
+                  </span>
+                )}
+              </div>
+
+              {event.organization && (
+                <Link
+                  to={`/organizations/${event.organization.slug}`}
+                  className="text-purple-400 hover:text-purple-300 hover:underline font-medium"
+                >
+                  {event.organization.name}
+                </Link>
+              )}
+
+              {event.description && (
+                <p className="text-white/70 mt-2 line-clamp-2">{event.description}</p>
               )}
             </div>
 
-            {event.organization && (
-              <Link
-                to={`/organizations/${event.organization.slug}`}
-                className="text-purple-400 hover:text-purple-300 hover:underline font-medium"
-              >
-                {event.organization.name}
-              </Link>
+            {event.isAdmin && (
+              <div className="mt-3">
+                <Link
+                  to={`/events/${slug}/manage`}
+                  className="glass-button text-sm py-2 px-4 inline-block"
+                >
+                  Manage Event
+                </Link>
+              </div>
             )}
           </div>
-
-          {event.isAdmin && (
-            <Link
-              to={`/events/${slug}/manage`}
-              className="glass-button text-sm py-2 px-4"
-            >
-              Manage Event
-            </Link>
-          )}
         </div>
-
-        {event.description && (
-          <p className="text-white/70 mb-4">{event.description}</p>
-        )}
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div>
