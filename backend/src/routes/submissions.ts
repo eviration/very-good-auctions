@@ -673,7 +673,7 @@ router.post(
       for (const img of imagesResult.recordset) {
         const imageId = uuidv4()
         await dbQuery(
-          `INSERT INTO item_images (
+          `INSERT INTO event_item_images (
             id, item_id, blob_url, thumbnail_url, original_filename,
             file_size_bytes, mime_type, display_order, is_primary
            ) VALUES (
