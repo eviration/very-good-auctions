@@ -146,6 +146,9 @@ export default function EventDashboardPage() {
     donorEmail: '',
   })
   const [addingItem, setAddingItem] = useState(false)
+  const [addItemImages, setAddItemImages] = useState<File[]>([])
+  const [addItemUploadProgress, setAddItemUploadProgress] = useState<string | null>(null)
+  const MAX_IMAGES = 12
 
   const fetchData = useCallback(async () => {
     if (!slug) return
@@ -213,6 +216,16 @@ export default function EventDashboardPage() {
     }
   }
 
+  const handleAddItemImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || [])
+    const newImages = [...addItemImages, ...files].slice(0, MAX_IMAGES)
+    setAddItemImages(newImages)
+  }
+
+  const handleRemoveAddItemImage = (index: number) => {
+    setAddItemImages((prev) => prev.filter((_, i) => i !== index))
+  }
+
   const handleAddItem = async () => {
     if (!event || !addItemData.title.trim()) return
 
@@ -228,8 +241,36 @@ export default function EventDashboardPage() {
         donorName: addItemData.donorName.trim() || undefined,
         donorEmail: addItemData.donorEmail.trim() || undefined,
       })
-      // Add the new item to the list with default values for missing fields
-      setItems((prev) => [...prev, { ...newItem, images: [], bids: [] }])
+
+      // Upload images if any
+      const uploadedImages: Array<{ id: string; url: string }> = []
+      if (addItemImages.length > 0) {
+        for (let i = 0; i < addItemImages.length; i++) {
+          setAddItemUploadProgress(`Uploading image ${i + 1} of ${addItemImages.length}...`)
+          try {
+            const result = await apiClient.uploadEventItemImage(event.id, newItem.id, addItemImages[i])
+            uploadedImages.push(result)
+          } catch (err) {
+            console.error(`Failed to upload image ${i + 1}:`, err)
+          }
+        }
+        setAddItemUploadProgress(null)
+      }
+
+      // Add the new item to the list with uploaded images
+      setItems((prev) => [
+        ...prev,
+        {
+          ...newItem,
+          images: uploadedImages.map((img, idx) => ({
+            id: img.id,
+            blobUrl: img.url,
+            displayOrder: idx,
+            isPrimary: idx === 0,
+          })),
+          bids: [],
+        },
+      ])
       setShowAddItemModal(false)
       setAddItemData({
         title: '',
@@ -241,12 +282,14 @@ export default function EventDashboardPage() {
         donorName: '',
         donorEmail: '',
       })
+      setAddItemImages([])
       setSuccessMessage('Item added successfully!')
       setTimeout(() => setSuccessMessage(null), 5000)
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Failed to add item')
     } finally {
       setAddingItem(false)
+      setAddItemUploadProgress(null)
     }
   }
 
@@ -1924,7 +1967,77 @@ export default function EventDashboardPage() {
                   </div>
                 </div>
               </div>
+
+              {/* Image Upload Section */}
+              <div className="border-t border-gray-200 pt-4">
+                <h3 className="text-sm font-medium text-charcoal mb-3">
+                  Item Photos <span className="text-gray-500 font-normal">({addItemImages.length}/{MAX_IMAGES})</span>
+                </h3>
+                <p className="text-xs text-gray-500 mb-3">
+                  Add up to {MAX_IMAGES} photos to showcase your item. The first image will be the primary photo.
+                </p>
+
+                {/* Image Preview Grid */}
+                {addItemImages.length > 0 && (
+                  <div className="grid grid-cols-4 gap-2 mb-3">
+                    {addItemImages.map((file, index) => (
+                      <div key={index} className="relative group aspect-square">
+                        <img
+                          src={URL.createObjectURL(file)}
+                          alt={`Preview ${index + 1}`}
+                          className="w-full h-full object-cover rounded-lg"
+                        />
+                        {index === 0 && (
+                          <span className="absolute top-1 left-1 bg-sage text-white text-xs px-1.5 py-0.5 rounded">
+                            Primary
+                          </span>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveAddItemImage(index)}
+                          className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Add Photo Button */}
+                {addItemImages.length < MAX_IMAGES && (
+                  <label className="flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-sage/30 rounded-lg cursor-pointer hover:border-sage/50 hover:bg-sage/5 transition-colors">
+                    <svg className="w-5 h-5 text-sage" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span className="text-sm font-medium text-sage">Add Photos</span>
+                    <span className="text-xs text-gray-500">({MAX_IMAGES - addItemImages.length} remaining)</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={handleAddItemImageChange}
+                      className="hidden"
+                    />
+                  </label>
+                )}
+              </div>
             </div>
+
+            {/* Upload Progress */}
+            {addItemUploadProgress && (
+              <div className="mt-4 p-3 bg-sage/10 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <svg className="animate-spin h-4 w-4 text-sage" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                  <span className="text-sm text-sage font-medium">{addItemUploadProgress}</span>
+                </div>
+              </div>
+            )}
 
             <div className="flex justify-end gap-3 mt-6">
               <button
@@ -1940,6 +2053,7 @@ export default function EventDashboardPage() {
                     donorName: '',
                     donorEmail: '',
                   })
+                  setAddItemImages([])
                 }}
                 className="px-4 py-2 border border-sage/30 rounded-lg hover:bg-sage/10"
                 disabled={addingItem}
@@ -1951,7 +2065,7 @@ export default function EventDashboardPage() {
                 disabled={!addItemData.title.trim() || addingItem}
                 className="px-4 py-2 bg-sage text-white rounded-lg hover:bg-sage/90 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {addingItem ? 'Adding...' : 'Add Item'}
+                {addingItem ? (addItemUploadProgress ? 'Uploading...' : 'Adding...') : 'Add Item'}
               </button>
             </div>
           </div>
