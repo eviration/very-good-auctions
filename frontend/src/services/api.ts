@@ -627,7 +627,8 @@ class ApiClient {
   }
 
   async getEventItem(eventId: string, itemId: string): Promise<EventItem> {
-    return this.request(`/events/${eventId}/items/${itemId}`)
+    // Backend GET route is at /items/:id
+    return this.request(`/items/${itemId}`)
   }
 
   async getEventItemsAdmin(eventId: string): Promise<EventItem[]> {
@@ -642,14 +643,16 @@ class ApiClient {
   }
 
   async updateEventItem(eventId: string, itemId: string, data: UpdateItemRequest): Promise<EventItem> {
-    return this.request(`/events/${eventId}/items/${itemId}`, {
+    // Backend PUT route is at /items/:id
+    return this.request(`/items/${itemId}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     })
   }
 
   async removeEventItem(eventId: string, itemId: string): Promise<void> {
-    return this.request(`/events/${eventId}/items/${itemId}`, {
+    // Backend DELETE route is at /items/:id, not /events/:eventId/items/:itemId
+    return this.request(`/items/${itemId}`, {
       method: 'DELETE',
     })
   }
@@ -703,7 +706,7 @@ class ApiClient {
     file: File
   ): Promise<{ url: string; id: string }> {
     const formData = new FormData()
-    formData.append('image', file)
+    formData.append('images', file) // Backend expects 'images' field name
 
     const token = this.getAccessToken ? await this.getAccessToken() : null
     const headers: HeadersInit = {}
@@ -711,8 +714,9 @@ class ApiClient {
       headers['Authorization'] = `Bearer ${token}`
     }
 
+    // Backend route is at /items/:id/images, not /events/:eventId/items/:itemId/images
     const response = await fetch(
-      `${API_BASE_URL}/events/${eventId}/items/${itemId}/images`,
+      `${API_BASE_URL}/items/${itemId}/images`,
       {
         method: 'POST',
         headers,
@@ -735,7 +739,8 @@ class ApiClient {
   }
 
   async deleteEventItemImage(eventId: string, itemId: string, imageId: string): Promise<void> {
-    return this.request(`/events/${eventId}/items/${itemId}/images/${imageId}`, {
+    // Backend route is at /items/:id/images/:imageId
+    return this.request(`/items/${itemId}/images/${imageId}`, {
       method: 'DELETE',
     })
   }
