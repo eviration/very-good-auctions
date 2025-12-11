@@ -627,8 +627,8 @@ class ApiClient {
   }
 
   async getEventItem(eventId: string, itemId: string): Promise<EventItem> {
-    // Backend GET route is at /items/:id
-    return this.request(`/items/${itemId}`)
+    // Backend GET route is at /:id (mounted at /api, so /api/:id)
+    return this.request(`/${itemId}`)
   }
 
   async getEventItemsAdmin(eventId: string): Promise<EventItem[]> {
@@ -643,16 +643,16 @@ class ApiClient {
   }
 
   async updateEventItem(eventId: string, itemId: string, data: UpdateItemRequest): Promise<EventItem> {
-    // Backend PUT route is at /items/:id
-    return this.request(`/items/${itemId}`, {
+    // Backend PUT route is at /:id (mounted at /api, so /api/:id)
+    return this.request(`/${itemId}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     })
   }
 
   async removeEventItem(eventId: string, itemId: string): Promise<void> {
-    // Backend DELETE route is at /items/:id, not /events/:eventId/items/:itemId
-    return this.request(`/items/${itemId}`, {
+    // Backend DELETE route is at /:id (mounted at /api, so /api/:id)
+    return this.request(`/${itemId}`, {
       method: 'DELETE',
     })
   }
@@ -714,9 +714,9 @@ class ApiClient {
       headers['Authorization'] = `Bearer ${token}`
     }
 
-    // Backend route is at /items/:id/images, not /events/:eventId/items/:itemId/images
+    // Backend route is at /:id/images (mounted at /api, so /api/:id/images)
     const response = await fetch(
-      `${API_BASE_URL}/items/${itemId}/images`,
+      `${API_BASE_URL}/${itemId}/images`,
       {
         method: 'POST',
         headers,
@@ -739,8 +739,8 @@ class ApiClient {
   }
 
   async deleteEventItemImage(eventId: string, itemId: string, imageId: string): Promise<void> {
-    // Backend route is at /items/:id/images/:imageId
-    return this.request(`/items/${itemId}/images/${imageId}`, {
+    // Backend route is at /:id/images/:imageId (mounted at /api, so /api/:id/images/:imageId)
+    return this.request(`/${itemId}/images/${imageId}`, {
       method: 'DELETE',
     })
   }
