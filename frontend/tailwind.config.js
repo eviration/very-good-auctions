@@ -48,8 +48,8 @@ export default {
           light: '#fb7185',
         },
         charcoal: {
-          DEFAULT: '#f8fafc',
-          light: '#cbd5e1',
+          DEFAULT: '#1f2937',
+          light: '#374151',
         },
       },
       fontFamily: {
