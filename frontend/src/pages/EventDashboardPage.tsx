@@ -48,7 +48,7 @@ export default function EventDashboardPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'items' | 'donations' | 'payments' | 'settings'>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'items' | 'payments' | 'settings'>('overview')
   const [itemFilter, setItemFilter] = useState<'all' | ItemSubmissionStatus>('all')
 
   // Donor submissions state
@@ -532,9 +532,9 @@ export default function EventDashboardPage() {
     }
   }, [event, donorSubmissionFilter])
 
-  // Load donor submissions when switching to donations tab
+  // Load donor submissions when switching to items tab
   useEffect(() => {
-    if (activeTab === 'donations' && event) {
+    if (activeTab === 'items' && event) {
       fetchDonorSubmissions()
     }
   }, [activeTab, event, fetchDonorSubmissions])
@@ -820,25 +820,20 @@ export default function EventDashboardPage() {
       {/* Tabs */}
       <div className="border-b border-sage/20 mb-6">
         <nav className="flex gap-8">
-          {(['overview', 'items', 'donations', ...(showPaymentsTab ? ['payments'] : []), 'settings'] as const).map((tab) => (
+          {(['overview', 'items', ...(showPaymentsTab ? ['payments'] : []), 'settings'] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab as typeof activeTab)}
-              className={`pb-4 text-sm font-medium capitalize border-b-2 transition-colors ${
+              className={`pb-4 text-sm font-medium border-b-2 transition-colors ${
                 activeTab === tab
                   ? 'border-sage text-sage'
                   : 'border-transparent text-gray-500 hover:text-charcoal'
               }`}
             >
-              {tab}
-              {tab === 'items' && pendingCount > 0 && (
+              {tab === 'items' ? 'Auction Items' : tab.charAt(0).toUpperCase() + tab.slice(1)}
+              {tab === 'items' && (pendingCount > 0 || (donorSubmissionStats && donorSubmissionStats.pending > 0)) && (
                 <span className="ml-2 bg-yellow-500 text-white text-xs px-2 py-0.5 rounded-full">
-                  {pendingCount}
-                </span>
-              )}
-              {tab === 'donations' && donorSubmissionStats && donorSubmissionStats.pending > 0 && (
-                <span className="ml-2 bg-purple-500 text-white text-xs px-2 py-0.5 rounded-full">
-                  {donorSubmissionStats.pending}
+                  {pendingCount + (donorSubmissionStats?.pending || 0)}
                 </span>
               )}
               {tab === 'payments' && unpaidCount > 0 && (
@@ -1109,13 +1104,12 @@ export default function EventDashboardPage() {
               </table>
             </div>
           )}
-        </div>
-      )}
 
-      {/* Donations Tab */}
-      {activeTab === 'donations' && (
-        <div className="space-y-6">
-          {/* Donation Link Card */}
+          {/* Public Donations Section */}
+          <div className="mt-8 pt-8 border-t border-sage/20">
+            <h3 className="text-lg font-semibold text-charcoal mb-4">Public Donations</h3>
+
+            {/* Donation Link Card */}
           <div className="bg-white rounded-lg shadow-sm border border-sage/20 p-6">
             <div className="flex items-center justify-between mb-4">
               <div>
@@ -1370,6 +1364,7 @@ export default function EventDashboardPage() {
               </table>
             </div>
           )}
+          </div>
         </div>
       )}
 
