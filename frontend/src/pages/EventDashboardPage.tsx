@@ -1055,8 +1055,8 @@ export default function EventDashboardPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`text-xs px-2 py-1 rounded-full font-medium ${submissionStatusColors[item.submissionStatus]}`}>
-                          {item.submissionStatus.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                        <span className={`text-xs px-2 py-1 rounded-full font-medium ${submissionStatusColors[item.submissionStatus || 'approved']}`}>
+                          {(item.submissionStatus || 'approved').replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
                         </span>
                         {item.rejectionReason && (
                           <div className="text-xs text-gray-500 mt-1 max-w-xs truncate">
