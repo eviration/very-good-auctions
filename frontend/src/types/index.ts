@@ -420,6 +420,7 @@ export interface EventItem {
   title: string
   description?: string
   condition?: string
+  category?: string
   startingPrice?: number
   buyNowPrice?: number
   currentBid?: number
@@ -495,6 +496,7 @@ export interface UpdateItemRequest {
   title?: string
   description?: string
   condition?: string
+  category?: string
   startingPrice?: number
   buyNowPrice?: number
 }

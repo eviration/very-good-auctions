@@ -151,6 +151,18 @@ export default function EventDashboardPage() {
   const [isDraggingImages, setIsDraggingImages] = useState(false)
   const MAX_IMAGES = 12
 
+  // Edit item modal state
+  const [editingItem, setEditingItem] = useState<EventItem | null>(null)
+  const [editItemData, setEditItemData] = useState({
+    title: '',
+    description: '',
+    condition: '',
+    startingPrice: '',
+    buyNowPrice: '',
+    category: '',
+  })
+  const [savingItem, setSavingItem] = useState(false)
+
   const fetchData = useCallback(async () => {
     if (!slug) return
 
@@ -342,6 +354,47 @@ export default function EventDashboardPage() {
     } finally {
       setAddingItem(false)
       setAddItemUploadProgress(null)
+    }
+  }
+
+  const handleOpenEditItem = (item: EventItem) => {
+    setEditingItem(item)
+    setEditItemData({
+      title: item.title || '',
+      description: item.description || '',
+      condition: item.condition || '',
+      startingPrice: item.startingPrice?.toString() || '',
+      buyNowPrice: item.buyNowPrice?.toString() || '',
+      category: item.category || '',
+    })
+  }
+
+  const handleSaveItem = async () => {
+    if (!event || !editingItem || !editItemData.title.trim()) return
+
+    setSavingItem(true)
+    try {
+      const updatedItem = await apiClient.updateEventItem(event.id, editingItem.id, {
+        title: editItemData.title.trim(),
+        description: editItemData.description.trim() || undefined,
+        condition: editItemData.condition.trim() || undefined,
+        startingPrice: editItemData.startingPrice ? parseFloat(editItemData.startingPrice) : undefined,
+        buyNowPrice: editItemData.buyNowPrice ? parseFloat(editItemData.buyNowPrice) : undefined,
+        category: editItemData.category.trim() || undefined,
+      })
+
+      setItems((prev) =>
+        prev.map((item) =>
+          item.id === editingItem.id ? { ...item, ...updatedItem } : item
+        )
+      )
+      setEditingItem(null)
+      setSuccessMessage('Item updated successfully!')
+      setTimeout(() => setSuccessMessage(null), 5000)
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to update item')
+    } finally {
+      setSavingItem(false)
     }
   }
 
@@ -1009,7 +1062,7 @@ export default function EventDashboardPage() {
                 </thead>
                 <tbody className="divide-y divide-sage/10">
                   {filteredItems.map((item) => (
-                    <tr key={item.id}>
+                    <tr key={item.id} className="hover:bg-sage/5 cursor-pointer transition-colors" onClick={() => handleOpenEditItem(item)}>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           {item.images && item.images.length > 0 ? (
@@ -1066,22 +1119,28 @@ export default function EventDashboardPage() {
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleOpenEditItem(item); }}
+                            className="text-blue-600 hover:underline text-sm"
+                          >
+                            Edit
+                          </button>
                           {item.submissionStatus === 'pending' && (
                             <>
                               <button
-                                onClick={() => handleApproveItem(item.id)}
+                                onClick={(e) => { e.stopPropagation(); handleApproveItem(item.id); }}
                                 className="text-green-600 hover:underline text-sm"
                               >
                                 Approve
                               </button>
                               <button
-                                onClick={() => setShowRejectModal(item.id)}
+                                onClick={(e) => { e.stopPropagation(); setShowRejectModal(item.id); }}
                                 className="text-red-600 hover:underline text-sm"
                               >
                                 Reject
                               </button>
                               <button
-                                onClick={() => setShowResubmitModal(item.id)}
+                                onClick={(e) => { e.stopPropagation(); setShowResubmitModal(item.id); }}
                                 className="text-orange-600 hover:underline text-sm"
                               >
                                 Request Changes
@@ -1090,7 +1149,7 @@ export default function EventDashboardPage() {
                           )}
                           {item.submissionStatus === 'approved' && event.status !== 'active' && (
                             <button
-                              onClick={() => handleRemoveItem(item.id)}
+                              onClick={(e) => { e.stopPropagation(); handleRemoveItem(item.id); }}
                               className="text-red-600 hover:underline text-sm"
                             >
                               Remove
@@ -2147,6 +2206,129 @@ export default function EventDashboardPage() {
                 className="px-4 py-2 bg-sage text-white rounded-lg hover:bg-sage/90 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {addingItem ? (addItemUploadProgress ? 'Uploading...' : 'Adding...') : 'Add Item'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Item Modal */}
+      {editingItem && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+            <h2 className="text-lg font-semibold text-charcoal mb-4">Edit Item</h2>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-charcoal mb-1">
+                  Item Title <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={editItemData.title}
+                  onChange={(e) => setEditItemData((prev) => ({ ...prev, title: e.target.value }))}
+                  placeholder="e.g., Vintage Wine Collection"
+                  className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-sage/50"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-charcoal mb-1">Description</label>
+                <textarea
+                  value={editItemData.description}
+                  onChange={(e) => setEditItemData((prev) => ({ ...prev, description: e.target.value }))}
+                  placeholder="Describe the item..."
+                  rows={3}
+                  className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-sage/50"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-charcoal mb-1">Starting Price ($)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={editItemData.startingPrice}
+                    onChange={(e) => setEditItemData((prev) => ({ ...prev, startingPrice: e.target.value }))}
+                    placeholder="0.00"
+                    className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-sage/50"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-charcoal mb-1">Buy Now Price ($)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={editItemData.buyNowPrice}
+                    onChange={(e) => setEditItemData((prev) => ({ ...prev, buyNowPrice: e.target.value }))}
+                    placeholder="0.00"
+                    className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-sage/50"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-charcoal mb-1">Condition</label>
+                  <select
+                    value={editItemData.condition}
+                    onChange={(e) => setEditItemData((prev) => ({ ...prev, condition: e.target.value }))}
+                    className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-sage/50"
+                  >
+                    <option value="">Select condition</option>
+                    <option value="New">New</option>
+                    <option value="Like New">Like New</option>
+                    <option value="Good">Good</option>
+                    <option value="Fair">Fair</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-charcoal mb-1">Category</label>
+                  <input
+                    type="text"
+                    value={editItemData.category}
+                    onChange={(e) => setEditItemData((prev) => ({ ...prev, category: e.target.value }))}
+                    placeholder="e.g., Art, Electronics"
+                    className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-sage/50"
+                  />
+                </div>
+              </div>
+
+              {/* Current Images Display */}
+              {editingItem.images && editingItem.images.length > 0 && (
+                <div className="border-t border-gray-200 pt-4">
+                  <h3 className="text-sm font-medium text-charcoal mb-3">Current Photos</h3>
+                  <div className="flex gap-2 flex-wrap">
+                    {editingItem.images.map((img, idx) => (
+                      <img
+                        key={idx}
+                        src={img.blobUrl}
+                        alt={`Item photo ${idx + 1}`}
+                        className="w-16 h-16 object-cover rounded-lg border border-sage/20"
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                onClick={() => setEditingItem(null)}
+                className="px-4 py-2 border border-sage/30 rounded-lg hover:bg-sage/10"
+                disabled={savingItem}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveItem}
+                disabled={!editItemData.title.trim() || savingItem}
+                className="px-4 py-2 bg-sage text-white rounded-lg hover:bg-sage/90 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {savingItem ? 'Saving...' : 'Save Changes'}
               </button>
             </div>
           </div>
