@@ -1012,7 +1012,7 @@ export default function EventDashboardPage() {
                     <tr key={item.id}>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          {item.images.length > 0 ? (
+                          {item.images && item.images.length > 0 ? (
                             <img
                               src={item.images[0].blobUrl}
                               alt={item.title}
@@ -1468,7 +1468,7 @@ export default function EventDashboardPage() {
                     <tr key={item.id}>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          {item.images.length > 0 ? (
+                          {item.images && item.images.length > 0 ? (
                             <img
                               src={item.images[0].blobUrl}
                               alt={item.title}
