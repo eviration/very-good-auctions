@@ -384,6 +384,102 @@ router.get(
   }
 )
 
+// List ALL items for admin (includes all submission statuses with images)
+router.get(
+  '/events/:eventId/items/all',
+  authenticate,
+  param('eventId').isString(),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { eventId: eventIdOrSlug } = req.params
+      const userId = req.user!.id
+
+      // Resolve event ID from ID or slug
+      const eventId = await resolveEventId(eventIdOrSlug)
+      if (!eventId) {
+        throw notFound('Event not found')
+      }
+
+      // Check admin access
+      const access = await checkEventAccess(eventId, userId)
+      if (!access) {
+        throw forbidden('You do not have permission to view all items')
+      }
+
+      const result = await dbQuery(
+        `SELECT i.*, u.display_name as submitter_name, u.email as submitter_email
+         FROM event_items i
+         LEFT JOIN users u ON i.submitted_by = u.id
+         WHERE i.event_id = @eventId AND i.status != 'removed'
+         ORDER BY i.display_order ASC, i.created_at ASC`,
+        { eventId }
+      )
+
+      // Get images for all items
+      const itemIds = result.recordset.map((i: any) => i.id)
+      let images: any[] = []
+      if (itemIds.length > 0) {
+        const imageResult = await dbQuery(
+          `SELECT * FROM event_item_images
+           WHERE item_id IN (${itemIds.map((_: any, idx: number) => `@id${idx}`).join(',')})
+           ORDER BY display_order ASC`,
+          itemIds.reduce((acc: any, id: string, idx: number) => ({ ...acc, [`id${idx}`]: id }), {})
+        )
+        images = imageResult.recordset
+      }
+
+      const items = result.recordset.map((item: any) => ({
+        id: item.id,
+        eventId: item.event_id,
+        title: item.title,
+        description: item.description,
+        condition: item.condition,
+        category: item.category,
+        startingPrice: item.starting_price ? parseFloat(item.starting_price) : null,
+        buyNowPrice: item.buy_now_price ? parseFloat(item.buy_now_price) : null,
+        currentBid: item.current_bid ? parseFloat(item.current_bid) : null,
+        bidCount: item.bid_count,
+        submissionStatus: item.submission_status,
+        status: item.status,
+        submitter: item.submitted_by ? {
+          id: item.submitted_by,
+          name: item.submitter_name,
+          email: item.submitter_email,
+        } : null,
+        submitterName: item.submitter_name,
+        rejectionReason: item.rejection_reason,
+        allowResubmit: item.allow_resubmit,
+        createdAt: item.created_at,
+        // Winner info
+        winnerId: item.winner_id,
+        winnerName: item.winner_name,
+        winnerEmail: item.winner_email,
+        winningBid: item.winning_bid ? parseFloat(item.winning_bid) : null,
+        // Payment tracking
+        paymentStatus: item.payment_status,
+        paymentConfirmedAt: item.payment_confirmed_at,
+        // Fulfillment tracking
+        fulfillmentStatus: item.fulfillment_status,
+        fulfillmentType: item.fulfillment_type,
+        trackingNumber: item.tracking_number,
+        trackingCarrier: item.tracking_carrier,
+        images: images
+          .filter((img: any) => img.item_id === item.id)
+          .map((img: any) => ({
+            id: img.id,
+            blobUrl: img.blob_url,
+            displayOrder: img.display_order,
+            isPrimary: img.is_primary,
+          })),
+      }))
+
+      res.json(items)
+    } catch (error) {
+      next(error)
+    }
+  }
+)
+
 // Get user's submissions for an event
 router.get(
   '/events/:eventId/items/my-submissions',

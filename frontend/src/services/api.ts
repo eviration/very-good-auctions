@@ -630,6 +630,10 @@ class ApiClient {
     return this.request(`/events/${eventId}/items/${itemId}`)
   }
 
+  async getEventItemsAdmin(eventId: string): Promise<EventItem[]> {
+    return this.request(`/events/${eventId}/items/all`)
+  }
+
   async submitEventItem(eventId: string, data: SubmitItemRequest): Promise<EventItem> {
     return this.request(`/events/${eventId}/items`, {
       method: 'POST',

@@ -162,6 +162,9 @@ export default function EventDashboardPage() {
     category: '',
   })
   const [savingItem, setSavingItem] = useState(false)
+  const [editItemNewImages, setEditItemNewImages] = useState<{ file: File; previewUrl: string }[]>([])
+  const [editItemImagesToDelete, setEditItemImagesToDelete] = useState<string[]>([])
+  const editItemFileInputRef = useRef<HTMLInputElement>(null)
 
   const fetchData = useCallback(async () => {
     if (!slug) return
@@ -170,7 +173,7 @@ export default function EventDashboardPage() {
       setLoading(true)
       const [eventData, itemsData] = await Promise.all([
         apiClient.getEvent(slug),
-        apiClient.getEventItems(slug).catch(() => []),
+        apiClient.getEventItemsAdmin(slug).catch(() => []),
       ])
 
       if (!eventData.isAdmin) {
@@ -367,6 +370,9 @@ export default function EventDashboardPage() {
       buyNowPrice: item.buyNowPrice?.toString() || '',
       category: item.category || '',
     })
+    // Reset image states
+    setEditItemNewImages([])
+    setEditItemImagesToDelete([])
   }
 
   const handleSaveItem = async () => {
@@ -374,6 +380,7 @@ export default function EventDashboardPage() {
 
     setSavingItem(true)
     try {
+      // Update item data
       const updatedItem = await apiClient.updateEventItem(event.id, editingItem.id, {
         title: editItemData.title.trim(),
         description: editItemData.description.trim() || undefined,
@@ -383,12 +390,51 @@ export default function EventDashboardPage() {
         category: editItemData.category.trim() || undefined,
       })
 
+      // Delete images marked for deletion
+      for (const imageId of editItemImagesToDelete) {
+        try {
+          await apiClient.deleteEventItemImage(event.id, editingItem.id, imageId)
+        } catch (err) {
+          console.error('Failed to delete image:', err)
+        }
+      }
+
+      // Upload new images
+      const uploadedImages: { id: string; url: string }[] = []
+      for (const { file } of editItemNewImages) {
+        try {
+          const result = await apiClient.uploadEventItemImage(event.id, editingItem.id, file)
+          uploadedImages.push({ id: result.id, url: result.url })
+        } catch (err) {
+          console.error('Failed to upload image:', err)
+        }
+      }
+
+      // Update local state with new images
+      const remainingImages = (editingItem.images || []).filter(
+        (img) => !editItemImagesToDelete.includes(img.id)
+      )
+      const newImages = uploadedImages.map((img, idx) => ({
+        id: img.id,
+        blobUrl: img.url,
+        displayOrder: remainingImages.length + idx,
+        isPrimary: remainingImages.length === 0 && idx === 0,
+      }))
+
       setItems((prev) =>
         prev.map((item) =>
-          item.id === editingItem.id ? { ...item, ...updatedItem } : item
+          item.id === editingItem.id
+            ? { ...item, ...updatedItem, images: [...remainingImages, ...newImages] }
+            : item
         )
       )
+
+      // Clean up preview URLs
+      editItemNewImages.forEach(({ previewUrl }) => URL.revokeObjectURL(previewUrl))
+
       setEditingItem(null)
+      setEditItemNewImages([])
+      setEditItemImagesToDelete([])
       setSuccessMessage('Item updated successfully!')
       setTimeout(() => setSuccessMessage(null), 5000)
     } catch (err) {
@@ -2297,22 +2343,107 @@ export default function EventDashboardPage() {
                 </div>
               </div>
 
-              {/* Current Images Display */}
-              {editingItem.images && editingItem.images.length > 0 && (
-                <div className="border-t border-gray-200 pt-4">
-                  <h3 className="text-sm font-medium text-charcoal mb-3">Current Photos</h3>
-                  <div className="flex gap-2 flex-wrap">
-                    {editingItem.images.map((img, idx) => (
-                      <img
-                        key={idx}
-                        src={img.blobUrl}
-                        alt={`Item photo ${idx + 1}`}
-                        className="w-16 h-16 object-cover rounded-lg border border-sage/20"
-                      />
-                    ))}
+              {/* Photos Section */}
+              <div className="border-t border-gray-200 pt-4">
+                <h3 className="text-sm font-medium text-charcoal mb-3">Photos</h3>
+
+                {/* Current Images */}
+                {editingItem.images && editingItem.images.length > 0 && (
+                  <div className="mb-4">
+                    <p className="text-xs text-gray-500 mb-2">Current photos (click X to remove)</p>
+                    <div className="flex gap-2 flex-wrap">
+                      {editingItem.images
+                        .filter((img) => !editItemImagesToDelete.includes(img.id))
+                        .map((img, idx) => (
+                          <div key={img.id} className="relative group">
+                            <img
+                              src={img.blobUrl}
+                              alt={`Item photo ${idx + 1}`}
+                              className="w-16 h-16 object-cover rounded-lg border border-sage/20"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setEditItemImagesToDelete((prev) => [...prev, img.id])}
+                              className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              &times;
+                            </button>
+                          </div>
+                        ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+
+                {/* Pending deletions indicator */}
+                {editItemImagesToDelete.length > 0 && (
+                  <p className="text-xs text-amber-600 mb-2">
+                    {editItemImagesToDelete.length} photo(s) will be removed when you save
+                  </p>
+                )}
+
+                {/* New Images to Upload */}
+                {editItemNewImages.length > 0 && (
+                  <div className="mb-4">
+                    <p className="text-xs text-gray-500 mb-2">New photos to upload</p>
+                    <div className="flex gap-2 flex-wrap">
+                      {editItemNewImages.map((img, idx) => (
+                        <div key={idx} className="relative group">
+                          <img
+                            src={img.previewUrl}
+                            alt={`New photo ${idx + 1}`}
+                            className="w-16 h-16 object-cover rounded-lg border-2 border-sage/40"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              URL.revokeObjectURL(img.previewUrl)
+                              setEditItemNewImages((prev) => prev.filter((_, i) => i !== idx))
+                            }}
+                            className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            &times;
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Add Photos Button */}
+                <input
+                  ref={editItemFileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/gif,image/webp"
+                  multiple
+                  className="hidden"
+                  onChange={(e) => {
+                    const files = Array.from(e.target.files || [])
+                    const currentCount = (editingItem.images?.length || 0) - editItemImagesToDelete.length + editItemNewImages.length
+                    const remainingSlots = MAX_IMAGES - currentCount
+                    const filesToAdd = files.slice(0, remainingSlots)
+
+                    const newImages = filesToAdd.map((file) => ({
+                      file,
+                      previewUrl: URL.createObjectURL(file),
+                    }))
+                    setEditItemNewImages((prev) => [...prev, ...newImages])
+                    e.target.value = ''
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => editItemFileInputRef.current?.click()}
+                  disabled={
+                    (editingItem.images?.length || 0) - editItemImagesToDelete.length + editItemNewImages.length >= MAX_IMAGES
+                  }
+                  className="px-4 py-2 border border-dashed border-sage/40 rounded-lg text-sage hover:bg-sage/5 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                >
+                  + Add Photos
+                </button>
+                <p className="text-xs text-gray-500 mt-1">
+                  {(editingItem.images?.length || 0) - editItemImagesToDelete.length + editItemNewImages.length} / {MAX_IMAGES} photos
+                </p>
+              </div>
             </div>
 
             <div className="flex justify-end gap-3 mt-6">
