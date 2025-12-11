@@ -148,6 +148,7 @@ export default function EventDashboardPage() {
   const [addingItem, setAddingItem] = useState(false)
   const [addItemImages, setAddItemImages] = useState<File[]>([])
   const [addItemUploadProgress, setAddItemUploadProgress] = useState<string | null>(null)
+  const [isDraggingImages, setIsDraggingImages] = useState(false)
   const MAX_IMAGES = 12
 
   const fetchData = useCallback(async () => {
@@ -218,12 +219,63 @@ export default function EventDashboardPage() {
 
   const handleAddItemImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
-    const newImages = [...addItemImages, ...files].slice(0, MAX_IMAGES)
+    addImagesToList(files)
+  }
+
+  const addImagesToList = (files: File[]) => {
+    const imageFiles = files.filter((file) => file.type.startsWith('image/'))
+    if (imageFiles.length === 0) return
+    const newImages = [...addItemImages, ...imageFiles].slice(0, MAX_IMAGES)
     setAddItemImages(newImages)
   }
 
   const handleRemoveAddItemImage = (index: number) => {
     setAddItemImages((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  // Handle paste event for images
+  const handleImagePaste = (e: React.ClipboardEvent) => {
+    const items = e.clipboardData?.items
+    if (!items) return
+
+    const files: File[] = []
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i]
+      if (item.type.startsWith('image/')) {
+        const file = item.getAsFile()
+        if (file) files.push(file)
+      }
+    }
+    if (files.length > 0) {
+      e.preventDefault()
+      addImagesToList(files)
+    }
+  }
+
+  // Handle drag events for images
+  const handleImageDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (addItemImages.length < MAX_IMAGES) {
+      setIsDraggingImages(true)
+    }
+  }
+
+  const handleImageDragLeave = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDraggingImages(false)
+  }
+
+  const handleImageDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDraggingImages(false)
+
+    if (addItemImages.length >= MAX_IMAGES) return
+
+    const files = Array.from(e.dataTransfer.files)
+    addImagesToList(files)
   }
 
   const handleAddItem = async () => {
@@ -1969,60 +2021,94 @@ export default function EventDashboardPage() {
               </div>
 
               {/* Image Upload Section */}
-              <div className="border-t border-gray-200 pt-4">
+              <div
+                className="border-t border-gray-200 pt-4"
+                onPaste={handleImagePaste}
+              >
                 <h3 className="text-sm font-medium text-charcoal mb-3">
                   Item Photos <span className="text-gray-500 font-normal">({addItemImages.length}/{MAX_IMAGES})</span>
                 </h3>
                 <p className="text-xs text-gray-500 mb-3">
-                  Add up to {MAX_IMAGES} photos to showcase your item. The first image will be the primary photo.
+                  Add up to {MAX_IMAGES} photos. Drag & drop, paste from clipboard, or click to browse.
                 </p>
 
-                {/* Image Preview Grid */}
-                {addItemImages.length > 0 && (
-                  <div className="grid grid-cols-4 gap-2 mb-3">
-                    {addItemImages.map((file, index) => (
-                      <div key={index} className="relative group aspect-square">
-                        <img
-                          src={URL.createObjectURL(file)}
-                          alt={`Preview ${index + 1}`}
-                          className="w-full h-full object-cover rounded-lg"
-                        />
-                        {index === 0 && (
-                          <span className="absolute top-1 left-1 bg-sage text-white text-xs px-1.5 py-0.5 rounded">
-                            Primary
-                          </span>
-                        )}
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveAddItemImage(index)}
-                          className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </button>
+                {/* Drop Zone with Image Preview Grid */}
+                <div
+                  onDragOver={handleImageDragOver}
+                  onDragLeave={handleImageDragLeave}
+                  onDrop={handleImageDrop}
+                  className={`relative rounded-lg border-2 border-dashed transition-all ${
+                    isDraggingImages
+                      ? 'border-sage bg-sage/10 scale-[1.02]'
+                      : 'border-sage/30'
+                  }`}
+                >
+                  {/* Drag overlay */}
+                  {isDraggingImages && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-sage/10 rounded-lg z-10">
+                      <div className="text-center">
+                        <svg className="w-12 h-12 text-sage mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                        </svg>
+                        <p className="text-sage font-semibold">Drop images here</p>
                       </div>
-                    ))}
-                  </div>
-                )}
+                    </div>
+                  )}
 
-                {/* Add Photo Button */}
-                {addItemImages.length < MAX_IMAGES && (
-                  <label className="flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-sage/30 rounded-lg cursor-pointer hover:border-sage/50 hover:bg-sage/5 transition-colors">
-                    <svg className="w-5 h-5 text-sage" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    <span className="text-sm font-medium text-sage">Add Photos</span>
-                    <span className="text-xs text-gray-500">({MAX_IMAGES - addItemImages.length} remaining)</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      onChange={handleAddItemImageChange}
-                      className="hidden"
-                    />
-                  </label>
-                )}
+                  {/* Image Preview Grid */}
+                  {addItemImages.length > 0 && (
+                    <div className="grid grid-cols-4 gap-2 p-3">
+                      {addItemImages.map((file, index) => (
+                        <div key={index} className="relative group aspect-square">
+                          <img
+                            src={URL.createObjectURL(file)}
+                            alt={`Preview ${index + 1}`}
+                            className="w-full h-full object-cover rounded-lg"
+                          />
+                          {index === 0 && (
+                            <span className="absolute top-1 left-1 bg-sage text-white text-xs px-1.5 py-0.5 rounded">
+                              Primary
+                            </span>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveAddItemImage(index)}
+                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Add Photo Button / Drop Zone */}
+                  {addItemImages.length < MAX_IMAGES && (
+                    <label className={`flex flex-col items-center justify-center gap-2 px-4 cursor-pointer hover:bg-sage/5 transition-colors ${addItemImages.length > 0 ? 'py-4 border-t border-sage/20' : 'py-8'}`}>
+                      <svg className="w-8 h-8 text-sage/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <div className="text-center">
+                        <span className="text-sm font-medium text-sage">Click to add photos</span>
+                        <span className="block text-xs text-gray-500 mt-1">
+                          or drag & drop, or paste (Ctrl+V)
+                        </span>
+                        <span className="block text-xs text-gray-400 mt-1">
+                          {MAX_IMAGES - addItemImages.length} remaining
+                        </span>
+                      </div>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={handleAddItemImageChange}
+                        className="hidden"
+                      />
+                    </label>
+                  )}
+                </div>
               </div>
             </div>
 
