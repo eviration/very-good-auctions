@@ -67,6 +67,17 @@ body::before {
   @apply outline-none ring-2 ring-purple-500 ring-offset-2 ring-offset-glass-bg;
 }
 
+/* Fix text color in white-background containers (modals, dropdowns, etc.) */
+.bg-white {
+  @apply text-gray-900;
+}
+
+.bg-white input,
+.bg-white textarea,
+.bg-white select {
+  @apply text-gray-900;
+}
+
 /* Skip link */
 .skip-link {
   @apply absolute -top-full left-1/2 -translate-x-1/2 px-4 py-2 rounded-glass font-bold z-[10000] transition-all;
