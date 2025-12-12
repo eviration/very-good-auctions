@@ -49,7 +49,13 @@ export default function NotificationBell() {
       console.log('Notifications fetch result:', {
         count: result.notifications.length,
         unreadCount: result.unreadCount,
-        total: result.total
+        total: result.total,
+        notifications: result.notifications.map((n) => ({
+          id: n.id,
+          type: n.type,
+          title: n.title,
+          readAt: n.readAt,
+        })),
       })
       setNotifications(result.notifications)
       setUnreadCount(result.unreadCount)
