@@ -2721,22 +2721,100 @@ export default function EventDashboardPage() {
       {/* Donation Settings Modal */}
       {showDonationSettingsModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-4">
+          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
             <h2 className="text-lg font-semibold text-charcoal mb-4">Donation Settings</h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-charcoal mb-1">Donation Link</label>
-                <input
-                  type="text"
-                  readOnly
-                  value={donationSettings?.code ? `${window.location.origin}/donate/${donationSettings.code}` : ''}
-                  className="w-full px-4 py-2 border border-sage/30 rounded-lg bg-gray-50 font-mono text-sm"
-                />
+            <p className="text-gray-600 mb-4">
+              Share this link or QR code with people who want to donate items to your auction.
+            </p>
+
+            {donationSettings?.code ? (
+              <div className="space-y-4">
+                {/* QR Code */}
+                <div className="flex flex-col items-center py-4 bg-gray-50 rounded-lg">
+                  <div id="donation-qr-code-container" className="bg-white p-4 rounded-lg shadow-sm">
+                    <QRCodeSVG
+                      value={`${window.location.origin}/donate/${donationSettings.code}`}
+                      size={180}
+                      level="H"
+                      includeMargin={true}
+                    />
+                  </div>
+                  <p className="text-sm text-gray-500 mt-3">Scan to donate items</p>
+                  <button
+                    onClick={() => {
+                      const svg = document.querySelector('#donation-qr-code-container svg')
+                      if (svg) {
+                        const svgData = new XMLSerializer().serializeToString(svg)
+                        const canvas = document.createElement('canvas')
+                        const ctx = canvas.getContext('2d')
+                        const img = new Image()
+                        img.onload = () => {
+                          canvas.width = img.width
+                          canvas.height = img.height
+                          ctx?.drawImage(img, 0, 0)
+                          const pngUrl = canvas.toDataURL('image/png')
+                          const downloadLink = document.createElement('a')
+                          downloadLink.href = pngUrl
+                          downloadLink.download = `${event?.name || 'auction'}-donation-qr.png`
+                          document.body.appendChild(downloadLink)
+                          downloadLink.click()
+                          document.body.removeChild(downloadLink)
+                        }
+                        img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)))
+                      }
+                    }}
+                    className="mt-3 px-4 py-2 text-sm bg-sage text-white rounded-lg hover:bg-sage/90 inline-flex items-center gap-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    Download QR Code
+                  </button>
+                </div>
+
+                <div className="border-t border-gray-200 pt-4">
+                  <label className="block text-sm font-medium text-charcoal mb-1">Donation URL</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      readOnly
+                      value={`${window.location.origin}/donate/${donationSettings.code}`}
+                      className="flex-1 px-4 py-2 border border-sage/30 rounded-lg bg-gray-50 text-sm font-mono"
+                    />
+                    <button
+                      onClick={() => copyToClipboard(`${window.location.origin}/donate/${donationSettings.code}`)}
+                      className="px-4 py-2 bg-sage text-white rounded-lg hover:bg-sage/90"
+                    >
+                      Copy
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-charcoal mb-1">Access Code</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      readOnly
+                      value={donationSettings.code}
+                      className="flex-1 px-4 py-2 border border-sage/30 rounded-lg bg-gray-50 text-sm font-mono tracking-wider"
+                    />
+                    <button
+                      onClick={() => copyToClipboard(donationSettings.code!)}
+                      className="px-4 py-2 bg-sage text-white rounded-lg hover:bg-sage/90"
+                    >
+                      Copy
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">Donors can also enter this code manually at the donate page</p>
+                </div>
               </div>
-              <div className="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-lg text-sm">
-                <strong>Note:</strong> More donation settings (instructions, required fields, etc.) can be configured in the event settings.
+            ) : (
+              <div className="bg-gray-50 rounded-lg p-4 text-center text-gray-500">
+                Enable donations to get a shareable link and QR code.
               </div>
-            </div>
+            )}
+
             <div className="flex justify-end gap-4 mt-6">
               <button
                 onClick={() => setShowDonationSettingsModal(false)}
