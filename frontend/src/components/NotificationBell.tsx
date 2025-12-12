@@ -35,6 +35,7 @@ export default function NotificationBell() {
   const fetchUnreadCount = async () => {
     try {
       const result = await apiClient.getUnreadNotificationCount()
+      console.log('Unread count:', result.unreadCount)
       setUnreadCount(result.unreadCount)
     } catch (error) {
       console.error('Failed to fetch unread count:', error)
@@ -45,6 +46,11 @@ export default function NotificationBell() {
     setLoading(true)
     try {
       const result = await apiClient.getNotifications({ limit: 10 })
+      console.log('Notifications fetch result:', {
+        count: result.notifications.length,
+        unreadCount: result.unreadCount,
+        total: result.total
+      })
       setNotifications(result.notifications)
       setUnreadCount(result.unreadCount)
     } catch (error) {
@@ -117,7 +123,7 @@ export default function NotificationBell() {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={handleBellClick}
-        className="relative p-2 text-charcoal hover:text-sage transition-colors"
+        className="relative p-2 text-white hover:text-sage transition-colors"
         aria-label="Notifications"
       >
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
