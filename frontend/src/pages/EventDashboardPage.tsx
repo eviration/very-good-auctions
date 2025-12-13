@@ -836,44 +836,73 @@ export default function EventDashboardPage() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <Link to="/my-events" className="text-sage hover:underline">
-            &larr; Back to My Events
-          </Link>
-          <h1 className="text-2xl font-bold text-white mt-2">{event.name}</h1>
-          <div className="flex items-center gap-3 mt-1">
-            <span className={`text-xs px-2 py-1 rounded-full font-medium ${statusColors[event.status]}`}>
-              {event.status.charAt(0).toUpperCase() + event.status.slice(1)}
-            </span>
-            {event.organization && (
-              <span className="text-white/70">{event.organization.name}</span>
-            )}
+      {/* Header with Cover Image */}
+      <div className="glass-section overflow-hidden mb-6">
+        {/* Banner Image */}
+        {event.coverImageUrl && (
+          <div className="relative h-32 md:h-40 -m-8 mb-0 rounded-t-glass-xl overflow-hidden">
+            <img
+              src={event.coverImageUrl}
+              alt={event.name}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
           </div>
-        </div>
+        )}
 
-        <div className="flex gap-3">
-          <button
-            onClick={handleGetSubmissionLink}
-            className="px-4 py-2 border border-sage text-sage rounded-lg hover:bg-sage/10"
-          >
-            Share Submission Link
-          </button>
-          {event.status === 'draft' && (
-            <button
-              onClick={handlePublish}
-              className="px-4 py-2 bg-sage text-white rounded-lg hover:bg-sage/90"
-            >
-              Publish Event
-            </button>
-          )}
-          <Link
-            to={`/events/${slug}`}
-            className="px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50"
-          >
-            View Public Page
-          </Link>
+        <div className={event.coverImageUrl ? 'p-6' : 'p-6 -m-8'}>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <Link to="/my-events" className="text-sage hover:underline text-sm">
+                &larr; Back to My Events
+              </Link>
+              <h1 className="text-2xl font-bold text-white mt-2">{event.name}</h1>
+              <div className="flex items-center gap-3 mt-1 flex-wrap">
+                <span className={`text-xs px-2 py-1 rounded-full font-medium ${statusColors[event.status]}`}>
+                  {event.status.charAt(0).toUpperCase() + event.status.slice(1)}
+                </span>
+                {event.organization && (
+                  <span className="inline-flex items-center gap-2 text-white/70">
+                    {event.organization.logoUrl ? (
+                      <img
+                        src={event.organization.logoUrl}
+                        alt={event.organization.name}
+                        className="w-5 h-5 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-5 h-5 rounded-full bg-purple-500/30 flex items-center justify-center text-xs font-bold text-purple-300">
+                        {event.organization.name.charAt(0)}
+                      </div>
+                    )}
+                    {event.organization.name}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <div className="flex gap-3 flex-wrap">
+              <button
+                onClick={handleGetSubmissionLink}
+                className="px-4 py-2 border border-sage text-sage rounded-lg hover:bg-sage/10"
+              >
+                Share Submission Link
+              </button>
+              {event.status === 'draft' && (
+                <button
+                  onClick={handlePublish}
+                  className="px-4 py-2 bg-sage text-white rounded-lg hover:bg-sage/90"
+                >
+                  Publish Event
+                </button>
+              )}
+              <Link
+                to={`/events/${slug}`}
+                className="px-4 py-2 border border-white/20 text-white/80 rounded-lg hover:bg-white/10"
+              >
+                View Public Page
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
 
