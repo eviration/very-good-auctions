@@ -758,7 +758,7 @@ class ApiClient {
 
   // Event Bids
   async getEventItemBids(eventId: string, itemId: string): Promise<EventItemBid[]> {
-    return this.request(`/events/${eventId}/items/${itemId}/bids`)
+    return this.request(`/event-items/${itemId}/bids`)
   }
 
   async placeEventBid(
@@ -766,19 +766,19 @@ class ApiClient {
     itemId: string,
     data: { amount: number; accessCode?: string }
   ): Promise<EventItemBid> {
-    return this.request(`/events/${eventId}/items/${itemId}/bids`, {
+    return this.request(`/event-items/${itemId}/bids`, {
       method: 'POST',
       body: JSON.stringify(data),
     })
   }
 
   async getCurrentBidInfo(eventId: string, itemId: string): Promise<CurrentBidInfo> {
-    return this.request(`/events/${eventId}/items/${itemId}/current-bid`)
+    return this.request(`/event-items/${itemId}/current-bid`)
   }
 
   // Silent Bids
   async getSilentBidStatus(eventId: string, itemId: string): Promise<SilentBidStatus> {
-    return this.request(`/events/${eventId}/items/${itemId}/silent-bid`)
+    return this.request(`/event-items/${itemId}/my-bid`)
   }
 
   async placeSilentBid(
@@ -786,7 +786,7 @@ class ApiClient {
     itemId: string,
     data: { amount: number; notifyOnOutbid?: boolean; accessCode?: string }
   ): Promise<SilentBidStatus> {
-    return this.request(`/events/${eventId}/items/${itemId}/silent-bid`, {
+    return this.request(`/event-items/${itemId}/silent-bids`, {
       method: 'POST',
       body: JSON.stringify(data),
     })
@@ -797,7 +797,7 @@ class ApiClient {
     itemId: string,
     data: { increaseBy: number }
   ): Promise<SilentBidStatus> {
-    return this.request(`/events/${eventId}/items/${itemId}/silent-bid/increase`, {
+    return this.request(`/event-items/${itemId}/silent-bids`, {
       method: 'POST',
       body: JSON.stringify(data),
     })
@@ -809,7 +809,7 @@ class ApiClient {
     itemId: string,
     data: { accessCode?: string }
   ): Promise<{ success: boolean; item: EventItem }> {
-    return this.request(`/events/${eventId}/items/${itemId}/buy-now`, {
+    return this.request(`/event-items/${itemId}/buy-now`, {
       method: 'POST',
       body: JSON.stringify(data),
     })
