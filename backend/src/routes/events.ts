@@ -472,7 +472,7 @@ router.get(
 
       // Get events with pagination
       const result = await dbQuery(
-        `SELECT e.*, o.name as organization_name, o.slug as organization_slug,
+        `SELECT e.*, o.name as organization_name, o.slug as organization_slug, o.logo_url as organization_logo_url,
                 u.display_name as owner_name
          FROM auction_events e
          LEFT JOIN organizations o ON e.organization_id = o.id
@@ -495,6 +495,7 @@ router.get(
           id: e.organization_id,
           name: e.organization_name,
           slug: e.organization_slug,
+          logoUrl: e.organization_logo_url,
         } : null,
         owner: e.owner_id ? {
           id: e.owner_id,
@@ -538,7 +539,7 @@ router.get(
       const isId = isUUID(idOrSlug)
 
       const result = await dbQuery(
-        `SELECT e.*, o.name as organization_name, o.slug as organization_slug,
+        `SELECT e.*, o.name as organization_name, o.slug as organization_slug, o.logo_url as organization_logo_url,
                 u.display_name as owner_name, u.display_name as creator_name
          FROM auction_events e
          LEFT JOIN organizations o ON e.organization_id = o.id
@@ -580,6 +581,7 @@ router.get(
           id: event.organization_id,
           name: event.organization_name,
           slug: event.organization_slug,
+          logoUrl: event.organization_logo_url,
         } : null,
         owner: event.owner_id ? {
           id: event.owner_id,
@@ -650,7 +652,7 @@ router.get(
       }
 
       const result = await dbQuery(
-        `SELECT e.*, o.name as organization_name, o.slug as organization_slug,
+        `SELECT e.*, o.name as organization_name, o.slug as organization_slug, o.logo_url as organization_logo_url,
                 u.display_name as owner_name
          FROM auction_events e
          LEFT JOIN organizations o ON e.organization_id = o.id
@@ -692,6 +694,7 @@ router.get(
           id: event.organization_id,
           name: event.organization_name,
           slug: event.organization_slug,
+          logoUrl: event.organization_logo_url,
         } : null,
         owner: event.owner_id ? {
           id: event.owner_id,
@@ -1131,7 +1134,7 @@ router.get(
 
       // Get events owned directly by user or through organizations they manage
       const result = await dbQuery(
-        `SELECT e.*, o.name as organization_name, o.slug as organization_slug,
+        `SELECT e.*, o.name as organization_name, o.slug as organization_slug, o.logo_url as organization_logo_url,
                 'owner' as user_role
          FROM auction_events e
          LEFT JOIN organizations o ON e.organization_id = o.id
@@ -1139,7 +1142,7 @@ router.get(
 
          UNION
 
-         SELECT e.*, o.name as organization_name, o.slug as organization_slug,
+         SELECT e.*, o.name as organization_name, o.slug as organization_slug, o.logo_url as organization_logo_url,
                 m.role as user_role
          FROM auction_events e
          INNER JOIN organizations o ON e.organization_id = o.id
@@ -1160,6 +1163,7 @@ router.get(
           id: e.organization_id,
           name: e.organization_name,
           slug: e.organization_slug,
+          logoUrl: e.organization_logo_url,
         } : null,
         startTime: e.start_time,
         endTime: e.end_time,

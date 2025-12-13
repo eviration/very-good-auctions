@@ -149,12 +149,29 @@ export default function MyEventsPage() {
               <Link
                 key={event.id}
                 to={`/events/${event.slug}/manage`}
-                className="block glass-section p-6 hover:bg-white/15 transition-colors"
+                className="block glass-section p-4 hover:bg-white/15 transition-colors"
               >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
+                <div className="flex items-start gap-4">
+                  {/* Event Thumbnail */}
+                  <div className="w-24 h-24 md:w-32 md:h-24 flex-shrink-0 rounded-lg overflow-hidden bg-white/10">
+                    {event.coverImageUrl ? (
+                      <img
+                        src={event.coverImageUrl}
+                        alt={event.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-purple-500/20 to-pink-500/20">
+                        <svg className="w-8 h-8 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3 mb-2 flex-wrap">
-                      <h2 className="text-xl font-bold text-white">{event.name}</h2>
+                      <h2 className="text-xl font-bold text-white truncate">{event.name}</h2>
                       <span className={`px-2 py-1 rounded text-xs font-semibold ${statusConfig[event.status].color}`}>
                         {statusConfig[event.status].label}
                       </span>
@@ -195,7 +212,8 @@ export default function MyEventsPage() {
                     </div>
                   </div>
 
-                  <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0 ml-4">
+                  {/* Arrow Icon */}
+                  <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0 self-center">
                     <svg
                       className="w-5 h-5 text-white"
                       fill="none"

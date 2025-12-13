@@ -301,6 +301,7 @@ export interface AuctionEvent {
     id: string
     name: string
     slug: string
+    logoUrl?: string
   }
   owner?: {
     id: string

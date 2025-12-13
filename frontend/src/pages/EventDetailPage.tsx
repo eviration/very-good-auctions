@@ -224,9 +224,20 @@ export default function EventDetailPage() {
             {event.organization && (
               <Link
                 to={`/organizations/${event.organization.slug}`}
-                className="text-purple-400 hover:text-purple-300 hover:underline font-medium"
+                className="inline-flex items-center gap-2 text-purple-400 hover:text-purple-300 font-medium group"
               >
-                {event.organization.name}
+                {event.organization.logoUrl ? (
+                  <img
+                    src={event.organization.logoUrl}
+                    alt={event.organization.name}
+                    className="w-6 h-6 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-6 h-6 rounded-full bg-purple-500/30 flex items-center justify-center text-xs font-bold">
+                    {event.organization.name.charAt(0)}
+                  </div>
+                )}
+                <span className="group-hover:underline">{event.organization.name}</span>
               </Link>
             )}
 
