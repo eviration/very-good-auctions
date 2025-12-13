@@ -188,7 +188,7 @@ export default function TaxInformationPage() {
         </button>
       </div>
 
-      <h1 className="text-3xl font-bold text-charcoal mb-2">Tax Information</h1>
+      <h1 className="text-3xl font-bold text-white mb-2">Tax Information</h1>
       <p className="text-gray-600 mb-8">
         Manage your tax documentation for IRS reporting requirements.
       </p>
@@ -222,7 +222,7 @@ export default function TaxInformationPage() {
 
       {showW9Form ? (
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-          <h2 className="text-xl font-semibold text-charcoal mb-6">Submit W-9 Form</h2>
+          <h2 className="text-xl font-semibold text-white mb-6">Submit W-9 Form</h2>
           <W9Form onSubmit={handleW9Submit} onCancel={() => setShowW9Form(false)} />
         </div>
       ) : (
@@ -230,7 +230,7 @@ export default function TaxInformationPage() {
           {/* Current Status */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold text-charcoal">W-9 Status</h2>
+              <h2 className="text-xl font-semibold text-white">W-9 Status</h2>
               {getStatusBadge(taxStatus?.status || 'not_submitted')}
             </div>
 
@@ -239,29 +239,29 @@ export default function TaxInformationPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-gray-500">Legal Name</p>
-                    <p className="font-medium text-charcoal">{taxInfo.legalName}</p>
+                    <p className="font-medium text-white">{taxInfo.legalName}</p>
                   </div>
                   {taxInfo.businessName && (
                     <div>
                       <p className="text-sm text-gray-500">Business Name</p>
-                      <p className="font-medium text-charcoal">{taxInfo.businessName}</p>
+                      <p className="font-medium text-white">{taxInfo.businessName}</p>
                     </div>
                   )}
                   <div>
                     <p className="text-sm text-gray-500">Tax Classification</p>
-                    <p className="font-medium text-charcoal">
+                    <p className="font-medium text-white">
                       {TAX_CLASSIFICATION_LABELS[taxInfo.taxClassification] || taxInfo.taxClassification}
                     </p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Tax ID ({taxInfo.tinType.toUpperCase()})</p>
-                    <p className="font-medium text-charcoal font-mono">
+                    <p className="font-medium text-white font-mono">
                       {taxInfo.tinType === 'ssn' ? `***-**-${taxInfo.tinLastFour}` : `**-***${taxInfo.tinLastFour}`}
                     </p>
                   </div>
                   <div className="md:col-span-2">
                     <p className="text-sm text-gray-500">Address</p>
-                    <p className="font-medium text-charcoal">
+                    <p className="font-medium text-white">
                       {taxInfo.address.line1}
                       {taxInfo.address.line2 && <>, {taxInfo.address.line2}</>}
                       <br />
@@ -270,14 +270,14 @@ export default function TaxInformationPage() {
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Submitted</p>
-                    <p className="font-medium text-charcoal">
+                    <p className="font-medium text-white">
                       {new Date(taxInfo.signatureDate).toLocaleDateString()}
                     </p>
                   </div>
                   {taxInfo.verifiedAt && (
                     <div>
                       <p className="text-sm text-gray-500">Verified</p>
-                      <p className="font-medium text-charcoal">
+                      <p className="font-medium text-white">
                         {new Date(taxInfo.verifiedAt).toLocaleDateString()}
                       </p>
                     </div>
@@ -311,17 +311,17 @@ export default function TaxInformationPage() {
           {/* Earnings Summary */}
           {requirements && (
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-              <h2 className="text-xl font-semibold text-charcoal mb-4">Earnings Summary</h2>
+              <h2 className="text-xl font-semibold text-white mb-4">Earnings Summary</h2>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-gray-500">Current Year Earnings</p>
-                  <p className="text-2xl font-bold text-charcoal">
+                  <p className="text-2xl font-bold text-white">
                     ${requirements.currentYearEarnings.toFixed(2)}
                   </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">1099-K Threshold</p>
-                  <p className="text-2xl font-bold text-charcoal">${requirements.threshold}</p>
+                  <p className="text-2xl font-bold text-white">${requirements.threshold}</p>
                 </div>
               </div>
               <p className="text-sm text-gray-500 mt-4">

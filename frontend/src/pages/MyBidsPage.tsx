@@ -75,7 +75,7 @@ export default function MyBidsPage() {
         <div className="max-w-6xl mx-auto px-4 py-12">
           <div className="flex justify-center py-16">
             <div className="w-16 h-16 rounded-clay bg-clay-mint shadow-clay-pressed flex items-center justify-center">
-              <div className="w-8 h-8 border-3 border-charcoal border-t-transparent rounded-full animate-spin" />
+              <div className="w-8 h-8 border-3 border-white border-t-transparent rounded-full animate-spin" />
             </div>
           </div>
         </div>
@@ -88,8 +88,8 @@ export default function MyBidsPage() {
       <div className="max-w-6xl mx-auto px-4 py-12">
         {/* Header */}
         <div className="clay-section mb-8">
-          <h1 className="font-display text-4xl font-black text-charcoal mb-2">My Bids</h1>
-          <p className="text-charcoal-light font-medium">Track your bids across all auction events</p>
+          <h1 className="font-display text-4xl font-black text-white mb-2">My Bids</h1>
+          <p className="text-white/70 font-medium">Track your bids across all auction events</p>
         </div>
 
         {error && (
@@ -101,20 +101,20 @@ export default function MyBidsPage() {
         {/* Summary Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <div className="clay-card p-5">
-            <p className="text-sm text-charcoal-light font-bold">Total Bids</p>
-            <p className="text-3xl font-black text-charcoal">{bids.length}</p>
+            <p className="text-sm text-white/70 font-bold">Total Bids</p>
+            <p className="text-3xl font-black text-white">{bids.length}</p>
           </div>
           <div className="clay-card p-5 bg-clay-mint/30">
-            <p className="text-sm text-charcoal-light font-bold">Winning</p>
-            <p className="text-3xl font-black text-charcoal">{winningCount}</p>
+            <p className="text-sm text-white/70 font-bold">Winning</p>
+            <p className="text-3xl font-black text-white">{winningCount}</p>
           </div>
           <div className="clay-card p-5 bg-clay-peach/30">
-            <p className="text-sm text-charcoal-light font-bold">Outbid</p>
-            <p className="text-3xl font-black text-charcoal">{outbidCount}</p>
+            <p className="text-sm text-white/70 font-bold">Outbid</p>
+            <p className="text-3xl font-black text-white">{outbidCount}</p>
           </div>
           <div className="clay-card p-5 bg-clay-lavender/30">
-            <p className="text-sm text-charcoal-light font-bold">Events</p>
-            <p className="text-3xl font-black text-charcoal">{Object.keys(bidsByEvent).length}</p>
+            <p className="text-sm text-white/70 font-bold">Events</p>
+            <p className="text-3xl font-black text-white">{Object.keys(bidsByEvent).length}</p>
           </div>
         </div>
 
@@ -145,7 +145,7 @@ export default function MyBidsPage() {
           <div className="clay-section text-center py-16">
             <div className="w-20 h-20 bg-clay-peach rounded-clay flex items-center justify-center mx-auto mb-6 shadow-clay">
               <svg
-                className="w-10 h-10 text-charcoal"
+                className="w-10 h-10 text-white"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -158,10 +158,10 @@ export default function MyBidsPage() {
                 />
               </svg>
             </div>
-            <h2 className="text-2xl font-black text-charcoal mb-2">
+            <h2 className="text-2xl font-black text-white mb-2">
               {filter === 'all' ? 'No bids yet' : `No ${filter} bids`}
             </h2>
-            <p className="text-charcoal-light font-medium mb-8">
+            <p className="text-white/70 font-medium mb-8">
               {filter === 'all'
                 ? 'Start bidding on auction items to see your activity here'
                 : 'Try changing the filter to see other bids'}
@@ -184,8 +184,8 @@ export default function MyBidsPage() {
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="font-black text-lg text-charcoal">{event.name}</h3>
-                      <p className="text-sm text-charcoal-light font-medium">
+                      <h3 className="font-black text-lg text-white">{event.name}</h3>
+                      <p className="text-sm text-white/70 font-medium">
                         {event.auctionType === 'silent' ? 'Silent Auction' : 'Live Auction'} - Ends {formatDate(event.endTime)}
                       </p>
                     </div>
@@ -217,7 +217,7 @@ export default function MyBidsPage() {
                       ) : (
                         <div className="w-16 h-16 bg-clay-lavender/30 rounded-clay shadow-clay-sm flex items-center justify-center flex-shrink-0">
                           <svg
-                            className="w-6 h-6 text-charcoal-light"
+                            className="w-6 h-6 text-white/70"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -234,16 +234,16 @@ export default function MyBidsPage() {
 
                       {/* Item Details */}
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-bold text-charcoal truncate">{bid.item.title}</h4>
-                        <p className="text-sm text-charcoal-light font-medium">
-                          Your bid: <span className="font-black text-charcoal">${bid.amount.toFixed(2)}</span>
+                        <h4 className="font-bold text-white truncate">{bid.item.title}</h4>
+                        <p className="text-sm text-white/70 font-medium">
+                          Your bid: <span className="font-black text-white">${bid.amount.toFixed(2)}</span>
                           {bid.item.currentBid && (
                             <span className="ml-2">
                               Current: <span className="font-black">${bid.item.currentBid.toFixed(2)}</span>
                             </span>
                           )}
                         </p>
-                        <p className="text-xs text-charcoal-light mt-1">
+                        <p className="text-xs text-white/70 mt-1">
                           {formatDate(bid.createdAt)}
                         </p>
                       </div>
@@ -251,21 +251,21 @@ export default function MyBidsPage() {
                       {/* Status */}
                       <div className="flex-shrink-0">
                         {bid.isWinning ? (
-                          <span className="clay-badge bg-clay-mint text-charcoal">
+                          <span className="clay-badge bg-clay-mint text-white">
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                             </svg>
                             Winning
                           </span>
                         ) : event.status === 'active' ? (
-                          <span className="clay-badge bg-clay-peach text-charcoal">
+                          <span className="clay-badge bg-clay-peach text-white">
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                             </svg>
                             Outbid
                           </span>
                         ) : (
-                          <span className="clay-badge bg-clay-lavender text-charcoal">
+                          <span className="clay-badge bg-clay-lavender text-white">
                             Ended
                           </span>
                         )}

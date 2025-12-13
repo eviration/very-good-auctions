@@ -238,7 +238,7 @@ export default function AdminFeedbackPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-charcoal mb-8">Feedback Management</h1>
+      <h1 className="text-3xl font-bold text-white mb-8">Feedback Management</h1>
 
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
@@ -250,7 +250,7 @@ export default function AdminFeedbackPage() {
       {stats && (
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-8">
           <div className="bg-white rounded-lg shadow p-4">
-            <div className="text-2xl font-bold text-charcoal">{stats.total}</div>
+            <div className="text-2xl font-bold text-white">{stats.total}</div>
             <div className="text-sm text-gray-500">Total</div>
           </div>
           <div className="bg-blue-50 rounded-lg shadow p-4">
@@ -364,7 +364,7 @@ export default function AdminFeedbackPage() {
                     }`}
                   >
                     <div className="flex items-start justify-between mb-2">
-                      <h3 className="font-medium text-charcoal line-clamp-1">{feedback.title}</h3>
+                      <h3 className="font-medium text-white line-clamp-1">{feedback.title}</h3>
                       <div className="flex gap-2 ml-2 flex-shrink-0">
                         {getTypeBadge(feedback.feedback_type)}
                         {getPriorityBadge(feedback.priority)}
@@ -399,7 +399,7 @@ export default function AdminFeedbackPage() {
         {selectedFeedback && (
           <div className="w-96 bg-white rounded-lg shadow p-6 h-fit sticky top-4">
             <div className="flex items-start justify-between mb-4">
-              <h2 className="text-xl font-bold text-charcoal">{selectedFeedback.title}</h2>
+              <h2 className="text-xl font-bold text-white">{selectedFeedback.title}</h2>
               <button
                 onClick={() => setSelectedFeedback(null)}
                 className="text-gray-400 hover:text-gray-600"

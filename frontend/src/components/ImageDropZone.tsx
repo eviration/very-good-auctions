@@ -148,7 +148,7 @@ export default function ImageDropZone({
   return (
     <div className={className}>
       {label && (
-        <label className="block text-sm font-medium text-charcoal mb-2">
+        <label className="block text-sm font-medium text-white mb-2">
           {label}
         </label>
       )}

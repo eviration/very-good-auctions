@@ -22,37 +22,37 @@ const ORG_TYPES: { value: OrganizationType; label: string; description: string; 
     value: 'nonprofit',
     label: 'Nonprofit',
     description: 'Registered 501(c)(3) charity or foundation',
-    icon: <svg className="w-6 h-6 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>,
+    icon: <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>,
   },
   {
     value: 'school',
     label: 'School',
     description: 'K-12, college, PTA, or booster club',
-    icon: <svg className="w-6 h-6 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" /></svg>,
+    icon: <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" /></svg>,
   },
   {
     value: 'religious',
     label: 'Religious',
     description: 'Church, synagogue, mosque, or temple',
-    icon: <svg className="w-6 h-6 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>,
+    icon: <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>,
   },
   {
     value: 'club',
     label: 'Club or Team',
     description: 'Sports team, social club, or community group',
-    icon: <svg className="w-6 h-6 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>,
+    icon: <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>,
   },
   {
     value: 'company',
     label: 'Business',
     description: 'Company running a charitable auction',
-    icon: <svg className="w-6 h-6 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>,
+    icon: <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>,
   },
   {
     value: 'other',
     label: 'Other',
     description: 'Any other type of organization',
-    icon: <svg className="w-6 h-6 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" /></svg>,
+    icon: <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" /></svg>,
   },
 ]
 
@@ -270,19 +270,19 @@ export default function CreateEventPage() {
                 setCurrentStep(1)
                 setCreateNewOrg(false)
               }}
-              className="clay-button bg-clay-mint text-charcoal font-bold px-8 py-4 text-lg inline-flex items-center gap-2"
+              className="clay-button bg-clay-mint text-white font-bold px-8 py-4 text-lg inline-flex items-center gap-2"
             >
               Continue Creating Auction
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
               </svg>
             </Link>
-            <p className="text-charcoal-light mt-4 text-sm max-w-md">
+            <p className="text-white/70 mt-4 text-sm max-w-md">
               Since you're using self-managed payments, you don't need Stripe setup to create auctions.
             </p>
             <Link
               to={`/organizations/${needsStripeSetup.orgSlug}/manage`}
-              className="block text-charcoal-light font-bold hover:text-charcoal transition-colors mt-2"
+              className="block text-white/70 font-bold hover:text-white transition-colors mt-2"
             >
               Go to organization dashboard instead
             </Link>
@@ -291,7 +291,7 @@ export default function CreateEventPage() {
           <>
             <Link
               to={`/organizations/${needsStripeSetup.orgSlug}/manage`}
-              className="clay-button bg-clay-mint text-charcoal font-bold px-8 py-4 text-lg inline-flex items-center gap-2"
+              className="clay-button bg-clay-mint text-white font-bold px-8 py-4 text-lg inline-flex items-center gap-2"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -301,7 +301,7 @@ export default function CreateEventPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
               </svg>
             </Link>
-            <p className="text-charcoal-light mt-4 text-sm">
+            <p className="text-white/70 mt-4 text-sm">
               After completing Stripe setup, you can return here to create your auction.
             </p>
             <Link
@@ -311,7 +311,7 @@ export default function CreateEventPage() {
                 setCurrentStep(1)
                 setCreateNewOrg(false)
               }}
-              className="block text-charcoal-light font-bold hover:text-charcoal transition-colors mt-2"
+              className="block text-white/70 font-bold hover:text-white transition-colors mt-2"
             >
               Start over
             </Link>
@@ -330,7 +330,7 @@ export default function CreateEventPage() {
       >
         <Link
           to={`/events/${createdEvent.slug}/manage`}
-          className="clay-button bg-clay-mint text-charcoal font-bold px-8 py-4 text-lg inline-flex items-center gap-2"
+          className="clay-button bg-clay-mint text-white font-bold px-8 py-4 text-lg inline-flex items-center gap-2"
         >
           Set Up Your Auction
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -339,7 +339,7 @@ export default function CreateEventPage() {
         </Link>
         <Link
           to={`/events/${createdEvent.slug}`}
-          className="block text-charcoal-light font-bold hover:text-charcoal transition-colors mt-4"
+          className="block text-white/70 font-bold hover:text-white transition-colors mt-4"
         >
           Preview auction page
         </Link>
@@ -360,7 +360,7 @@ export default function CreateEventPage() {
         isValid={isStep1Valid}
         encouragement={createNewOrg && newOrgName ? `Great! "${newOrgName}" will be the host.` : selectedOrgId ? "Perfect! You've selected your organization." : undefined}
         icon={
-          <svg className="w-10 h-10 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
           </svg>
         }
@@ -416,7 +416,7 @@ export default function CreateEventPage() {
             />
 
             <div className="space-y-3">
-              <label className="text-charcoal font-bold text-lg">What type of organization?</label>
+              <label className="text-white font-bold text-lg">What type of organization?</label>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 {ORG_TYPES.map((type) => (
                   <button
@@ -425,15 +425,15 @@ export default function CreateEventPage() {
                     onClick={() => setNewOrgType(type.value)}
                     className={`clay-card p-4 text-left transition-all ${
                       newOrgType === type.value
-                        ? 'ring-2 ring-charcoal shadow-clay-lg scale-[1.02]'
+                        ? 'ring-2 ring-white shadow-clay-lg scale-[1.02]'
                         : 'hover:shadow-clay-lg'
                     }`}
                   >
                     <div className="flex items-center gap-2 mb-1">
                       {type.icon}
-                      <span className="font-bold text-charcoal">{type.label}</span>
+                      <span className="font-bold text-white">{type.label}</span>
                     </div>
-                    <p className="text-sm text-charcoal-light">{type.description}</p>
+                    <p className="text-sm text-white/70">{type.description}</p>
                   </button>
                 ))}
               </div>
@@ -457,7 +457,7 @@ export default function CreateEventPage() {
         isValid={isStep2Valid}
         encouragement={eventName ? "Love the name! Your auction is going to be amazing." : undefined}
         icon={
-          <svg className="w-10 h-10 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
           </svg>
         }
@@ -482,8 +482,8 @@ export default function CreateEventPage() {
         />
 
         <div className="space-y-2">
-          <label className="text-charcoal font-bold text-lg">Cover image (optional)</label>
-          <p className="text-charcoal-light text-sm">A great image makes your auction stand out</p>
+          <label className="text-white font-bold text-lg">Cover image (optional)</label>
+          <p className="text-white/70 text-sm">A great image makes your auction stand out</p>
           <ImageDropZone
             previewUrl={coverImagePreview}
             onFileSelect={handleCoverImageSelect}
@@ -510,7 +510,7 @@ export default function CreateEventPage() {
         isValid={isStep3Valid}
         encouragement={isStep3Valid ? "Perfect timing! Your auction will run for a great duration." : undefined}
         icon={
-          <svg className="w-10 h-10 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
         }
@@ -577,14 +577,14 @@ export default function CreateEventPage() {
         isValid={isStep4Valid}
         encouragement="These settings look great for your auction!"
         icon={
-          <svg className="w-10 h-10 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>
         }
       >
         <div className="space-y-3">
-          <label className="text-charcoal font-bold text-lg">Auction style</label>
+          <label className="text-white font-bold text-lg">Auction style</label>
           <WizardOptionGrid columns={2}>
             <WizardOptionCard
               title="Standard Auction"
@@ -617,7 +617,7 @@ export default function CreateEventPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
-            <label className="text-charcoal font-bold text-lg">Bid increment type</label>
+            <label className="text-white font-bold text-lg">Bid increment type</label>
             <select
               value={incrementType}
               onChange={(e) => setIncrementType(e.target.value as 'fixed' | 'percent')}
@@ -628,9 +628,9 @@ export default function CreateEventPage() {
             </select>
           </div>
           <div className="space-y-2">
-            <label className="text-charcoal font-bold text-lg">Increment value</label>
+            <label className="text-white font-bold text-lg">Increment value</label>
             <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-charcoal-light font-bold text-lg">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/70 font-bold text-lg">
                 {incrementType === 'fixed' ? '$' : ''}
               </span>
               <input
@@ -642,23 +642,23 @@ export default function CreateEventPage() {
                 className={`clay-input w-full text-lg py-4 ${incrementType === 'fixed' ? 'pl-8' : ''}`}
               />
               {incrementType === 'percent' && (
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-charcoal-light font-bold text-lg">%</span>
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white/70 font-bold text-lg">%</span>
               )}
             </div>
           </div>
         </div>
 
         <div className="space-y-3">
-          <label className="text-charcoal font-bold text-lg">Additional options</label>
+          <label className="text-white font-bold text-lg">Additional options</label>
           <button
             type="button"
             onClick={() => setBuyNowEnabled(!buyNowEnabled)}
             className={`w-full clay-card p-5 text-left transition-all flex items-center gap-4 ${
-              buyNowEnabled ? 'ring-2 ring-charcoal shadow-clay-lg' : ''
+              buyNowEnabled ? 'ring-2 ring-white shadow-clay-lg' : ''
             }`}
           >
             <div className={`w-6 h-6 rounded-md flex items-center justify-center ${
-              buyNowEnabled ? 'bg-charcoal' : 'bg-clay-surface border-2 border-charcoal/20'
+              buyNowEnabled ? 'bg-white' : 'bg-clay-surface border-2 border-white/20'
             }`}>
               {buyNowEnabled && (
                 <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -667,8 +667,8 @@ export default function CreateEventPage() {
               )}
             </div>
             <div>
-              <span className="font-bold text-charcoal text-lg">Enable "Buy Now" option</span>
-              <p className="text-charcoal-light">Allow instant purchases at a set price</p>
+              <span className="font-bold text-white text-lg">Enable "Buy Now" option</span>
+              <p className="text-white/70">Allow instant purchases at a set price</p>
             </div>
           </button>
         </div>
@@ -715,13 +715,13 @@ export default function CreateEventPage() {
         isValid={isStep5Valid}
         encouragement={isStep5Valid ? "Payment setup looks good!" : "Add payment instructions or link"}
         icon={
-          <svg className="w-10 h-10 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
           </svg>
         }
       >
         <div className="space-y-3">
-          <label className="text-charcoal font-bold text-lg">Payment collection method</label>
+          <label className="text-white font-bold text-lg">Payment collection method</label>
           <WizardOptionGrid columns={2}>
             <WizardOptionCard
               title="Self-Managed Payments"
@@ -773,7 +773,7 @@ export default function CreateEventPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <label className="text-charcoal font-bold text-lg">Payment due within</label>
+                <label className="text-white font-bold text-lg">Payment due within</label>
                 <select
                   value={paymentDueDays}
                   onChange={(e) => setPaymentDueDays(e.target.value)}
@@ -791,7 +791,7 @@ export default function CreateEventPage() {
         )}
 
         <div className="space-y-3 mt-6">
-          <label className="text-charcoal font-bold text-lg">How will items be delivered?</label>
+          <label className="text-white font-bold text-lg">How will items be delivered?</label>
           <WizardOptionGrid columns={2}>
             <WizardOptionCard
               title="Local Pickup"
@@ -899,7 +899,7 @@ export default function CreateEventPage() {
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <h3 className={`font-bold text-sm uppercase tracking-wider mb-2 ${
-                hasError ? 'text-clay-coral' : 'text-charcoal-light'
+                hasError ? 'text-clay-coral' : 'text-white/70'
               }`}>
                 {title}
                 {hasError && (
@@ -915,7 +915,7 @@ export default function CreateEventPage() {
             <div className={`ml-4 p-2 rounded-full transition-colors ${
               hasError
                 ? 'bg-clay-coral/20 text-clay-coral'
-                : 'bg-clay-surface text-charcoal-light group-hover:bg-clay-mint group-hover:text-charcoal'
+                : 'bg-clay-surface text-white/70 group-hover:bg-clay-mint group-hover:text-white'
             }`}>
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -946,7 +946,7 @@ export default function CreateEventPage() {
         isValid={true}
         isLoading={isSubmitting}
         icon={
-          <svg className="w-10 h-10 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
         }
@@ -960,7 +960,7 @@ export default function CreateEventPage() {
               <div>
                 <p className="text-clay-coral font-bold">{error}</p>
                 {errorSection && (
-                  <p className="text-charcoal-light text-sm mt-1">
+                  <p className="text-white/70 text-sm mt-1">
                     Click the highlighted section below to fix this.
                   </p>
                 )}
@@ -971,41 +971,41 @@ export default function CreateEventPage() {
 
         <div className="space-y-4">
           <ReviewCard section="name" title="Event Name">
-            <p className="font-bold text-charcoal text-xl">{eventName}</p>
+            <p className="font-bold text-white text-xl">{eventName}</p>
           </ReviewCard>
 
           <ReviewCard section="org" title="Organization">
-            <p className="font-bold text-charcoal text-xl">
+            <p className="font-bold text-white text-xl">
               {createNewOrg ? newOrgName : myOrganizations.find((o) => o.id === selectedOrgId)?.name}
             </p>
           </ReviewCard>
 
           <ReviewCard section="schedule" title="Schedule">
-            <p className="text-charcoal">
+            <p className="text-white">
               <span className="font-bold">{new Date(startDate).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</span> at {startTime}
-              <span className="text-charcoal-light"> to </span>
+              <span className="text-white/70"> to </span>
               <span className="font-bold">{new Date(endDate).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</span> at {endTime}
             </p>
             {submissionDeadline && (
-              <p className="text-charcoal-light text-sm mt-1">
+              <p className="text-white/70 text-sm mt-1">
                 Submission deadline: {new Date(submissionDeadline).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
               </p>
             )}
           </ReviewCard>
 
           <ReviewCard section="settings" title="Auction Type">
-            <p className="font-bold text-charcoal text-xl capitalize">{auctionType}</p>
-            <p className="text-charcoal-light">
+            <p className="font-bold text-white text-xl capitalize">{auctionType}</p>
+            <p className="text-white/70">
               {incrementType === 'fixed' ? `$${incrementValue}` : `${incrementValue}%`} bid increments
               {buyNowEnabled && ' • Buy Now enabled'}
             </p>
           </ReviewCard>
 
           <ReviewCard section="payment" title="Payment & Fulfillment">
-            <p className="font-bold text-charcoal text-xl">
+            <p className="font-bold text-white text-xl">
               {paymentMode === 'self_managed' ? 'Self-Managed Payments' : 'Integrated (Stripe)'}
             </p>
-            <p className="text-charcoal-light">
+            <p className="text-white/70">
               {fulfillmentType === 'pickup' && 'Local pickup'}
               {fulfillmentType === 'shipping' && 'Shipping to winners'}
               {fulfillmentType === 'both' && 'Pickup or shipping'}
@@ -1013,7 +1013,7 @@ export default function CreateEventPage() {
               {paymentMode === 'self_managed' && ` • ${paymentDueDays} days to pay`}
             </p>
             {pickupLocation && (
-              <p className="text-charcoal-light text-sm mt-1">Pickup at: {pickupLocation}</p>
+              <p className="text-white/70 text-sm mt-1">Pickup at: {pickupLocation}</p>
             )}
           </ReviewCard>
 
@@ -1021,22 +1021,22 @@ export default function CreateEventPage() {
 
         {/* Pricing info */}
         <div className="mt-6 p-4 rounded-clay bg-clay-mint/20 border-2 border-clay-mint/30">
-          <p className="text-charcoal-light text-sm">
+          <p className="text-white/70 text-sm">
             {paymentMode === 'self_managed' ? (
               <>
-                <span className="font-bold text-charcoal">Free to use.</span>{' '}
+                <span className="font-bold text-white">Free to use.</span>{' '}
                 Self-managed payments have no platform fees. You handle payments directly.
               </>
             ) : (
               <>
-                <span className="font-bold text-charcoal">Free to create.</span>{' '}
+                <span className="font-bold text-white">Free to create.</span>{' '}
                 $1 per item sold (deducted from proceeds). No upfront costs.
               </>
             )}
           </p>
         </div>
 
-        <p className="text-center text-charcoal-light text-sm mt-4">
+        <p className="text-center text-white/70 text-sm mt-4">
           Click any section above to make changes
         </p>
       </WizardStep>

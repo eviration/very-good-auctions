@@ -150,7 +150,7 @@ export default function NotificationBell() {
       {isOpen && (
         <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-200 z-50 overflow-hidden">
           <div className="p-3 border-b border-gray-200 flex justify-between items-center">
-            <h3 className="font-semibold text-charcoal">Notifications</h3>
+            <h3 className="font-semibold text-white">Notifications</h3>
             {unreadCount > 0 && (
               <button
                 onClick={handleMarkAllAsRead}
@@ -185,7 +185,7 @@ export default function NotificationBell() {
                         <span className="w-2 h-2 bg-sage rounded-full mt-2 flex-shrink-0" />
                       )}
                       <div className={`flex-1 ${!isUnread ? 'pl-5' : ''}`}>
-                        <p className="font-medium text-charcoal text-sm">{notification.title}</p>
+                        <p className="font-medium text-white text-sm">{notification.title}</p>
                         <p className="text-gray-600 text-sm mt-0.5 line-clamp-2">
                           {notification.message}
                         </p>

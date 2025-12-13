@@ -148,7 +148,7 @@ export default function AdminManageAdmins() {
   return (
     <div>
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-charcoal">Manage Administrators</h2>
+        <h2 className="text-2xl font-bold text-white">Manage Administrators</h2>
         <p className="text-gray-500">Control who has administrative access to the platform.</p>
       </div>
 
@@ -186,7 +186,7 @@ export default function AdminManageAdmins() {
         <>
           {/* Add Admin Section */}
           <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-            <h3 className="text-lg font-semibold text-charcoal mb-4">Add New Admin</h3>
+            <h3 className="text-lg font-semibold text-white mb-4">Add New Admin</h3>
             <div className="relative">
               <input
                 type="text"
@@ -210,7 +210,7 @@ export default function AdminManageAdmins() {
                     className="flex items-center justify-between p-3 hover:bg-gray-50"
                   >
                     <div>
-                      <div className="font-medium text-charcoal">
+                      <div className="font-medium text-white">
                         {searchUser.displayName || 'No name'}
                       </div>
                       <div className="text-sm text-gray-500">{searchUser.email}</div>
@@ -236,7 +236,7 @@ export default function AdminManageAdmins() {
           {/* Current Admins */}
           <div className="bg-white rounded-lg shadow-sm">
             <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-charcoal">Current Administrators</h3>
+              <h3 className="text-lg font-semibold text-white">Current Administrators</h3>
             </div>
             <div className="divide-y divide-gray-200">
               {admins.map((adminUser) => (
@@ -245,7 +245,7 @@ export default function AdminManageAdmins() {
                   className="flex items-center justify-between p-4 hover:bg-gray-50"
                 >
                   <div>
-                    <div className="font-medium text-charcoal">
+                    <div className="font-medium text-white">
                       {adminUser.displayName || 'No name'}
                     </div>
                     <div className="text-sm text-gray-500">{adminUser.email}</div>
@@ -279,7 +279,7 @@ export default function AdminManageAdmins() {
       {activeTab === 'audit' && (
         <div className="bg-white rounded-lg shadow-sm">
           <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-semibold text-charcoal">Admin Access History</h3>
+            <h3 className="text-lg font-semibold text-white">Admin Access History</h3>
           </div>
           {auditLog.length === 0 ? (
             <div className="p-8 text-center text-gray-500">
@@ -301,7 +301,7 @@ export default function AdminManageAdmins() {
                         >
                           {entry.action === 'grant_admin' ? 'Granted' : 'Revoked'}
                         </span>
-                        <span className="text-charcoal font-medium">
+                        <span className="text-white font-medium">
                           {entry.targetEmail}
                         </span>
                       </div>
@@ -329,7 +329,7 @@ export default function AdminManageAdmins() {
       {showGrantModal && selectedUser && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
-            <h3 className="text-xl font-bold text-charcoal mb-4">Grant Admin Access</h3>
+            <h3 className="text-xl font-bold text-white mb-4">Grant Admin Access</h3>
             <p className="text-gray-600 mb-4">
               You are about to grant platform admin access to:
             </p>
@@ -373,7 +373,7 @@ export default function AdminManageAdmins() {
       {showRevokeModal && selectedUser && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
-            <h3 className="text-xl font-bold text-charcoal mb-4">Revoke Admin Access</h3>
+            <h3 className="text-xl font-bold text-white mb-4">Revoke Admin Access</h3>
             <p className="text-gray-600 mb-4">
               You are about to revoke platform admin access from:
             </p>

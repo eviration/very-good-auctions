@@ -24,7 +24,7 @@ export default function SubmitItemSuccessPage() {
           </svg>
         </div>
 
-        <h1 className="text-2xl font-bold text-charcoal mb-2">Item Submitted!</h1>
+        <h1 className="text-2xl font-bold text-white mb-2">Item Submitted!</h1>
 
         {itemTitle && (
           <p className="text-gray-600 mb-4">

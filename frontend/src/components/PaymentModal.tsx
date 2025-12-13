@@ -102,7 +102,7 @@ export default function PaymentModal({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <h2 className="font-display text-2xl font-bold text-charcoal mb-2">
+            <h2 className="font-display text-2xl font-bold text-white mb-2">
               Bid Placed Successfully!
             </h2>
             <p className="text-gray-600 mb-6">
@@ -118,14 +118,14 @@ export default function PaymentModal({
         ) : step === 'processing' ? (
           <div className="text-center py-12">
             <div className="w-16 h-16 border-4 border-sage border-t-transparent rounded-full animate-spin mx-auto mb-6" />
-            <p className="text-lg text-charcoal">Processing payment...</p>
+            <p className="text-lg text-white">Processing payment...</p>
           </div>
         ) : (
           <>
             {/* Header */}
             <div className="flex justify-between items-start mb-6">
               <div>
-                <h2 className="font-display text-2xl font-bold text-charcoal">
+                <h2 className="font-display text-2xl font-bold text-white">
                   {step === 'method' ? 'Payment Method' : 'Card Details'}
                 </h2>
                 <p className="text-gray-600">
@@ -186,7 +186,7 @@ export default function PaymentModal({
                 </button>
 
                 <div className="mb-6">
-                  <label className="block text-sm font-medium text-charcoal mb-2">
+                  <label className="block text-sm font-medium text-white mb-2">
                     Card Information
                   </label>
                   <div className="p-4 border-2 border-gray-200 rounded-xl focus-within:border-sage transition-colors">
@@ -242,7 +242,7 @@ function PaymentMethodButton({
       className="w-full flex items-center justify-between p-4 bg-white border-2 border-gray-200 
                  rounded-xl hover:border-sage hover:bg-cream transition-all"
     >
-      <span className="font-medium text-charcoal">{label}</span>
+      <span className="font-medium text-white">{label}</span>
       <div className="flex gap-2">
         {icons.map((icon) => (
           <div key={icon} className="h-6 w-10 bg-gray-100 rounded" />

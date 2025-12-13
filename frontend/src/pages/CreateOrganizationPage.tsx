@@ -216,13 +216,13 @@ export default function CreateOrganizationPage() {
         isValid={true}
         encouragement="Gather your info first, then breeze through in about 5 minutes!"
         icon={
-          <svg className="w-8 h-8 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
           </svg>
         }
       >
         {stripeError && (
-          <div className="bg-clay-coral/20 border border-clay-coral text-charcoal px-4 py-3 rounded-clay mb-6">
+          <div className="bg-clay-coral/20 border border-clay-coral text-white px-4 py-3 rounded-clay mb-6">
             {stripeError}
           </div>
         )}
@@ -231,13 +231,13 @@ export default function CreateOrganizationPage() {
         <div className="clay-card bg-clay-sky/30 p-5 mb-6">
           <div className="flex items-start gap-4">
             <div className="w-10 h-10 rounded-full bg-clay-sky flex items-center justify-center flex-shrink-0">
-              <svg className="w-5 h-5 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
             <div>
-              <h3 className="font-bold text-charcoal mb-1">Why Stripe?</h3>
-              <p className="text-charcoal-light text-sm">
+              <h3 className="font-bold text-white mb-1">Why Stripe?</h3>
+              <p className="text-white/70 text-sm">
                 Stripe is the same secure payment system used by Amazon, Google, and millions of businesses.
                 They handle all the security so you can focus on your fundraising!
               </p>
@@ -247,7 +247,7 @@ export default function CreateOrganizationPage() {
 
         {/* Detailed checklist of what Stripe will ask */}
         <div className="clay-card p-5 mb-6">
-          <h3 className="font-bold text-charcoal mb-4 flex items-center gap-2">
+          <h3 className="font-bold text-white mb-4 flex items-center gap-2">
             <svg className="w-5 h-5 text-clay-mint" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
             </svg>
@@ -256,12 +256,12 @@ export default function CreateOrganizationPage() {
 
           <div className="space-y-4">
             {/* Organization Details */}
-            <div className="border-b border-charcoal/10 pb-4">
+            <div className="border-b border-white/10 pb-4">
               <div className="flex items-center gap-2 mb-2">
-                <div className="w-6 h-6 rounded-full bg-clay-butter flex items-center justify-center text-xs font-bold text-charcoal">1</div>
-                <h4 className="font-medium text-charcoal">Organization Details</h4>
+                <div className="w-6 h-6 rounded-full bg-clay-butter flex items-center justify-center text-xs font-bold text-white">1</div>
+                <h4 className="font-medium text-white">Organization Details</h4>
               </div>
-              <ul className="ml-8 text-sm text-charcoal-light space-y-1">
+              <ul className="ml-8 text-sm text-white/70 space-y-1">
                 <li>Legal business name (as registered)</li>
                 <li>Business address</li>
                 <li>Phone number</li>
@@ -270,12 +270,12 @@ export default function CreateOrganizationPage() {
             </div>
 
             {/* Representative Info */}
-            <div className="border-b border-charcoal/10 pb-4">
+            <div className="border-b border-white/10 pb-4">
               <div className="flex items-center gap-2 mb-2">
-                <div className="w-6 h-6 rounded-full bg-clay-butter flex items-center justify-center text-xs font-bold text-charcoal">2</div>
-                <h4 className="font-medium text-charcoal">Your Personal Info (as the representative)</h4>
+                <div className="w-6 h-6 rounded-full bg-clay-butter flex items-center justify-center text-xs font-bold text-white">2</div>
+                <h4 className="font-medium text-white">Your Personal Info (as the representative)</h4>
               </div>
-              <ul className="ml-8 text-sm text-charcoal-light space-y-1">
+              <ul className="ml-8 text-sm text-white/70 space-y-1">
                 <li>Full legal name</li>
                 <li>Date of birth</li>
                 <li>Last 4 digits of SSN (for identity verification)</li>
@@ -286,13 +286,13 @@ export default function CreateOrganizationPage() {
             {/* Bank Account */}
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <div className="w-6 h-6 rounded-full bg-clay-butter flex items-center justify-center text-xs font-bold text-charcoal">3</div>
-                <h4 className="font-medium text-charcoal">Bank Account for Deposits</h4>
+                <div className="w-6 h-6 rounded-full bg-clay-butter flex items-center justify-center text-xs font-bold text-white">3</div>
+                <h4 className="font-medium text-white">Bank Account for Deposits</h4>
               </div>
-              <ul className="ml-8 text-sm text-charcoal-light space-y-1">
+              <ul className="ml-8 text-sm text-white/70 space-y-1">
                 <li>Bank account number</li>
                 <li>Routing number</li>
-                <li className="text-charcoal-light/70 italic">Tip: Use a checkbook or your bank's online portal to find these</li>
+                <li className="text-white/70/70 italic">Tip: Use a checkbook or your bank's online portal to find these</li>
               </ul>
             </div>
           </div>
@@ -300,28 +300,28 @@ export default function CreateOrganizationPage() {
 
         {/* Pro Tips */}
         <div className="clay-card bg-clay-mint/20 p-5 mb-6">
-          <h3 className="font-bold text-charcoal mb-3 flex items-center gap-2">
+          <h3 className="font-bold text-white mb-3 flex items-center gap-2">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
             </svg>
             Tips for a smooth setup:
           </h3>
-          <ul className="text-sm text-charcoal-light space-y-2">
+          <ul className="text-sm text-white/70 space-y-2">
             <li className="flex items-start gap-2">
-              <span className="text-charcoal font-bold">•</span>
-              <span><strong className="text-charcoal">For "Business Type":</strong> Select "Non-profit" or "Company" depending on your status</span>
+              <span className="text-white font-bold">•</span>
+              <span><strong className="text-white">For "Business Type":</strong> Select "Non-profit" or "Company" depending on your status</span>
             </li>
             <li className="flex items-start gap-2">
-              <span className="text-charcoal font-bold">•</span>
-              <span><strong className="text-charcoal">For "Industry":</strong> Choose "Charities" or "Fundraising"</span>
+              <span className="text-white font-bold">•</span>
+              <span><strong className="text-white">For "Industry":</strong> Choose "Charities" or "Fundraising"</span>
             </li>
             <li className="flex items-start gap-2">
-              <span className="text-charcoal font-bold">•</span>
-              <span><strong className="text-charcoal">Website URL:</strong> You can use your organization's website or social media page</span>
+              <span className="text-white font-bold">•</span>
+              <span><strong className="text-white">Website URL:</strong> You can use your organization's website or social media page</span>
             </li>
             <li className="flex items-start gap-2">
-              <span className="text-charcoal font-bold">•</span>
-              <span><strong className="text-charcoal">Product description:</strong> Something like "Online charity auctions and fundraising events"</span>
+              <span className="text-white font-bold">•</span>
+              <span><strong className="text-white">Product description:</strong> Something like "Online charity auctions and fundraising events"</span>
             </li>
           </ul>
         </div>
@@ -330,7 +330,7 @@ export default function CreateOrganizationPage() {
         <button
           onClick={handleStripeConnect}
           disabled={stripeLoading}
-          className="w-full clay-button bg-clay-mint text-charcoal font-bold text-lg py-4 flex items-center justify-center gap-3 hover:shadow-clay-lg transition-all disabled:opacity-50"
+          className="w-full clay-button bg-clay-mint text-white font-bold text-lg py-4 flex items-center justify-center gap-3 hover:shadow-clay-lg transition-all disabled:opacity-50"
         >
           {stripeLoading ? (
             <>
@@ -351,22 +351,22 @@ export default function CreateOrganizationPage() {
         </button>
 
         {/* Security reassurance */}
-        <div className="mt-5 p-4 bg-clay-surface rounded-clay border border-charcoal/10">
+        <div className="mt-5 p-4 bg-clay-surface rounded-clay border border-white/10">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-full bg-clay-lavender flex items-center justify-center flex-shrink-0">
-              <svg className="w-4 h-4 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
               </svg>
             </div>
-            <p className="text-sm text-charcoal-light">
-              <span className="font-medium text-charcoal">100% secure:</span> You'll be on Stripe's official website.
+            <p className="text-sm text-white/70">
+              <span className="font-medium text-white">100% secure:</span> You'll be on Stripe's official website.
               We never see your banking details.
             </p>
           </div>
         </div>
 
         {/* Skip option */}
-        <p className="mt-5 text-center text-charcoal-light text-sm">
+        <p className="mt-5 text-center text-white/70 text-sm">
           Not ready yet? You can skip this and set up payments later from your dashboard.
         </p>
       </WizardStep>
@@ -380,7 +380,7 @@ export default function CreateOrganizationPage() {
         title="You Did It!"
         message={`${createdOrg.name} is all set up and ready to make a difference. We're so excited to help you raise funds for your cause!`}
         icon={
-          <svg className="w-12 h-12 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
           </svg>
         }
@@ -414,13 +414,13 @@ export default function CreateOrganizationPage() {
         isValid={isStep1Valid}
         encouragement={getStep1Encouragement()}
         icon={
-          <svg className="w-8 h-8 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
           </svg>
         }
       >
         {error && (
-          <div className="bg-clay-coral/20 border border-clay-coral text-charcoal px-4 py-3 rounded-clay mb-6">
+          <div className="bg-clay-coral/20 border border-clay-coral text-white px-4 py-3 rounded-clay mb-6">
             {error}
           </div>
         )}
@@ -437,14 +437,14 @@ export default function CreateOrganizationPage() {
         />
 
         <div className="mt-6">
-          <label className="block text-sm font-bold text-charcoal mb-2">
+          <label className="block text-sm font-bold text-white mb-2">
             Organization Logo (optional)
           </label>
-          <p className="text-sm text-charcoal-light mb-3">
+          <p className="text-sm text-white/70 mb-3">
             A logo helps people recognize you - but you can always add this later!
           </p>
           <div className="flex items-start gap-4">
-            <div className="w-24 h-24 rounded-clay border-2 border-dashed border-charcoal/20 flex items-center justify-center bg-clay-surface overflow-hidden shadow-clay">
+            <div className="w-24 h-24 rounded-clay border-2 border-dashed border-white/20 flex items-center justify-center bg-clay-surface overflow-hidden shadow-clay">
               {logoPreview ? (
                 <img
                   src={logoPreview}
@@ -452,7 +452,7 @@ export default function CreateOrganizationPage() {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <svg className="w-8 h-8 text-charcoal/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-8 h-8 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
               )}
@@ -476,12 +476,12 @@ export default function CreateOrganizationPage() {
                 <button
                   type="button"
                   onClick={handleRemoveLogo}
-                  className="ml-2 text-sm text-charcoal-light hover:text-charcoal"
+                  className="ml-2 text-sm text-white/70 hover:text-white"
                 >
                   Remove
                 </button>
               )}
-              <p className="text-xs text-charcoal-light mt-2">
+              <p className="text-xs text-white/70 mt-2">
                 JPG, PNG, GIF or WebP. Max 5MB.
               </p>
             </div>
@@ -504,7 +504,7 @@ export default function CreateOrganizationPage() {
         isValid={isStep2Valid}
         encouragement={getStep2Encouragement()}
         icon={
-          <svg className="w-8 h-8 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
           </svg>
         }
@@ -538,13 +538,13 @@ export default function CreateOrganizationPage() {
         isValid={isStep3Valid}
         encouragement={getStep3Encouragement()}
         icon={
-          <svg className="w-8 h-8 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
           </svg>
         }
       >
         {error && (
-          <div className="bg-clay-coral/20 border border-clay-coral text-charcoal px-4 py-3 rounded-clay mb-6">
+          <div className="bg-clay-coral/20 border border-clay-coral text-white px-4 py-3 rounded-clay mb-6">
             {error}
           </div>
         )}
@@ -597,7 +597,7 @@ export default function CreateOrganizationPage() {
         isValid={isStep4Valid}
         encouragement={formData.taxId ? "You're doing great! Having this on file makes everything official." : ''}
         icon={
-          <svg className="w-8 h-8 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
         }
@@ -606,13 +606,13 @@ export default function CreateOrganizationPage() {
         <div className="clay-card bg-clay-sky/30 p-6 mb-6">
           <div className="flex items-start gap-4">
             <div className="w-12 h-12 rounded-full bg-clay-sky flex items-center justify-center flex-shrink-0">
-              <svg className="w-6 h-6 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
             <div>
-              <h3 className="font-bold text-charcoal mb-1">Why do we ask for this?</h3>
-              <p className="text-charcoal-light text-sm">
+              <h3 className="font-bold text-white mb-1">Why do we ask for this?</h3>
+              <p className="text-white/70 text-sm">
                 Your EIN (Employer Identification Number) helps donors know their contributions are going to a legitimate organization.
                 It's like a social security number for your organization - completely safe to share and helps build trust!
               </p>
@@ -637,51 +637,51 @@ export default function CreateOrganizationPage() {
         <div className="mt-6 space-y-3">
           <div className="flex items-start gap-3 text-sm">
             <div className="w-6 h-6 rounded-full bg-clay-mint flex items-center justify-center flex-shrink-0 mt-0.5">
-              <svg className="w-3.5 h-3.5 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <p className="text-charcoal-light">
-              <span className="font-medium text-charcoal">Not sure where to find it?</span> Check your IRS determination letter,
+            <p className="text-white/70">
+              <span className="font-medium text-white">Not sure where to find it?</span> Check your IRS determination letter,
               annual tax filing (Form 990), or ask your bookkeeper or treasurer.
             </p>
           </div>
 
           <div className="flex items-start gap-3 text-sm">
             <div className="w-6 h-6 rounded-full bg-clay-mint flex items-center justify-center flex-shrink-0 mt-0.5">
-              <svg className="w-3.5 h-3.5 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <p className="text-charcoal-light">
-              <span className="font-medium text-charcoal">Don't have one yet?</span> That's totally okay!
+            <p className="text-white/70">
+              <span className="font-medium text-white">Don't have one yet?</span> That's totally okay!
               You can skip this for now and add it later from your organization settings.
             </p>
           </div>
 
           <div className="flex items-start gap-3 text-sm">
             <div className="w-6 h-6 rounded-full bg-clay-mint flex items-center justify-center flex-shrink-0 mt-0.5">
-              <svg className="w-3.5 h-3.5 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <p className="text-charcoal-light">
-              <span className="font-medium text-charcoal">Is this secure?</span> Absolutely! Your information is encrypted
+            <p className="text-white/70">
+              <span className="font-medium text-white">Is this secure?</span> Absolutely! Your information is encrypted
               and we only use it to verify your organization and display on receipts.
             </p>
           </div>
         </div>
 
         {/* Extra reassurance */}
-        <div className="mt-8 p-4 bg-clay-surface rounded-clay border border-charcoal/10">
+        <div className="mt-8 p-4 bg-clay-surface rounded-clay border border-white/10">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-clay-lavender flex items-center justify-center flex-shrink-0">
-              <svg className="w-5 h-5 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
               </svg>
             </div>
-            <p className="text-sm text-charcoal-light">
-              <span className="font-medium text-charcoal">Remember:</span> This step is completely optional.
+            <p className="text-sm text-white/70">
+              <span className="font-medium text-white">Remember:</span> This step is completely optional.
               Many successful auctions run without it. You can always add this information later when you're ready.
             </p>
           </div>
@@ -704,13 +704,13 @@ export default function CreateOrganizationPage() {
         isLoading={loading}
         encouragement="You're just one click away from creating something amazing!"
         icon={
-          <svg className="w-8 h-8 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
         }
       >
         {error && (
-          <div className="bg-clay-coral/20 border border-clay-coral text-charcoal px-4 py-3 rounded-clay mb-6">
+          <div className="bg-clay-coral/20 border border-clay-coral text-white px-4 py-3 rounded-clay mb-6">
             {error}
           </div>
         )}
@@ -727,7 +727,7 @@ export default function CreateOrganizationPage() {
 
         {/* Review summary */}
         <div className="mt-6 clay-card p-6 bg-clay-surface">
-          <h3 className="font-bold text-charcoal mb-4 flex items-center gap-2">
+          <h3 className="font-bold text-white mb-4 flex items-center gap-2">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
@@ -740,49 +740,49 @@ export default function CreateOrganizationPage() {
                 <img src={logoPreview} alt="Logo" className="w-12 h-12 rounded-clay object-cover shadow-clay" />
               ) : (
                 <div className="w-12 h-12 rounded-clay bg-clay-mint flex items-center justify-center shadow-clay">
-                  <span className="text-lg font-bold text-charcoal">
+                  <span className="text-lg font-bold text-white">
                     {formData.name.charAt(0).toUpperCase()}
                   </span>
                 </div>
               )}
               <div>
-                <p className="font-bold text-charcoal">{formData.name}</p>
-                <p className="text-sm text-charcoal-light capitalize">{formData.orgType}</p>
+                <p className="font-bold text-white">{formData.name}</p>
+                <p className="text-sm text-white/70 capitalize">{formData.orgType}</p>
               </div>
             </div>
 
-            <div className="pt-3 border-t border-charcoal/10 space-y-2">
+            <div className="pt-3 border-t border-white/10 space-y-2">
               <div className="flex items-center gap-2 text-sm">
-                <svg className="w-4 h-4 text-charcoal-light" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
-                <span className="text-charcoal">{formData.contactEmail}</span>
+                <span className="text-white">{formData.contactEmail}</span>
               </div>
 
               {formData.contactPhone && (
                 <div className="flex items-center gap-2 text-sm">
-                  <svg className="w-4 h-4 text-charcoal-light" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                   </svg>
-                  <span className="text-charcoal">{formData.contactPhone}</span>
+                  <span className="text-white">{formData.contactPhone}</span>
                 </div>
               )}
 
               {formData.websiteUrl && (
                 <div className="flex items-center gap-2 text-sm">
-                  <svg className="w-4 h-4 text-charcoal-light" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
                   </svg>
-                  <span className="text-charcoal">{formData.websiteUrl}</span>
+                  <span className="text-white">{formData.websiteUrl}</span>
                 </div>
               )}
 
               {formData.taxId && (
                 <div className="flex items-center gap-2 text-sm">
-                  <svg className="w-4 h-4 text-charcoal-light" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
-                  <span className="text-charcoal">EIN: {formData.taxId}</span>
+                  <span className="text-white">EIN: {formData.taxId}</span>
                 </div>
               )}
             </div>
@@ -791,7 +791,7 @@ export default function CreateOrganizationPage() {
 
         {/* Final encouragement */}
         <div className="mt-6 text-center">
-          <p className="text-charcoal-light text-sm">
+          <p className="text-white/70 text-sm">
             Ready to start making a difference? Click "Continue" to create your organization!
           </p>
         </div>

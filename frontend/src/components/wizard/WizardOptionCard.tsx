@@ -39,7 +39,7 @@ export default function WizardOptionCard({
         disabled
           ? 'opacity-50 cursor-not-allowed'
           : selected
-          ? 'ring-3 ring-charcoal shadow-clay-lg scale-[1.02]'
+          ? 'ring-3 ring-white shadow-clay-lg scale-[1.02]'
           : 'hover:shadow-clay-lg hover:scale-[1.01]'
       }`}
     >
@@ -48,12 +48,12 @@ export default function WizardOptionCard({
         <div
           className={`w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center transition-all ${
             selected
-              ? 'bg-charcoal'
-              : 'bg-clay-surface border-2 border-charcoal/20'
+              ? 'bg-white'
+              : 'bg-clay-surface border-2 border-white/20'
           }`}
         >
           {selected && (
-            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 text-glass-bg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
             </svg>
           )}
@@ -71,15 +71,15 @@ export default function WizardOptionCard({
         {/* Content */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-bold text-charcoal text-lg">{title}</span>
+            <span className="font-bold text-white text-lg">{title}</span>
             {badge && (
-              <span className={`px-2 py-0.5 rounded-clay-pill text-xs font-bold text-charcoal ${badgeColors[badgeColor]}`}>
+              <span className={`px-2 py-0.5 rounded-clay-pill text-xs font-bold text-white ${badgeColors[badgeColor]}`}>
                 {badge}
               </span>
             )}
           </div>
           {description && (
-            <p className="text-charcoal-light mt-1">{description}</p>
+            <p className="text-white/70 mt-1">{description}</p>
           )}
         </div>
       </div>

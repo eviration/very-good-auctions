@@ -1005,7 +1005,7 @@ export default function EventDashboardPage() {
               className={`pb-4 text-sm font-medium border-b-2 transition-colors ${
                 activeTab === tab
                   ? 'border-sage text-sage'
-                  : 'border-transparent text-gray-500 hover:text-charcoal'
+                  : 'border-transparent text-gray-500 hover:text-white'
               }`}
             >
               {tab === 'items' ? 'Auction Items' : tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -1043,42 +1043,42 @@ export default function EventDashboardPage() {
               <div className="text-gray-500 text-sm">Total Raised</div>
             </div>
             <div className="bg-white rounded-lg shadow-sm border border-sage/20 p-6">
-              <div className="text-3xl font-bold text-charcoal">{event.maxItems}</div>
+              <div className="text-3xl font-bold text-white">{event.maxItems}</div>
               <div className="text-gray-500 text-sm">Max Items ({event.tier})</div>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="bg-white rounded-lg shadow-sm border border-sage/20 p-6">
-              <h3 className="font-semibold text-charcoal mb-4">Event Schedule</h3>
+              <h3 className="font-semibold text-white mb-4">Event Schedule</h3>
               <dl className="space-y-3">
                 <div>
                   <dt className="text-sm text-gray-500">Start Time</dt>
-                  <dd className="font-medium text-charcoal">{formatDate(event.startTime)}</dd>
+                  <dd className="font-medium text-white">{formatDate(event.startTime)}</dd>
                 </div>
                 <div>
                   <dt className="text-sm text-gray-500">End Time</dt>
-                  <dd className="font-medium text-charcoal">{formatDate(event.endTime)}</dd>
+                  <dd className="font-medium text-white">{formatDate(event.endTime)}</dd>
                 </div>
                 {event.submissionDeadline && (
                   <div>
                     <dt className="text-sm text-gray-500">Submission Deadline</dt>
-                    <dd className="font-medium text-charcoal">{formatDate(event.submissionDeadline)}</dd>
+                    <dd className="font-medium text-white">{formatDate(event.submissionDeadline)}</dd>
                   </div>
                 )}
               </dl>
             </div>
 
             <div className="bg-white rounded-lg shadow-sm border border-sage/20 p-6">
-              <h3 className="font-semibold text-charcoal mb-4">Auction Settings</h3>
+              <h3 className="font-semibold text-white mb-4">Auction Settings</h3>
               <dl className="space-y-3">
                 <div>
                   <dt className="text-sm text-gray-500">Auction Type</dt>
-                  <dd className="font-medium text-charcoal capitalize">{event.auctionType}</dd>
+                  <dd className="font-medium text-white capitalize">{event.auctionType}</dd>
                 </div>
                 <div>
                   <dt className="text-sm text-gray-500">Bid Increment</dt>
-                  <dd className="font-medium text-charcoal">
+                  <dd className="font-medium text-white">
                     {event.incrementType === 'fixed'
                       ? `$${event.incrementValue}`
                       : `${event.incrementValue}%`}
@@ -1086,7 +1086,7 @@ export default function EventDashboardPage() {
                 </div>
                 <div>
                   <dt className="text-sm text-gray-500">Buy Now</dt>
-                  <dd className="font-medium text-charcoal">
+                  <dd className="font-medium text-white">
                     {event.buyNowEnabled ? 'Enabled' : 'Disabled'}
                   </dd>
                 </div>
@@ -1149,7 +1149,7 @@ export default function EventDashboardPage() {
                   d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
                 />
               </svg>
-              <h2 className="text-xl font-semibold text-charcoal mb-2">No items yet</h2>
+              <h2 className="text-xl font-semibold text-white mb-2">No items yet</h2>
               <p className="text-gray-500 mb-4">
                 Share your submission link to start collecting items, or add items manually
               </p>
@@ -1178,11 +1178,11 @@ export default function EventDashboardPage() {
               <table className="w-full">
                 <thead className="bg-sage/10">
                   <tr>
-                    <th className="text-left px-6 py-3 text-sm font-medium text-charcoal">Item</th>
-                    <th className="text-left px-6 py-3 text-sm font-medium text-charcoal">Submitted By</th>
-                    <th className="text-left px-6 py-3 text-sm font-medium text-charcoal">Price</th>
-                    <th className="text-left px-6 py-3 text-sm font-medium text-charcoal">Status</th>
-                    <th className="text-right px-6 py-3 text-sm font-medium text-charcoal">Actions</th>
+                    <th className="text-left px-6 py-3 text-sm font-medium text-white">Item</th>
+                    <th className="text-left px-6 py-3 text-sm font-medium text-white">Submitted By</th>
+                    <th className="text-left px-6 py-3 text-sm font-medium text-white">Price</th>
+                    <th className="text-left px-6 py-3 text-sm font-medium text-white">Status</th>
+                    <th className="text-right px-6 py-3 text-sm font-medium text-white">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-sage/10">
@@ -1204,7 +1204,7 @@ export default function EventDashboardPage() {
                             </div>
                           )}
                           <div>
-                            <div className="font-medium text-charcoal">{item.title}</div>
+                            <div className="font-medium text-white">{item.title}</div>
                             {item.description && (
                               <div className="text-sm text-gray-500 truncate max-w-xs">
                                 {item.description}
@@ -1214,14 +1214,14 @@ export default function EventDashboardPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="text-sm text-charcoal">
+                        <div className="text-sm text-white">
                           {item.submitter?.name || item.submitterName || 'Unknown'}
                         </div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-sm">
                           {item.startingPrice ? (
-                            <span className="text-charcoal">${item.startingPrice}</span>
+                            <span className="text-white">${item.startingPrice}</span>
                           ) : (
                             <span className="text-gray-400">No starting price</span>
                           )}
@@ -1291,13 +1291,13 @@ export default function EventDashboardPage() {
 
           {/* Public Donations Section */}
           <div className="mt-8 pt-8 border-t border-sage/20">
-            <h3 className="text-lg font-semibold text-charcoal mb-4">Public Donations</h3>
+            <h3 className="text-lg font-semibold text-white mb-4">Public Donations</h3>
 
             {/* Donation Link Card */}
           <div className="bg-white rounded-lg shadow-sm border border-sage/20 p-6">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="font-semibold text-charcoal">Public Donation Link</h3>
+                <h3 className="font-semibold text-white">Public Donation Link</h3>
                 <p className="text-sm text-gray-500">Share this link to collect item donations from the public</p>
               </div>
               {donationSettings?.code ? (
@@ -1310,7 +1310,7 @@ export default function EventDashboardPage() {
                       className="sr-only peer"
                     />
                     <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-sage/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-sage"></div>
-                    <span className="ml-3 text-sm font-medium text-charcoal">
+                    <span className="ml-3 text-sm font-medium text-white">
                       {donationSettings.enabled ? 'Enabled' : 'Disabled'}
                     </span>
                   </label>
@@ -1372,7 +1372,7 @@ export default function EventDashboardPage() {
 
                 {/* Donation URL */}
                 <div>
-                  <label className="block text-sm font-medium text-charcoal mb-1">Donation URL</label>
+                  <label className="block text-sm font-medium text-white mb-1">Donation URL</label>
                   <div className="flex gap-2">
                     <input
                       type="text"
@@ -1391,7 +1391,7 @@ export default function EventDashboardPage() {
 
                 {/* Access Code */}
                 <div>
-                  <label className="block text-sm font-medium text-charcoal mb-1">Access Code</label>
+                  <label className="block text-sm font-medium text-white mb-1">Access Code</label>
                   <div className="flex gap-2">
                     <input
                       type="text"
@@ -1411,7 +1411,7 @@ export default function EventDashboardPage() {
 
                 {/* Email Sharing Section */}
                 <div className="pt-4 border-t border-sage/20">
-                  <label className="block text-sm font-medium text-charcoal mb-1">Share via Email</label>
+                  <label className="block text-sm font-medium text-white mb-1">Share via Email</label>
                   <p className="text-xs text-gray-500 mb-2">
                     Enter email addresses separated by commas, spaces, or new lines (max 50)
                   </p>
@@ -1422,7 +1422,7 @@ export default function EventDashboardPage() {
                     rows={3}
                     className="w-full px-4 py-2 border border-sage/30 rounded-lg bg-white text-sm resize-none mb-2"
                   />
-                  <label className="block text-sm font-medium text-charcoal mb-1">Custom Message (optional)</label>
+                  <label className="block text-sm font-medium text-white mb-1">Custom Message (optional)</label>
                   <textarea
                     value={emailShareMessage}
                     onChange={(e) => setEmailShareMessage(e.target.value)}
@@ -1523,7 +1523,7 @@ export default function EventDashboardPage() {
                   d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"
                 />
               </svg>
-              <h2 className="text-xl font-semibold text-charcoal mb-2">No donations yet</h2>
+              <h2 className="text-xl font-semibold text-white mb-2">No donations yet</h2>
               <p className="text-gray-500 mb-4">
                 {donationSettings?.code
                   ? 'Share your donation link to start receiving item donations'
@@ -1543,11 +1543,11 @@ export default function EventDashboardPage() {
               <table className="w-full">
                 <thead className="bg-sage/10">
                   <tr>
-                    <th className="text-left px-6 py-3 text-sm font-medium text-charcoal">Item</th>
-                    <th className="text-left px-6 py-3 text-sm font-medium text-charcoal">Donor</th>
-                    <th className="text-left px-6 py-3 text-sm font-medium text-charcoal">Est. Value</th>
-                    <th className="text-left px-6 py-3 text-sm font-medium text-charcoal">Status</th>
-                    <th className="text-right px-6 py-3 text-sm font-medium text-charcoal">Actions</th>
+                    <th className="text-left px-6 py-3 text-sm font-medium text-white">Item</th>
+                    <th className="text-left px-6 py-3 text-sm font-medium text-white">Donor</th>
+                    <th className="text-left px-6 py-3 text-sm font-medium text-white">Est. Value</th>
+                    <th className="text-left px-6 py-3 text-sm font-medium text-white">Status</th>
+                    <th className="text-right px-6 py-3 text-sm font-medium text-white">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-sage/10">
@@ -1569,7 +1569,7 @@ export default function EventDashboardPage() {
                             </div>
                           )}
                           <div>
-                            <div className="font-medium text-charcoal">{submission.name}</div>
+                            <div className="font-medium text-white">{submission.name}</div>
                             {submission.description && (
                               <div className="text-sm text-gray-500 truncate max-w-xs">
                                 {submission.description}
@@ -1589,7 +1589,7 @@ export default function EventDashboardPage() {
                             <span className="text-gray-400 italic">Anonymous</span>
                           ) : (
                             <>
-                              <div className="text-charcoal">{submission.donor.name || 'Unknown'}</div>
+                              <div className="text-white">{submission.donor.name || 'Unknown'}</div>
                               {submission.donor.email && (
                                 <div className="text-gray-500 text-xs">{submission.donor.email}</div>
                               )}
@@ -1598,7 +1598,7 @@ export default function EventDashboardPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="text-sm text-charcoal">
+                        <div className="text-sm text-white">
                           {submission.estimatedValue ? `$${submission.estimatedValue.toLocaleString()}` : '-'}
                         </div>
                       </td>
@@ -1693,7 +1693,7 @@ export default function EventDashboardPage() {
               <div className="text-gray-500 text-sm">Paid</div>
             </div>
             <div className="bg-white rounded-lg shadow-sm border border-sage/20 p-4">
-              <div className="text-2xl font-bold text-charcoal">{pendingFulfillmentCount}</div>
+              <div className="text-2xl font-bold text-white">{pendingFulfillmentCount}</div>
               <div className="text-gray-500 text-sm">Pending Fulfillment</div>
             </div>
           </div>
@@ -1740,7 +1740,7 @@ export default function EventDashboardPage() {
                   d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z"
                 />
               </svg>
-              <h2 className="text-xl font-semibold text-charcoal mb-2">No won items</h2>
+              <h2 className="text-xl font-semibold text-white mb-2">No won items</h2>
               <p className="text-gray-500">
                 {paymentFilter === 'all'
                   ? 'No items have been won yet'
@@ -1752,12 +1752,12 @@ export default function EventDashboardPage() {
               <table className="w-full">
                 <thead className="bg-sage/10">
                   <tr>
-                    <th className="text-left px-6 py-3 text-sm font-medium text-charcoal">Item</th>
-                    <th className="text-left px-6 py-3 text-sm font-medium text-charcoal">Winner</th>
-                    <th className="text-left px-6 py-3 text-sm font-medium text-charcoal">Amount</th>
-                    <th className="text-left px-6 py-3 text-sm font-medium text-charcoal">Payment</th>
-                    <th className="text-left px-6 py-3 text-sm font-medium text-charcoal">Fulfillment</th>
-                    <th className="text-right px-6 py-3 text-sm font-medium text-charcoal">Actions</th>
+                    <th className="text-left px-6 py-3 text-sm font-medium text-white">Item</th>
+                    <th className="text-left px-6 py-3 text-sm font-medium text-white">Winner</th>
+                    <th className="text-left px-6 py-3 text-sm font-medium text-white">Amount</th>
+                    <th className="text-left px-6 py-3 text-sm font-medium text-white">Payment</th>
+                    <th className="text-left px-6 py-3 text-sm font-medium text-white">Fulfillment</th>
+                    <th className="text-right px-6 py-3 text-sm font-medium text-white">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-sage/10">
@@ -1778,17 +1778,17 @@ export default function EventDashboardPage() {
                               </svg>
                             </div>
                           )}
-                          <div className="font-medium text-charcoal">{item.title}</div>
+                          <div className="font-medium text-white">{item.title}</div>
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="text-sm text-charcoal">{item.winnerName || 'Unknown'}</div>
+                        <div className="text-sm text-white">{item.winnerName || 'Unknown'}</div>
                         {item.winnerEmail && (
                           <div className="text-xs text-gray-500">{item.winnerEmail}</div>
                         )}
                       </td>
                       <td className="px-6 py-4">
-                        <div className="font-medium text-charcoal">
+                        <div className="font-medium text-white">
                           ${item.winningBid?.toLocaleString() || '0'}
                         </div>
                       </td>
@@ -1856,7 +1856,7 @@ export default function EventDashboardPage() {
         <div className="space-y-6">
           <div className="bg-white rounded-lg shadow-sm border border-sage/20 p-6">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-semibold text-charcoal">Event Settings</h2>
+              <h2 className="text-lg font-semibold text-white">Event Settings</h2>
               {!editMode ? (
                 <button
                   onClick={() => {
@@ -1895,7 +1895,7 @@ export default function EventDashboardPage() {
             {editMode ? (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-charcoal mb-1">Name</label>
+                  <label className="block text-sm font-medium text-white mb-1">Name</label>
                   <input
                     type="text"
                     value={editData.name || ''}
@@ -1904,7 +1904,7 @@ export default function EventDashboardPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-charcoal mb-1">Description</label>
+                  <label className="block text-sm font-medium text-white mb-1">Description</label>
                   <textarea
                     rows={4}
                     value={editData.description || ''}
@@ -1917,11 +1917,11 @@ export default function EventDashboardPage() {
               <dl className="space-y-4">
                 <div>
                   <dt className="text-sm text-gray-500">Name</dt>
-                  <dd className="font-medium text-charcoal">{event.name}</dd>
+                  <dd className="font-medium text-white">{event.name}</dd>
                 </div>
                 <div>
                   <dt className="text-sm text-gray-500">Description</dt>
-                  <dd className="text-charcoal">{event.description || '-'}</dd>
+                  <dd className="text-white">{event.description || '-'}</dd>
                 </div>
               </dl>
             )}
@@ -1929,7 +1929,7 @@ export default function EventDashboardPage() {
 
           {/* Cover Image Section */}
           <div className="bg-white rounded-lg shadow-sm border border-sage/20 p-6">
-            <h2 className="text-lg font-semibold text-charcoal mb-4">Cover Image</h2>
+            <h2 className="text-lg font-semibold text-white mb-4">Cover Image</h2>
             <ImageDropZone
               currentImageUrl={event.coverImageUrl}
               previewUrl={coverImagePreview}
@@ -2025,9 +2025,9 @@ export default function EventDashboardPage() {
       {showRejectModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-4">
-            <h2 className="text-lg font-semibold text-charcoal mb-4">Reject Item</h2>
+            <h2 className="text-lg font-semibold text-white mb-4">Reject Item</h2>
             <div>
-              <label className="block text-sm font-medium text-charcoal mb-1">Reason</label>
+              <label className="block text-sm font-medium text-white mb-1">Reason</label>
               <textarea
                 rows={3}
                 value={rejectReason}
@@ -2061,9 +2061,9 @@ export default function EventDashboardPage() {
       {showResubmitModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-4">
-            <h2 className="text-lg font-semibold text-charcoal mb-4">Request Changes</h2>
+            <h2 className="text-lg font-semibold text-white mb-4">Request Changes</h2>
             <div>
-              <label className="block text-sm font-medium text-charcoal mb-1">What needs to change?</label>
+              <label className="block text-sm font-medium text-white mb-1">What needs to change?</label>
               <textarea
                 rows={3}
                 value={resubmitReason}
@@ -2097,7 +2097,7 @@ export default function EventDashboardPage() {
       {showShareModal && submissionLink && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
-            <h2 className="text-lg font-semibold text-charcoal mb-4">Share Submission Link</h2>
+            <h2 className="text-lg font-semibold text-white mb-4">Share Submission Link</h2>
             <p className="text-gray-600 mb-4">
               Share this link or QR code with people who want to submit items to your auction.
             </p>
@@ -2147,7 +2147,7 @@ export default function EventDashboardPage() {
               </div>
 
               <div className="border-t border-gray-200 pt-4">
-                <label className="block text-sm font-medium text-charcoal mb-1">Submission URL</label>
+                <label className="block text-sm font-medium text-white mb-1">Submission URL</label>
                 <div className="flex gap-2">
                   <input
                     type="text"
@@ -2165,7 +2165,7 @@ export default function EventDashboardPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-charcoal mb-1">Access Code</label>
+                <label className="block text-sm font-medium text-white mb-1">Access Code</label>
                 <div className="flex gap-2">
                   <input
                     type="text"
@@ -2202,14 +2202,14 @@ export default function EventDashboardPage() {
       {showAddItemModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
-            <h2 className="text-lg font-semibold text-charcoal mb-4">Add Item</h2>
+            <h2 className="text-lg font-semibold text-white mb-4">Add Item</h2>
             <p className="text-gray-600 mb-4 text-sm">
               Add an item directly to your auction. It will be automatically approved.
             </p>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-charcoal mb-1">
+                <label className="block text-sm font-medium text-white mb-1">
                   Item Title <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -2222,7 +2222,7 @@ export default function EventDashboardPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-charcoal mb-1">Description</label>
+                <label className="block text-sm font-medium text-white mb-1">Description</label>
                 <textarea
                   value={addItemData.description}
                   onChange={(e) => setAddItemData((prev) => ({ ...prev, description: e.target.value }))}
@@ -2234,7 +2234,7 @@ export default function EventDashboardPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-charcoal mb-1">Starting Price ($)</label>
+                  <label className="block text-sm font-medium text-white mb-1">Starting Price ($)</label>
                   <input
                     type="number"
                     min="0"
@@ -2246,7 +2246,7 @@ export default function EventDashboardPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-charcoal mb-1">Buy Now Price ($)</label>
+                  <label className="block text-sm font-medium text-white mb-1">Buy Now Price ($)</label>
                   <input
                     type="number"
                     min="0"
@@ -2261,7 +2261,7 @@ export default function EventDashboardPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-charcoal mb-1">Condition</label>
+                  <label className="block text-sm font-medium text-white mb-1">Condition</label>
                   <select
                     value={addItemData.condition}
                     onChange={(e) => setAddItemData((prev) => ({ ...prev, condition: e.target.value }))}
@@ -2275,7 +2275,7 @@ export default function EventDashboardPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-charcoal mb-1">Category</label>
+                  <label className="block text-sm font-medium text-white mb-1">Category</label>
                   <input
                     type="text"
                     value={addItemData.category}
@@ -2287,10 +2287,10 @@ export default function EventDashboardPage() {
               </div>
 
               <div className="border-t border-gray-200 pt-4">
-                <h3 className="text-sm font-medium text-charcoal mb-3">Donor Information (Optional)</h3>
+                <h3 className="text-sm font-medium text-white mb-3">Donor Information (Optional)</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-charcoal mb-1">Donor Name</label>
+                    <label className="block text-sm font-medium text-white mb-1">Donor Name</label>
                     <input
                       type="text"
                       value={addItemData.donorName}
@@ -2300,7 +2300,7 @@ export default function EventDashboardPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-charcoal mb-1">Donor Email</label>
+                    <label className="block text-sm font-medium text-white mb-1">Donor Email</label>
                     <input
                       type="email"
                       value={addItemData.donorEmail}
@@ -2317,7 +2317,7 @@ export default function EventDashboardPage() {
                 className="border-t border-gray-200 pt-4"
                 onPaste={handleImagePaste}
               >
-                <h3 className="text-sm font-medium text-charcoal mb-3">
+                <h3 className="text-sm font-medium text-white mb-3">
                   Item Photos <span className="text-gray-500 font-normal">({addItemImages.length}/{MAX_IMAGES})</span>
                 </h3>
                 <p className="text-xs text-gray-500 mb-3">
@@ -2454,11 +2454,11 @@ export default function EventDashboardPage() {
       {editingItem && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
-            <h2 className="text-lg font-semibold text-charcoal mb-4">Edit Item</h2>
+            <h2 className="text-lg font-semibold text-white mb-4">Edit Item</h2>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-charcoal mb-1">
+                <label className="block text-sm font-medium text-white mb-1">
                   Item Title <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -2471,7 +2471,7 @@ export default function EventDashboardPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-charcoal mb-1">Description</label>
+                <label className="block text-sm font-medium text-white mb-1">Description</label>
                 <textarea
                   value={editItemData.description}
                   onChange={(e) => setEditItemData((prev) => ({ ...prev, description: e.target.value }))}
@@ -2483,7 +2483,7 @@ export default function EventDashboardPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-charcoal mb-1">Starting Price ($)</label>
+                  <label className="block text-sm font-medium text-white mb-1">Starting Price ($)</label>
                   <input
                     type="number"
                     min="0"
@@ -2495,7 +2495,7 @@ export default function EventDashboardPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-charcoal mb-1">Buy Now Price ($)</label>
+                  <label className="block text-sm font-medium text-white mb-1">Buy Now Price ($)</label>
                   <input
                     type="number"
                     min="0"
@@ -2510,7 +2510,7 @@ export default function EventDashboardPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-charcoal mb-1">Condition</label>
+                  <label className="block text-sm font-medium text-white mb-1">Condition</label>
                   <select
                     value={editItemData.condition}
                     onChange={(e) => setEditItemData((prev) => ({ ...prev, condition: e.target.value }))}
@@ -2524,7 +2524,7 @@ export default function EventDashboardPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-charcoal mb-1">Category</label>
+                  <label className="block text-sm font-medium text-white mb-1">Category</label>
                   <input
                     type="text"
                     value={editItemData.category}
@@ -2537,7 +2537,7 @@ export default function EventDashboardPage() {
 
               {/* Photos Section */}
               <div className="border-t border-gray-200 pt-4">
-                <h3 className="text-sm font-medium text-charcoal mb-3">Photos</h3>
+                <h3 className="text-sm font-medium text-white mb-3">Photos</h3>
 
                 {/* Current Images */}
                 {editingItem.images && editingItem.images.length > 0 && (
@@ -2662,10 +2662,10 @@ export default function EventDashboardPage() {
       {showPaymentModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-4">
-            <h2 className="text-lg font-semibold text-charcoal mb-4">Update Payment Status</h2>
+            <h2 className="text-lg font-semibold text-white mb-4">Update Payment Status</h2>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-charcoal mb-1">Payment Status</label>
+                <label className="block text-sm font-medium text-white mb-1">Payment Status</label>
                 <select
                   value={paymentModalData.status}
                   onChange={(e) => setPaymentModalData((prev) => ({ ...prev, status: e.target.value as ItemPaymentStatus }))}
@@ -2679,7 +2679,7 @@ export default function EventDashboardPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-charcoal mb-1">Payment Method Used</label>
+                <label className="block text-sm font-medium text-white mb-1">Payment Method Used</label>
                 <input
                   type="text"
                   value={paymentModalData.methodUsed}
@@ -2689,7 +2689,7 @@ export default function EventDashboardPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-charcoal mb-1">Notes (optional)</label>
+                <label className="block text-sm font-medium text-white mb-1">Notes (optional)</label>
                 <textarea
                   rows={2}
                   value={paymentModalData.notes}
@@ -2724,10 +2724,10 @@ export default function EventDashboardPage() {
       {showFulfillmentModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-4">
-            <h2 className="text-lg font-semibold text-charcoal mb-4">Update Fulfillment Status</h2>
+            <h2 className="text-lg font-semibold text-white mb-4">Update Fulfillment Status</h2>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-charcoal mb-1">Fulfillment Status</label>
+                <label className="block text-sm font-medium text-white mb-1">Fulfillment Status</label>
                 <select
                   value={fulfillmentModalData.status}
                   onChange={(e) => setFulfillmentModalData((prev) => ({ ...prev, status: e.target.value as ItemFulfillmentStatus }))}
@@ -2744,7 +2744,7 @@ export default function EventDashboardPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-charcoal mb-1">Fulfillment Type</label>
+                <label className="block text-sm font-medium text-white mb-1">Fulfillment Type</label>
                 <select
                   value={fulfillmentModalData.type || ''}
                   onChange={(e) => setFulfillmentModalData((prev) => ({ ...prev, type: e.target.value as 'shipping' | 'pickup' | 'digital' | undefined }))}
@@ -2759,7 +2759,7 @@ export default function EventDashboardPage() {
               {fulfillmentModalData.type === 'shipping' && (
                 <>
                   <div>
-                    <label className="block text-sm font-medium text-charcoal mb-1">Tracking Number</label>
+                    <label className="block text-sm font-medium text-white mb-1">Tracking Number</label>
                     <input
                       type="text"
                       value={fulfillmentModalData.trackingNumber}
@@ -2769,7 +2769,7 @@ export default function EventDashboardPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-charcoal mb-1">Carrier</label>
+                    <label className="block text-sm font-medium text-white mb-1">Carrier</label>
                     <input
                       type="text"
                       value={fulfillmentModalData.trackingCarrier}
@@ -2781,7 +2781,7 @@ export default function EventDashboardPage() {
                 </>
               )}
               <div>
-                <label className="block text-sm font-medium text-charcoal mb-1">Notes (optional)</label>
+                <label className="block text-sm font-medium text-white mb-1">Notes (optional)</label>
                 <textarea
                   rows={2}
                   value={fulfillmentModalData.notes}
@@ -2816,9 +2816,9 @@ export default function EventDashboardPage() {
       {showDonorRejectModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-4">
-            <h2 className="text-lg font-semibold text-charcoal mb-4">Reject Donation</h2>
+            <h2 className="text-lg font-semibold text-white mb-4">Reject Donation</h2>
             <div>
-              <label className="block text-sm font-medium text-charcoal mb-1">Reason (optional)</label>
+              <label className="block text-sm font-medium text-white mb-1">Reason (optional)</label>
               <textarea
                 rows={3}
                 value={donorRejectReason}
@@ -2852,13 +2852,13 @@ export default function EventDashboardPage() {
       {showConvertModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-4">
-            <h2 className="text-lg font-semibold text-charcoal mb-4">Add to Auction</h2>
+            <h2 className="text-lg font-semibold text-white mb-4">Add to Auction</h2>
             <p className="text-sm text-gray-500 mb-4">
               Set the starting bid and optional buy-now price for this item.
             </p>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-charcoal mb-1">Starting Bid *</label>
+                <label className="block text-sm font-medium text-white mb-1">Starting Bid *</label>
                 <div className="relative">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">$</span>
                   <input
@@ -2873,7 +2873,7 @@ export default function EventDashboardPage() {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-charcoal mb-1">Buy Now Price (optional)</label>
+                <label className="block text-sm font-medium text-white mb-1">Buy Now Price (optional)</label>
                 <div className="relative">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">$</span>
                   <input

@@ -148,7 +148,7 @@ export default function AdminW9Review() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-charcoal">W-9 Submissions</h2>
+          <h2 className="text-2xl font-bold text-white">W-9 Submissions</h2>
           <p className="text-gray-500">Review and verify tax information</p>
         </div>
       </div>
@@ -157,7 +157,7 @@ export default function AdminW9Review() {
       {stats && (
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
           <div className="bg-white rounded-lg p-4 shadow-sm">
-            <p className="text-2xl font-bold text-charcoal">{stats.total}</p>
+            <p className="text-2xl font-bold text-white">{stats.total}</p>
             <p className="text-sm text-gray-500">Total</p>
           </div>
           <div className="bg-yellow-50 rounded-lg p-4 shadow-sm border border-yellow-100">
@@ -248,7 +248,7 @@ export default function AdminW9Review() {
               {submissions.map((submission) => (
                 <tr key={submission.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="font-medium text-charcoal">{submission.legalName}</div>
+                    <div className="font-medium text-white">{submission.legalName}</div>
                     {submission.businessName && (
                       <div className="text-sm text-gray-500">{submission.businessName}</div>
                     )}
@@ -307,7 +307,7 @@ export default function AdminW9Review() {
           <div className="absolute inset-y-0 right-0 w-full max-w-lg bg-white shadow-xl">
             <div className="flex flex-col h-full">
               <div className="flex items-center justify-between p-6 border-b">
-                <h3 className="text-lg font-semibold text-charcoal">W-9 Details</h3>
+                <h3 className="text-lg font-semibold text-white">W-9 Details</h3>
                 <button
                   onClick={() => setSelectedSubmission(null)}
                   className="text-gray-400 hover:text-gray-600"
@@ -329,21 +329,21 @@ export default function AdminW9Review() {
                   {/* Legal Name */}
                   <div>
                     <label className="block text-sm text-gray-500 mb-1">Legal Name</label>
-                    <p className="font-medium text-charcoal">{selectedSubmission.legalName}</p>
+                    <p className="font-medium text-white">{selectedSubmission.legalName}</p>
                   </div>
 
                   {/* Business Name */}
                   {selectedSubmission.businessName && (
                     <div>
                       <label className="block text-sm text-gray-500 mb-1">Business Name</label>
-                      <p className="font-medium text-charcoal">{selectedSubmission.businessName}</p>
+                      <p className="font-medium text-white">{selectedSubmission.businessName}</p>
                     </div>
                   )}
 
                   {/* Tax Classification */}
                   <div>
                     <label className="block text-sm text-gray-500 mb-1">Tax Classification</label>
-                    <p className="font-medium text-charcoal">
+                    <p className="font-medium text-white">
                       {formatTaxClassification(selectedSubmission.taxClassification)}
                     </p>
                   </div>
@@ -353,7 +353,7 @@ export default function AdminW9Review() {
                     <label className="block text-sm text-gray-500 mb-1">
                       {selectedSubmission.tinType === 'ssn' ? 'Social Security Number' : 'Employer ID Number'}
                     </label>
-                    <p className="font-medium text-charcoal font-mono">
+                    <p className="font-medium text-white font-mono">
                       ***-**-{selectedSubmission.tinLastFour}
                     </p>
                   </div>
@@ -361,7 +361,7 @@ export default function AdminW9Review() {
                   {/* Address */}
                   <div>
                     <label className="block text-sm text-gray-500 mb-1">Address</label>
-                    <p className="font-medium text-charcoal">
+                    <p className="font-medium text-white">
                       {selectedSubmission.address.line1}
                       {selectedSubmission.address.line2 && <><br />{selectedSubmission.address.line2}</>}
                       <br />
@@ -374,7 +374,7 @@ export default function AdminW9Review() {
                   {/* Signature */}
                   <div>
                     <label className="block text-sm text-gray-500 mb-1">Electronic Signature</label>
-                    <p className="font-medium text-charcoal italic">"{selectedSubmission.signatureName}"</p>
+                    <p className="font-medium text-white italic">"{selectedSubmission.signatureName}"</p>
                     <p className="text-sm text-gray-500">Signed on {formatDate(selectedSubmission.signatureDate)}</p>
                   </div>
 
@@ -382,12 +382,12 @@ export default function AdminW9Review() {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm text-gray-500 mb-1">Submitted</label>
-                      <p className="font-medium text-charcoal">{formatDate(selectedSubmission.createdAt)}</p>
+                      <p className="font-medium text-white">{formatDate(selectedSubmission.createdAt)}</p>
                     </div>
                     {selectedSubmission.verifiedAt && (
                       <div>
                         <label className="block text-sm text-gray-500 mb-1">Verified</label>
-                        <p className="font-medium text-charcoal">{formatDate(selectedSubmission.verifiedAt)}</p>
+                        <p className="font-medium text-white">{formatDate(selectedSubmission.verifiedAt)}</p>
                       </div>
                     )}
                   </div>
@@ -423,7 +423,7 @@ export default function AdminW9Review() {
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/50" onClick={() => setShowActionModal(false)} />
           <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
-            <h3 className="text-xl font-bold text-charcoal mb-4">
+            <h3 className="text-xl font-bold text-white mb-4">
               {actionType === 'verified' ? 'Verify W-9' : 'Reject W-9'}
             </h3>
             <p className="text-gray-600 mb-4">

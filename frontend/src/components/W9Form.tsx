@@ -161,7 +161,7 @@ export default function W9Form({ onSubmit, onCancel }: W9FormProps) {
 
       {/* Legal Name */}
       <div>
-        <label className="block text-sm font-medium text-charcoal mb-2">
+        <label className="block text-sm font-medium text-white mb-2">
           Legal Name (as shown on your tax return) *
         </label>
         <input
@@ -176,7 +176,7 @@ export default function W9Form({ onSubmit, onCancel }: W9FormProps) {
 
       {/* Business Name */}
       <div>
-        <label className="block text-sm font-medium text-charcoal mb-2">
+        <label className="block text-sm font-medium text-white mb-2">
           Business Name (if different from above)
         </label>
         <input
@@ -190,7 +190,7 @@ export default function W9Form({ onSubmit, onCancel }: W9FormProps) {
 
       {/* Tax Classification */}
       <div>
-        <label className="block text-sm font-medium text-charcoal mb-2">
+        <label className="block text-sm font-medium text-white mb-2">
           Federal Tax Classification *
         </label>
         <select
@@ -207,7 +207,7 @@ export default function W9Form({ onSubmit, onCancel }: W9FormProps) {
       {/* TIN Type and Number */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-charcoal mb-2">Tax ID Type *</label>
+          <label className="block text-sm font-medium text-white mb-2">Tax ID Type *</label>
           <select
             value={formData.tinType}
             onChange={(e) => setFormData({
@@ -222,7 +222,7 @@ export default function W9Form({ onSubmit, onCancel }: W9FormProps) {
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-charcoal mb-2">
+          <label className="block text-sm font-medium text-white mb-2">
             {formData.tinType === 'ssn' ? 'SSN' : 'EIN'} *
           </label>
           <input
@@ -242,7 +242,7 @@ export default function W9Form({ onSubmit, onCancel }: W9FormProps) {
 
       {/* Address */}
       <div className="space-y-3">
-        <label className="block text-sm font-medium text-charcoal">Address *</label>
+        <label className="block text-sm font-medium text-white">Address *</label>
         <input
           type="text"
           placeholder="Street address"
@@ -313,7 +313,7 @@ export default function W9Form({ onSubmit, onCancel }: W9FormProps) {
 
       {/* Certification */}
       <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
-        <h4 className="font-medium text-charcoal mb-2">Certification</h4>
+        <h4 className="font-medium text-white mb-2">Certification</h4>
         <p className="text-sm text-gray-600 mb-3">
           Under penalties of perjury, I certify that:
         </p>
@@ -330,7 +330,7 @@ export default function W9Form({ onSubmit, onCancel }: W9FormProps) {
             onChange={(e) => setFormData({ ...formData, certify: e.target.checked })}
             className="mt-1 h-5 w-5 text-sage border-gray-300 rounded focus:ring-sage"
           />
-          <span className="text-sm text-charcoal">
+          <span className="text-sm text-white">
             I certify under penalties of perjury that the above statements are true and correct *
           </span>
         </label>
@@ -339,7 +339,7 @@ export default function W9Form({ onSubmit, onCancel }: W9FormProps) {
 
       {/* Signature */}
       <div>
-        <label className="block text-sm font-medium text-charcoal mb-2">
+        <label className="block text-sm font-medium text-white mb-2">
           Electronic Signature (type your full legal name) *
         </label>
         <input
@@ -366,7 +366,7 @@ export default function W9Form({ onSubmit, onCancel }: W9FormProps) {
         <button
           type="button"
           onClick={onCancel}
-          className="flex-1 py-4 border-2 border-gray-200 text-charcoal font-semibold rounded-xl hover:bg-gray-50 transition-colors"
+          className="flex-1 py-4 border-2 border-gray-200 text-white font-semibold rounded-xl hover:bg-gray-50 transition-colors"
         >
           Cancel
         </button>

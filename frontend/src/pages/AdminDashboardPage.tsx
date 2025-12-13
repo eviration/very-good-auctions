@@ -166,7 +166,7 @@ export default function AdminDashboardPage() {
         {/* Sidebar */}
         <div className="w-64 bg-white shadow-lg min-h-screen sticky top-20">
           <div className="p-6">
-            <h1 className="text-xl font-bold text-charcoal mb-1">Admin Dashboard</h1>
+            <h1 className="text-xl font-bold text-white mb-1">Admin Dashboard</h1>
             <p className="text-sm text-gray-500">Platform management</p>
           </div>
 
@@ -300,7 +300,7 @@ function OverviewPanel({
 
   return (
     <div>
-      <h2 className="text-2xl font-bold text-charcoal mb-6">Dashboard Overview</h2>
+      <h2 className="text-2xl font-bold text-white mb-6">Dashboard Overview</h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {statCards.map((card, idx) => (
@@ -318,7 +318,7 @@ function OverviewPanel({
                 </button>
               )}
             </div>
-            <p className="text-3xl font-bold text-charcoal mb-1">{card.value}</p>
+            <p className="text-3xl font-bold text-white mb-1">{card.value}</p>
             <p className="text-sm text-gray-500">{card.label}</p>
           </div>
         ))}
@@ -326,7 +326,7 @@ function OverviewPanel({
 
       {/* Quick Actions */}
       <div className="bg-white rounded-xl shadow-sm p-6">
-        <h3 className="text-lg font-semibold text-charcoal mb-4">Quick Actions</h3>
+        <h3 className="text-lg font-semibold text-white mb-4">Quick Actions</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <button
             onClick={() => onNavigate('w9')}
@@ -338,7 +338,7 @@ function OverviewPanel({
               </svg>
             </div>
             <div>
-              <p className="font-medium text-charcoal">Review W-9 Submissions</p>
+              <p className="font-medium text-white">Review W-9 Submissions</p>
               <p className="text-sm text-gray-500">Verify tax information</p>
             </div>
           </button>
@@ -353,7 +353,7 @@ function OverviewPanel({
               </svg>
             </div>
             <div>
-              <p className="font-medium text-charcoal">Respond to Feedback</p>
+              <p className="font-medium text-white">Respond to Feedback</p>
               <p className="text-sm text-gray-500">Address user concerns</p>
             </div>
           </button>
@@ -368,7 +368,7 @@ function OverviewPanel({
               </svg>
             </div>
             <div>
-              <p className="font-medium text-charcoal">Manage Administrators</p>
+              <p className="font-medium text-white">Manage Administrators</p>
               <p className="text-sm text-gray-500">Add or remove admins</p>
             </div>
           </button>

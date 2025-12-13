@@ -278,7 +278,7 @@ export default function AdminUatManagement() {
   return (
     <div>
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-charcoal">UAT Management</h2>
+        <h2 className="text-2xl font-bold text-white">UAT Management</h2>
         <p className="text-gray-500 mt-1">Manage testers, feedback, and time controls for User Acceptance Testing</p>
       </div>
 
@@ -333,7 +333,7 @@ export default function AdminUatManagement() {
                   </svg>
                 </div>
               </div>
-              <p className="text-3xl font-bold text-charcoal">{testerCounts.total}</p>
+              <p className="text-3xl font-bold text-white">{testerCounts.total}</p>
               <p className="text-xs text-gray-500 mt-1">{testerCounts.active} active</p>
             </div>
 
@@ -346,7 +346,7 @@ export default function AdminUatManagement() {
                   </svg>
                 </div>
               </div>
-              <p className="text-3xl font-bold text-charcoal">{testerCounts.invited}</p>
+              <p className="text-3xl font-bold text-white">{testerCounts.invited}</p>
               <p className="text-xs text-gray-500 mt-1">awaiting response</p>
             </div>
 
@@ -359,7 +359,7 @@ export default function AdminUatManagement() {
                   </svg>
                 </div>
               </div>
-              <p className="text-3xl font-bold text-charcoal">{feedbackCounts.total}</p>
+              <p className="text-3xl font-bold text-white">{feedbackCounts.total}</p>
               <p className="text-xs text-gray-500 mt-1">{feedbackCounts.byStatus['new'] || 0} new</p>
             </div>
 
@@ -372,14 +372,14 @@ export default function AdminUatManagement() {
                   </svg>
                 </div>
               </div>
-              <p className="text-lg font-bold text-charcoal">{timeInfo?.isFrozen ? 'Frozen' : 'Running'}</p>
+              <p className="text-lg font-bold text-white">{timeInfo?.isFrozen ? 'Frozen' : 'Running'}</p>
               <p className="text-xs text-gray-500 mt-1">{timeInfo?.offsetHuman || 'No offset'}</p>
             </div>
           </div>
 
           {/* Quick Actions */}
           <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-            <h3 className="text-lg font-semibold text-charcoal mb-4">Quick Actions</h3>
+            <h3 className="text-lg font-semibold text-white mb-4">Quick Actions</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <button
                 onClick={() => setActiveSection('testers')}
@@ -391,7 +391,7 @@ export default function AdminUatManagement() {
                   </svg>
                 </div>
                 <div>
-                  <p className="font-medium text-charcoal">Invite Testers</p>
+                  <p className="font-medium text-white">Invite Testers</p>
                   <p className="text-sm text-gray-500">Add new UAT participants</p>
                 </div>
               </button>
@@ -406,7 +406,7 @@ export default function AdminUatManagement() {
                   </svg>
                 </div>
                 <div>
-                  <p className="font-medium text-charcoal">Review Feedback</p>
+                  <p className="font-medium text-white">Review Feedback</p>
                   <p className="text-sm text-gray-500">{feedbackCounts.byStatus['new'] || 0} items pending</p>
                 </div>
               </button>
@@ -421,7 +421,7 @@ export default function AdminUatManagement() {
                   </svg>
                 </div>
                 <div>
-                  <p className="font-medium text-charcoal">Time Controls</p>
+                  <p className="font-medium text-white">Time Controls</p>
                   <p className="text-sm text-gray-500">Manipulate test time</p>
                 </div>
               </button>
@@ -432,7 +432,7 @@ export default function AdminUatManagement() {
           {feedback.length > 0 && (
             <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold text-charcoal">Recent Feedback</h3>
+                <h3 className="text-lg font-semibold text-white">Recent Feedback</h3>
                 <button
                   onClick={() => setActiveSection('feedback')}
                   className="text-sm text-sage hover:text-sage/80 font-medium"
@@ -447,7 +447,7 @@ export default function AdminUatManagement() {
                       <span className={`px-2 py-1 text-xs font-medium rounded-full ${getFeedbackTypeBadgeClass(item.feedback_type)}`}>
                         {item.feedback_type}
                       </span>
-                      <span className="text-sm text-charcoal font-medium truncate max-w-xs">{item.title}</span>
+                      <span className="text-sm text-white font-medium truncate max-w-xs">{item.title}</span>
                     </div>
                     <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusBadgeClass(item.status)}`}>
                       {item.status}
@@ -465,7 +465,7 @@ export default function AdminUatManagement() {
         <div className="space-y-6">
           {/* Invite Form */}
           <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-            <h3 className="text-lg font-semibold text-charcoal mb-4">Invite New Testers</h3>
+            <h3 className="text-lg font-semibold text-white mb-4">Invite New Testers</h3>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -523,7 +523,7 @@ export default function AdminUatManagement() {
             ].map((stat) => (
               <div key={stat.label} className="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
                 <p className="text-sm text-gray-600">{stat.label}</p>
-                <p className="text-2xl font-bold text-charcoal">{stat.count}</p>
+                <p className="text-2xl font-bold text-white">{stat.count}</p>
               </div>
             ))}
           </div>
@@ -545,7 +545,7 @@ export default function AdminUatManagement() {
               <tbody className="divide-y divide-gray-200">
                 {testers.map((tester) => (
                   <tr key={tester.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 text-sm text-charcoal">{tester.email}</td>
+                    <td className="px-4 py-3 text-sm text-white">{tester.email}</td>
                     <td className="px-4 py-3 text-sm text-gray-600">{tester.name || '-'}</td>
                     <td className="px-4 py-3">
                       <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getStatusBadgeClass(tester.status)}`}>
@@ -617,7 +617,7 @@ export default function AdminUatManagement() {
                 }))}
               >
                 <p className="text-sm text-gray-600 capitalize">{status.replace('_', ' ')}</p>
-                <p className="text-2xl font-bold text-charcoal">{feedbackCounts.byStatus[status] || 0}</p>
+                <p className="text-2xl font-bold text-white">{feedbackCounts.byStatus[status] || 0}</p>
               </button>
             ))}
           </div>
@@ -654,7 +654,7 @@ export default function AdminUatManagement() {
                             {item.feedback_type}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-sm text-charcoal font-medium max-w-xs truncate">{item.title}</td>
+                        <td className="px-4 py-3 text-sm text-white font-medium max-w-xs truncate">{item.title}</td>
                         <td className="px-4 py-3 text-sm text-gray-600">{item.tester_email || 'Unknown'}</td>
                         <td className="px-4 py-3">
                           <select
@@ -692,7 +692,7 @@ export default function AdminUatManagement() {
             {selectedFeedback && (
               <div className="w-96 bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                 <div className="flex justify-between items-start mb-4">
-                  <h3 className="text-lg font-semibold text-charcoal">{selectedFeedback.title}</h3>
+                  <h3 className="text-lg font-semibold text-white">{selectedFeedback.title}</h3>
                   <button
                     onClick={() => setSelectedFeedback(null)}
                     className="text-gray-400 hover:text-gray-600"
@@ -713,15 +713,15 @@ export default function AdminUatManagement() {
                   </div>
                   <div>
                     <p className="text-sm font-medium text-gray-500 mb-1">Description</p>
-                    <p className="text-sm text-charcoal">{selectedFeedback.description}</p>
+                    <p className="text-sm text-white">{selectedFeedback.description}</p>
                   </div>
                   <div>
                     <p className="text-sm font-medium text-gray-500 mb-1">Submitted By</p>
-                    <p className="text-sm text-charcoal">{selectedFeedback.tester_email || 'Unknown'}</p>
+                    <p className="text-sm text-white">{selectedFeedback.tester_email || 'Unknown'}</p>
                   </div>
                   <div>
                     <p className="text-sm font-medium text-gray-500 mb-1">Submitted At</p>
-                    <p className="text-sm text-charcoal">{formatDate(selectedFeedback.submitted_at)}</p>
+                    <p className="text-sm text-white">{formatDate(selectedFeedback.submitted_at)}</p>
                   </div>
                 </div>
               </div>
@@ -735,11 +735,11 @@ export default function AdminUatManagement() {
         <div className="space-y-6">
           {/* Current Time Status */}
           <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-            <h3 className="text-lg font-semibold text-charcoal mb-4">Current Time Status</h3>
+            <h3 className="text-lg font-semibold text-white mb-4">Current Time Status</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               <div>
                 <p className="text-sm text-gray-500 mb-1">Real Time</p>
-                <p className="text-lg font-mono text-charcoal">{formatDate(timeInfo.realTime)}</p>
+                <p className="text-lg font-mono text-white">{formatDate(timeInfo.realTime)}</p>
               </div>
               <div>
                 <p className="text-sm text-gray-500 mb-1">Effective Time (UAT)</p>
@@ -747,7 +747,7 @@ export default function AdminUatManagement() {
               </div>
               <div>
                 <p className="text-sm text-gray-500 mb-1">Offset</p>
-                <p className="text-lg font-medium text-charcoal">{timeInfo.offsetHuman}</p>
+                <p className="text-lg font-medium text-white">{timeInfo.offsetHuman}</p>
               </div>
               <div>
                 <p className="text-sm text-gray-500 mb-1">Status</p>
@@ -764,7 +764,7 @@ export default function AdminUatManagement() {
           <div className="grid grid-cols-2 gap-6">
             {/* Set Offset */}
             <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-              <h3 className="text-md font-semibold text-charcoal mb-4">Set Time Offset</h3>
+              <h3 className="text-md font-semibold text-white mb-4">Set Time Offset</h3>
               <div className="flex gap-2 mb-3">
                 <input
                   type="text"
@@ -788,14 +788,14 @@ export default function AdminUatManagement() {
 
             {/* Quick Advance */}
             <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-              <h3 className="text-md font-semibold text-charcoal mb-4">Quick Advance</h3>
+              <h3 className="text-md font-semibold text-white mb-4">Quick Advance</h3>
               <div className="grid grid-cols-3 gap-2">
                 {['+1h', '+6h', '+12h', '+1d', '+3d', '+1w'].map((duration) => (
                   <button
                     key={duration}
                     onClick={() => handleAdvanceTime(duration)}
                     disabled={isUpdatingTime}
-                    className="border border-gray-300 hover:border-sage hover:bg-sage/5 text-charcoal px-3 py-2 rounded-lg text-sm font-medium disabled:opacity-50 transition-colors"
+                    className="border border-gray-300 hover:border-sage hover:bg-sage/5 text-white px-3 py-2 rounded-lg text-sm font-medium disabled:opacity-50 transition-colors"
                   >
                     {duration}
                   </button>
@@ -806,7 +806,7 @@ export default function AdminUatManagement() {
 
           {/* Freeze/Reset */}
           <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-            <h3 className="text-md font-semibold text-charcoal mb-4">Freeze/Reset Controls</h3>
+            <h3 className="text-md font-semibold text-white mb-4">Freeze/Reset Controls</h3>
             <div className="flex gap-4">
               {timeInfo.isFrozen ? (
                 <button
@@ -828,7 +828,7 @@ export default function AdminUatManagement() {
               <button
                 onClick={handleResetTime}
                 disabled={isUpdatingTime}
-                className="border border-gray-300 hover:border-sage hover:bg-sage/5 text-charcoal px-6 py-2 rounded-lg font-medium disabled:opacity-50 transition-colors"
+                className="border border-gray-300 hover:border-sage hover:bg-sage/5 text-white px-6 py-2 rounded-lg font-medium disabled:opacity-50 transition-colors"
               >
                 Reset to Real Time
               </button>

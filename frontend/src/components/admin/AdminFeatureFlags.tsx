@@ -129,7 +129,7 @@ export default function AdminFeatureFlags() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-charcoal">Feature Flags</h2>
+          <h2 className="text-2xl font-bold text-white">Feature Flags</h2>
           <p className="text-gray-500 text-sm mt-1">
             Control platform features and payment modes
           </p>
@@ -200,12 +200,12 @@ export default function AdminFeatureFlags() {
       {showConfirmModal && selectedFlag && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
-            <h3 className="text-lg font-bold text-charcoal mb-4">
+            <h3 className="text-lg font-bold text-white mb-4">
               {selectedFlag.flagValue ? 'Disable' : 'Enable'} Feature
             </h3>
 
             <div className="mb-4 p-4 bg-gray-50 rounded-lg">
-              <p className="font-medium text-charcoal">
+              <p className="font-medium text-white">
                 {FLAG_LABELS[selectedFlag.flagKey]?.label || selectedFlag.flagKey}
               </p>
               <p className="text-sm text-gray-500 mt-1">
@@ -282,7 +282,7 @@ function FlagSection({
   return (
     <div className="bg-white rounded-xl shadow-sm overflow-hidden">
       <div className="p-4 border-b border-gray-100">
-        <h3 className="font-semibold text-charcoal">{title}</h3>
+        <h3 className="font-semibold text-white">{title}</h3>
         <p className="text-sm text-gray-500">{description}</p>
       </div>
       <div className="divide-y divide-gray-100">
@@ -295,7 +295,7 @@ function FlagSection({
           >
             <div className="flex-1">
               <div className="flex items-center gap-2">
-                <p className="font-medium text-charcoal">
+                <p className="font-medium text-white">
                   {FLAG_LABELS[flag.flagKey]?.label || flag.flagKey}
                 </p>
                 {!flag.flagValue && (
@@ -376,7 +376,7 @@ function AuditLogSection({ entries }: { entries: AuditEntry[] }) {
                 <td className="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">
                   {new Date(entry.createdAt).toLocaleString()}
                 </td>
-                <td className="px-4 py-3 text-sm font-medium text-charcoal">
+                <td className="px-4 py-3 text-sm font-medium text-white">
                   {FLAG_LABELS[entry.flagKey]?.label || entry.flagKey}
                 </td>
                 <td className="px-4 py-3">

@@ -16,12 +16,12 @@ export const WizardInput = forwardRef<HTMLInputElement, WizardInputProps>(
     return (
       <div className="space-y-2">
         <label className="block">
-          <span className="text-charcoal font-bold text-lg">
+          <span className="text-white font-bold text-lg">
             {label}
             {required && <span className="text-clay-coral ml-1">*</span>}
           </span>
           {hint && (
-            <span className="block text-charcoal-light text-sm mt-1">{hint}</span>
+            <span className="block text-white/70 text-sm mt-1">{hint}</span>
           )}
         </label>
         <input
@@ -65,12 +65,12 @@ export const WizardTextarea = forwardRef<HTMLTextAreaElement, WizardTextareaProp
     return (
       <div className="space-y-2">
         <label className="block">
-          <span className="text-charcoal font-bold text-lg">
+          <span className="text-white font-bold text-lg">
             {label}
             {required && <span className="text-clay-coral ml-1">*</span>}
           </span>
           {hint && (
-            <span className="block text-charcoal-light text-sm mt-1">{hint}</span>
+            <span className="block text-white/70 text-sm mt-1">{hint}</span>
           )}
         </label>
         <textarea

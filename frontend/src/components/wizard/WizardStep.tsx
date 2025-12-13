@@ -79,8 +79,8 @@ export default function WizardStep({
                 i + 1 < stepNumber
                   ? 'bg-clay-mint scale-100'
                   : i + 1 === stepNumber
-                  ? 'bg-charcoal scale-125'
-                  : 'bg-clay-surface border-2 border-charcoal/20'
+                  ? 'bg-white scale-125'
+                  : 'bg-clay-surface border-2 border-white/20'
               }`}
             />
           ))}
@@ -103,14 +103,14 @@ export default function WizardStep({
 
           {/* Title */}
           <div className="text-center mb-8">
-            <p className="text-charcoal-light font-bold text-sm uppercase tracking-wider mb-2">
+            <p className="text-white/70 font-bold text-sm uppercase tracking-wider mb-2">
               Step {stepNumber} of {totalSteps}
             </p>
-            <h1 className="font-display text-3xl md:text-4xl font-black text-charcoal mb-3">
+            <h1 className="font-display text-3xl md:text-4xl font-black text-white mb-3">
               {title}
             </h1>
             {subtitle && (
-              <p className="text-charcoal-light text-lg">
+              <p className="text-white/70 text-lg">
                 {subtitle}
               </p>
             )}
@@ -126,11 +126,11 @@ export default function WizardStep({
             <div className="mt-8 p-4 rounded-clay bg-clay-mint/30 border-2 border-clay-mint/50">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-clay-mint flex items-center justify-center flex-shrink-0">
-                  <svg className="w-6 h-6 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
-                <p className="text-charcoal font-medium">{encouragement}</p>
+                <p className="text-white font-medium">{encouragement}</p>
               </div>
             </div>
           )}
@@ -148,7 +148,7 @@ export default function WizardStep({
               <button
                 type="button"
                 onClick={onBack}
-                className="clay-button bg-clay-surface text-charcoal order-2 sm:order-1"
+                className="clay-button bg-clay-surface text-white order-2 sm:order-1"
               >
                 <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
@@ -165,7 +165,7 @@ export default function WizardStep({
               <button
                 type="button"
                 onClick={onSkip}
-                className="text-charcoal-light font-bold hover:text-charcoal transition-colors order-3"
+                className="text-white/70 font-bold hover:text-white transition-colors order-3"
               >
                 {skipLabel}
               </button>
@@ -177,11 +177,11 @@ export default function WizardStep({
                 type="button"
                 onClick={onNext}
                 disabled={!isValid || isLoading}
-                className="clay-button bg-clay-mint text-charcoal font-bold px-8 py-4 text-lg disabled:opacity-50 disabled:cursor-not-allowed order-4"
+                className="clay-button bg-clay-mint text-white font-bold px-8 py-4 text-lg disabled:opacity-50 disabled:cursor-not-allowed order-4"
               >
                 {isLoading ? (
                   <>
-                    <div className="w-5 h-5 border-2 border-charcoal/30 border-t-charcoal rounded-full animate-spin mr-2" />
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
                     Processing...
                   </>
                 ) : (

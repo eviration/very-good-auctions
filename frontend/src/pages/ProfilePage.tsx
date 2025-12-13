@@ -6,11 +6,11 @@ export default function ProfilePage() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
-      <h1 className="font-display text-3xl font-bold text-charcoal mb-8">Profile</h1>
+      <h1 className="font-display text-3xl font-bold text-white mb-8">Profile</h1>
 
       {/* Settings Links */}
       <div className="bg-warm-white rounded-2xl p-6 border border-gray-200 mb-6">
-        <h2 className="font-semibold text-charcoal mb-4">Settings</h2>
+        <h2 className="font-semibold text-white mb-4">Settings</h2>
         <div className="space-y-2">
           <Link
             to="/tax-information"
@@ -23,7 +23,7 @@ export default function ProfilePage() {
                 </svg>
               </div>
               <div>
-                <p className="font-medium text-charcoal">Tax Information</p>
+                <p className="font-medium text-white">Tax Information</p>
                 <p className="text-sm text-gray-500">Manage W-9 and tax documents</p>
               </div>
             </div>
@@ -40,14 +40,14 @@ export default function ProfilePage() {
             {user?.name?.charAt(0).toUpperCase() || 'U'}
           </div>
           <div>
-            <h2 className="font-display text-2xl font-semibold text-charcoal">{user?.name}</h2>
+            <h2 className="font-display text-2xl font-semibold text-white">{user?.name}</h2>
             <p className="text-gray-500">{user?.email}</p>
           </div>
         </div>
 
         <form className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-charcoal mb-2">Display Name</label>
+            <label className="block text-sm font-medium text-white mb-2">Display Name</label>
             <input
               type="text"
               defaultValue={user?.name}
@@ -56,7 +56,7 @@ export default function ProfilePage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-charcoal mb-2">Email</label>
+            <label className="block text-sm font-medium text-white mb-2">Email</label>
             <input
               type="email"
               defaultValue={user?.email}
@@ -66,7 +66,7 @@ export default function ProfilePage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-charcoal mb-2">Phone</label>
+            <label className="block text-sm font-medium text-white mb-2">Phone</label>
             <input
               type="tel"
               className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-sage focus:ring-0"
@@ -75,7 +75,7 @@ export default function ProfilePage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-charcoal mb-2">Address</label>
+            <label className="block text-sm font-medium text-white mb-2">Address</label>
             <textarea
               rows={3}
               className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-sage focus:ring-0"

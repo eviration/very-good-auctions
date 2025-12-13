@@ -90,7 +90,7 @@ export default function InvitationAcceptPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
           </div>
-          <h1 className="text-xl font-bold text-charcoal mb-2">Invitation Not Found</h1>
+          <h1 className="text-xl font-bold text-white mb-2">Invitation Not Found</h1>
           <p className="text-gray-500 mb-6">
             This invitation may have expired or already been used.
           </p>
@@ -125,7 +125,7 @@ export default function InvitationAcceptPage() {
               </span>
             </div>
           )}
-          <h1 className="text-xl font-bold text-charcoal">
+          <h1 className="text-xl font-bold text-white">
             {invitation.organization?.name}
           </h1>
         </div>
@@ -139,14 +139,14 @@ export default function InvitationAcceptPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <h2 className="text-lg font-semibold text-charcoal mb-2">Invitation Expired</h2>
+              <h2 className="text-lg font-semibold text-white mb-2">Invitation Expired</h2>
               <p className="text-gray-500">
                 This invitation has expired. Please contact the organization for a new invitation.
               </p>
             </>
           ) : isAlreadyProcessed ? (
             <>
-              <h2 className="text-lg font-semibold text-charcoal mb-2">
+              <h2 className="text-lg font-semibold text-white mb-2">
                 Invitation {invitation.status === 'accepted' ? 'Accepted' : 'Declined'}
               </h2>
               <p className="text-gray-500">
@@ -155,7 +155,7 @@ export default function InvitationAcceptPage() {
             </>
           ) : (
             <>
-              <h2 className="text-lg font-semibold text-charcoal mb-2">
+              <h2 className="text-lg font-semibold text-white mb-2">
                 You've been invited!
               </h2>
               <p className="text-gray-600">

@@ -121,8 +121,8 @@ export default function FeedbackPage() {
     return (
       <div className="min-h-screen bg-clay-bg flex items-center justify-center">
         <div className="clay-card p-8 text-center max-w-md">
-          <h2 className="text-xl font-bold text-charcoal mb-4">Sign in Required</h2>
-          <p className="text-charcoal-light mb-6">
+          <h2 className="text-xl font-bold text-white mb-4">Sign in Required</h2>
+          <p className="text-white/70 mb-6">
             Please sign in to submit feedback or view your submissions.
           </p>
           <Link to="/" className="clay-button bg-sage text-white font-bold">
@@ -140,7 +140,7 @@ export default function FeedbackPage() {
         <div className="max-w-3xl mx-auto px-4 py-8">
           <button
             onClick={() => setSelectedFeedback(null)}
-            className="flex items-center gap-2 text-charcoal-light hover:text-charcoal mb-6"
+            className="flex items-center gap-2 text-white/70 hover:text-white mb-6"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -154,17 +154,17 @@ export default function FeedbackPage() {
                 <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${STATUS_LABELS[selectedFeedback.status].color}`}>
                   {STATUS_LABELS[selectedFeedback.status].label}
                 </span>
-                <span className="ml-2 text-sm text-charcoal-light capitalize">
+                <span className="ml-2 text-sm text-white/70 capitalize">
                   {selectedFeedback.feedback_type.replace('_', ' ')}
                 </span>
               </div>
-              <span className="text-sm text-charcoal-light">
+              <span className="text-sm text-white/70">
                 {new Date(selectedFeedback.created_at).toLocaleDateString()}
               </span>
             </div>
 
-            <h1 className="text-2xl font-bold text-charcoal mb-4">{selectedFeedback.title}</h1>
-            <p className="text-charcoal-light whitespace-pre-wrap mb-6">{selectedFeedback.description}</p>
+            <h1 className="text-2xl font-bold text-white mb-4">{selectedFeedback.title}</h1>
+            <p className="text-white/70 whitespace-pre-wrap mb-6">{selectedFeedback.description}</p>
 
             {selectedFeedback.resolution_notes && (
               <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
@@ -175,7 +175,7 @@ export default function FeedbackPage() {
 
             {/* Responses */}
             <div className="border-t pt-6">
-              <h3 className="font-semibold text-charcoal mb-4">
+              <h3 className="font-semibold text-white mb-4">
                 Responses ({selectedFeedback.responses?.length || 0})
               </h3>
 
@@ -187,7 +187,7 @@ export default function FeedbackPage() {
                   }`}
                 >
                   <div className="flex items-center justify-between mb-2">
-                    <span className="font-medium text-charcoal">
+                    <span className="font-medium text-white">
                       {response.responder_name}
                       {response.is_admin && (
                         <span className="ml-2 text-xs bg-sage text-white px-2 py-0.5 rounded">
@@ -195,11 +195,11 @@ export default function FeedbackPage() {
                         </span>
                       )}
                     </span>
-                    <span className="text-sm text-charcoal-light">
+                    <span className="text-sm text-white/70">
                       {new Date(response.created_at).toLocaleDateString()}
                     </span>
                   </div>
-                  <p className="text-charcoal-light whitespace-pre-wrap">{response.message}</p>
+                  <p className="text-white/70 whitespace-pre-wrap">{response.message}</p>
                 </div>
               ))}
 
@@ -233,8 +233,8 @@ export default function FeedbackPage() {
       <div className="max-w-3xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-charcoal mb-2">Feedback & Feature Requests</h1>
-          <p className="text-charcoal-light">
+          <h1 className="text-3xl font-bold text-white mb-2">Feedback & Feature Requests</h1>
+          <p className="text-white/70">
             Help us improve! Submit bug reports, feature requests, or general feedback.
           </p>
         </div>
@@ -246,7 +246,7 @@ export default function FeedbackPage() {
             className={`px-4 py-2 rounded-lg font-medium transition-colors ${
               activeTab === 'submit'
                 ? 'bg-sage text-white'
-                : 'bg-clay-surface text-charcoal-light hover:bg-clay-mint'
+                : 'bg-clay-surface text-white/70 hover:bg-clay-mint'
             }`}
           >
             Submit Feedback
@@ -256,7 +256,7 @@ export default function FeedbackPage() {
             className={`px-4 py-2 rounded-lg font-medium transition-colors ${
               activeTab === 'my'
                 ? 'bg-sage text-white'
-                : 'bg-clay-surface text-charcoal-light hover:bg-clay-mint'
+                : 'bg-clay-surface text-white/70 hover:bg-clay-mint'
             }`}
           >
             My Submissions
@@ -271,8 +271,8 @@ export default function FeedbackPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <h2 className="text-xl font-bold text-charcoal mb-2">Thank you for your feedback!</h2>
-              <p className="text-charcoal-light mb-6">
+              <h2 className="text-xl font-bold text-white mb-2">Thank you for your feedback!</h2>
+              <p className="text-white/70 mb-6">
                 We appreciate you taking the time to help us improve. We'll review your submission and may follow up if we have questions.
               </p>
               <div className="flex gap-4 justify-center">
@@ -288,7 +288,7 @@ export default function FeedbackPage() {
                     setActiveTab('my')
                     loadMyFeedback()
                   }}
-                  className="clay-button bg-clay-surface text-charcoal font-bold"
+                  className="clay-button bg-clay-surface text-white font-bold"
                 >
                   View My Submissions
                 </button>
@@ -298,7 +298,7 @@ export default function FeedbackPage() {
             <form onSubmit={handleSubmit} className="clay-card p-6">
               {contextName && (
                 <div className="bg-clay-mint/50 rounded-lg p-3 mb-6">
-                  <p className="text-sm text-charcoal">
+                  <p className="text-sm text-white">
                     <span className="font-medium">Context:</span> {contextName}
                   </p>
                 </div>
@@ -312,7 +312,7 @@ export default function FeedbackPage() {
 
               {/* Feedback Type */}
               <div className="mb-6">
-                <label className="block text-sm font-medium text-charcoal mb-3">
+                <label className="block text-sm font-medium text-white mb-3">
                   What type of feedback is this?
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -327,8 +327,8 @@ export default function FeedbackPage() {
                           : 'border-transparent bg-clay-surface hover:bg-clay-mint/50'
                       }`}
                     >
-                      <span className="font-medium text-charcoal block">{type.label}</span>
-                      <span className="text-sm text-charcoal-light">{type.description}</span>
+                      <span className="font-medium text-white block">{type.label}</span>
+                      <span className="text-sm text-white/70">{type.description}</span>
                     </button>
                   ))}
                 </div>
@@ -336,7 +336,7 @@ export default function FeedbackPage() {
 
               {/* Title */}
               <div className="mb-6">
-                <label className="block text-sm font-medium text-charcoal mb-2">
+                <label className="block text-sm font-medium text-white mb-2">
                   Title <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -349,12 +349,12 @@ export default function FeedbackPage() {
                   minLength={5}
                   maxLength={255}
                 />
-                <p className="text-xs text-charcoal-light mt-1">{title.length}/255 characters</p>
+                <p className="text-xs text-white/70 mt-1">{title.length}/255 characters</p>
               </div>
 
               {/* Description */}
               <div className="mb-6">
-                <label className="block text-sm font-medium text-charcoal mb-2">
+                <label className="block text-sm font-medium text-white mb-2">
                   Description <span className="text-red-500">*</span>
                 </label>
                 <textarea
@@ -372,7 +372,7 @@ export default function FeedbackPage() {
                   minLength={20}
                   maxLength={5000}
                 />
-                <p className="text-xs text-charcoal-light mt-1">{description.length}/5000 characters (minimum 20)</p>
+                <p className="text-xs text-white/70 mt-1">{description.length}/5000 characters (minimum 20)</p>
               </div>
 
               {/* Submit */}
@@ -392,14 +392,14 @@ export default function FeedbackPage() {
             {loadingFeedback ? (
               <div className="text-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sage mx-auto"></div>
-                <p className="text-charcoal-light mt-4">Loading your feedback...</p>
+                <p className="text-white/70 mt-4">Loading your feedback...</p>
               </div>
             ) : myFeedback.length === 0 ? (
               <div className="text-center py-8">
-                <svg className="w-16 h-16 text-charcoal-light/30 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-16 h-16 text-white/70/30 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                 </svg>
-                <p className="text-charcoal-light mb-4">You haven't submitted any feedback yet.</p>
+                <p className="text-white/70 mb-4">You haven't submitted any feedback yet.</p>
                 <button
                   onClick={() => setActiveTab('submit')}
                   className="clay-button bg-sage text-white font-bold"
@@ -420,16 +420,16 @@ export default function FeedbackPage() {
                         <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${STATUS_LABELS[feedback.status].color}`}>
                           {STATUS_LABELS[feedback.status].label}
                         </span>
-                        <span className="text-xs text-charcoal-light capitalize">
+                        <span className="text-xs text-white/70 capitalize">
                           {feedback.feedback_type.replace('_', ' ')}
                         </span>
                       </div>
-                      <span className="text-xs text-charcoal-light">
+                      <span className="text-xs text-white/70">
                         {new Date(feedback.created_at).toLocaleDateString()}
                       </span>
                     </div>
-                    <h3 className="font-medium text-charcoal mb-1">{feedback.title}</h3>
-                    <p className="text-sm text-charcoal-light line-clamp-2">{feedback.description}</p>
+                    <h3 className="font-medium text-white mb-1">{feedback.title}</h3>
+                    <p className="text-sm text-white/70 line-clamp-2">{feedback.description}</p>
                     {(feedback.response_count ?? 0) > 0 && (
                       <p className="text-xs text-sage mt-2">
                         {feedback.response_count} response{(feedback.response_count ?? 0) !== 1 ? 's' : ''}

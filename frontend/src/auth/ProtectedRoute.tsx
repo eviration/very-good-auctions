@@ -17,7 +17,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
       <div className="min-h-[60vh] flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-sage border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-lg text-charcoal">Loading...</p>
+          <p className="text-lg text-white">Loading...</p>
         </div>
       </div>
     )
@@ -30,7 +30,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
         <div className="text-center max-w-md mx-auto px-4">
-          <h2 className="font-display text-2xl font-bold text-charcoal mb-4">
+          <h2 className="font-display text-2xl font-bold text-white mb-4">
             Sign In Required
           </h2>
           <p className="text-gray-600 mb-6">

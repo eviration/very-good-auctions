@@ -84,7 +84,7 @@ export default function OrganizationDetailPage() {
 
           <div className="flex-1">
             <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold text-charcoal">{organization.name}</h1>
+              <h1 className="text-2xl font-bold text-white">{organization.name}</h1>
               {organization.status === 'verified' && (
                 <span className="text-sage flex items-center gap-1" title="Verified Organization">
                   <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
@@ -157,7 +157,7 @@ export default function OrganizationDetailPage() {
 
       {/* Events Section - Placeholder for Sprint 7 */}
       <div className="mt-8">
-        <h2 className="text-xl font-semibold text-charcoal mb-4">Upcoming Events</h2>
+        <h2 className="text-xl font-semibold text-white mb-4">Upcoming Events</h2>
         <div className="bg-white rounded-lg shadow-sm border border-sage/20 p-8 text-center">
           <p className="text-gray-500">No upcoming events</p>
           <p className="text-sm text-gray-400 mt-2">

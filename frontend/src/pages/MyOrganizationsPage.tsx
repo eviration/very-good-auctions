@@ -44,7 +44,7 @@ export default function MyOrganizationsPage() {
         <div className="max-w-6xl mx-auto px-4 py-12">
           <div className="flex justify-center py-16">
             <div className="w-16 h-16 rounded-clay bg-clay-mint shadow-clay-pressed flex items-center justify-center">
-              <div className="w-8 h-8 border-3 border-charcoal border-t-transparent rounded-full animate-spin" />
+              <div className="w-8 h-8 border-3 border-white border-t-transparent rounded-full animate-spin" />
             </div>
           </div>
         </div>
@@ -58,8 +58,8 @@ export default function MyOrganizationsPage() {
         {/* Header */}
         <div className="clay-section mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="font-display text-4xl font-black text-charcoal mb-2">My Organizations</h1>
-            <p className="text-charcoal-light font-medium">Organizations you're a member of</p>
+            <h1 className="font-display text-4xl font-black text-white mb-2">My Organizations</h1>
+            <p className="text-white/70 font-medium">Organizations you're a member of</p>
           </div>
           <Link
             to="/organizations/new"
@@ -82,7 +82,7 @@ export default function MyOrganizationsPage() {
           <div className="clay-section text-center py-16">
             <div className="w-20 h-20 bg-clay-lavender rounded-clay flex items-center justify-center mx-auto mb-6 shadow-clay">
               <svg
-                className="w-10 h-10 text-charcoal"
+                className="w-10 h-10 text-white"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -95,8 +95,8 @@ export default function MyOrganizationsPage() {
                 />
               </svg>
             </div>
-            <h2 className="text-2xl font-black text-charcoal mb-2">No organizations yet</h2>
-            <p className="text-charcoal-light font-medium mb-8">
+            <h2 className="text-2xl font-black text-white mb-2">No organizations yet</h2>
+            <p className="text-white/70 font-medium mb-8">
               Create an organization to host auction events, or join one through an invitation
             </p>
             <Link
@@ -126,7 +126,7 @@ export default function MyOrganizationsPage() {
                     ) : (
                       <div className="w-16 h-16 bg-clay-lavender/30 rounded-clay shadow-clay-sm flex items-center justify-center flex-shrink-0">
                         <svg
-                          className="w-8 h-8 text-charcoal-light"
+                          className="w-8 h-8 text-white/70"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -144,18 +144,18 @@ export default function MyOrganizationsPage() {
                     {/* Info */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="font-black text-lg text-charcoal">{org.name}</h3>
+                        <h3 className="font-black text-lg text-white">{org.name}</h3>
                         {org.userRole && (
                           <span className={`clay-badge text-xs ${roleConfig[org.userRole]?.color || 'bg-clay-butter'}`}>
                             {roleConfig[org.userRole]?.label || org.userRole}
                           </span>
                         )}
                       </div>
-                      <p className="text-sm text-charcoal-light font-medium mt-1">
+                      <p className="text-sm text-white/70 font-medium mt-1">
                         {orgTypeLabels[org.orgType] || org.orgType}
                       </p>
                       {org.description && (
-                        <p className="text-sm text-charcoal-light mt-2 line-clamp-2">{org.description}</p>
+                        <p className="text-sm text-white/70 mt-2 line-clamp-2">{org.description}</p>
                       )}
                     </div>
                   </div>
@@ -163,17 +163,17 @@ export default function MyOrganizationsPage() {
                   {/* Stats */}
                   <div className="flex gap-6 mt-5 pt-5 border-t-2 border-white/60">
                     <div className="clay-badge bg-clay-butter/50">
-                      <span className="font-black text-charcoal">{org.memberCount || 0}</span>
-                      <span className="text-charcoal-light font-medium">Members</span>
+                      <span className="font-black text-white">{org.memberCount || 0}</span>
+                      <span className="text-white/70 font-medium">Members</span>
                     </div>
                     <div className="clay-badge bg-clay-sky/50">
-                      <span className="font-black text-charcoal">{org.eventCount || 0}</span>
-                      <span className="text-charcoal-light font-medium">Events</span>
+                      <span className="font-black text-white">{org.eventCount || 0}</span>
+                      <span className="text-white/70 font-medium">Events</span>
                     </div>
                     {org.totalRaised !== undefined && org.totalRaised > 0 && (
                       <div className="clay-badge bg-clay-mint/50">
-                        <span className="font-black text-charcoal">${org.totalRaised.toLocaleString()}</span>
-                        <span className="text-charcoal-light font-medium">Raised</span>
+                        <span className="font-black text-white">${org.totalRaised.toLocaleString()}</span>
+                        <span className="text-white/70 font-medium">Raised</span>
                       </div>
                     )}
                   </div>

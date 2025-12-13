@@ -54,10 +54,10 @@ export function ToastContainer() {
             className={`${style.bg} ${style.border} border-2 rounded-clay px-4 py-3 shadow-lg flex items-center gap-3 animate-slide-in`}
           >
             <div className="flex-shrink-0">{style.icon}</div>
-            <p className="text-charcoal font-medium flex-1">{toast.message}</p>
+            <p className="text-white font-medium flex-1">{toast.message}</p>
             <button
               onClick={() => removeToast(toast.id)}
-              className="flex-shrink-0 text-charcoal-light hover:text-charcoal transition-colors"
+              className="flex-shrink-0 text-white/70 hover:text-white transition-colors"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

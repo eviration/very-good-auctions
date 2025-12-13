@@ -276,7 +276,7 @@ export default function EventItemPage() {
                 </span>
               )}
             </div>
-            <h1 className="text-3xl font-bold text-charcoal">{item.title}</h1>
+            <h1 className="text-3xl font-bold text-white">{item.title}</h1>
           </div>
 
           {/* Bid Info */}
@@ -350,7 +350,7 @@ export default function EventItemPage() {
 
               {event.auctionType === 'standard' && (
                 <div>
-                  <label className="block text-sm font-medium text-charcoal mb-2">
+                  <label className="block text-sm font-medium text-white mb-2">
                     Your Bid
                   </label>
                   <div className="flex gap-3">
@@ -386,7 +386,7 @@ export default function EventItemPage() {
 
               {event.auctionType === 'silent' && !silentBidStatus?.hasBid && (
                 <div>
-                  <label className="block text-sm font-medium text-charcoal mb-2">
+                  <label className="block text-sm font-medium text-white mb-2">
                     Your Bid
                   </label>
                   <div className="flex gap-3">
@@ -447,7 +447,7 @@ export default function EventItemPage() {
           {/* Item Description */}
           {item.description && (
             <div>
-              <h2 className="text-lg font-semibold text-charcoal mb-2">Description</h2>
+              <h2 className="text-lg font-semibold text-white mb-2">Description</h2>
               <p className="text-gray-600 whitespace-pre-wrap">{item.description}</p>
             </div>
           )}
@@ -455,11 +455,11 @@ export default function EventItemPage() {
           {/* Item Details */}
           {item.condition && (
             <div>
-              <h2 className="text-lg font-semibold text-charcoal mb-2">Details</h2>
+              <h2 className="text-lg font-semibold text-white mb-2">Details</h2>
               <dl className="grid grid-cols-2 gap-4">
                 <div>
                   <dt className="text-sm text-gray-500">Condition</dt>
-                  <dd className="font-medium text-charcoal capitalize">
+                  <dd className="font-medium text-white capitalize">
                     {item.condition.replace('-', ' ')}
                   </dd>
                 </div>
@@ -472,21 +472,21 @@ export default function EventItemPage() {
       {/* Bid History (Standard Auction Only) */}
       {event.auctionType === 'standard' && bids.length > 0 && (
         <div className="mt-8">
-          <h2 className="text-xl font-semibold text-charcoal mb-4">Bid History</h2>
+          <h2 className="text-xl font-semibold text-white mb-4">Bid History</h2>
           <div className="bg-white rounded-xl border border-sage/20 overflow-hidden">
             <table className="w-full">
               <thead className="bg-sage/10">
                 <tr>
-                  <th className="text-left px-6 py-3 text-sm font-medium text-charcoal">Bidder</th>
-                  <th className="text-left px-6 py-3 text-sm font-medium text-charcoal">Amount</th>
-                  <th className="text-left px-6 py-3 text-sm font-medium text-charcoal">Time</th>
+                  <th className="text-left px-6 py-3 text-sm font-medium text-white">Bidder</th>
+                  <th className="text-left px-6 py-3 text-sm font-medium text-white">Amount</th>
+                  <th className="text-left px-6 py-3 text-sm font-medium text-white">Time</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-sage/10">
                 {bids.map((bid, index) => (
                   <tr key={bid.id} className={index === 0 ? 'bg-green-50' : ''}>
                     <td className="px-6 py-4">
-                      <span className="font-medium text-charcoal">
+                      <span className="font-medium text-white">
                         {bid.bidderName || 'Anonymous'}
                       </span>
                       {index === 0 && (
@@ -513,7 +513,7 @@ export default function EventItemPage() {
       {showIncreaseModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-4">
-            <h2 className="text-lg font-semibold text-charcoal mb-4">Increase Your Bid</h2>
+            <h2 className="text-lg font-semibold text-white mb-4">Increase Your Bid</h2>
             <p className="text-gray-600 mb-4">
               Current bid: <strong>${silentBidStatus?.amount}</strong>
             </p>
@@ -525,7 +525,7 @@ export default function EventItemPage() {
             )}
 
             <div>
-              <label className="block text-sm font-medium text-charcoal mb-1">
+              <label className="block text-sm font-medium text-white mb-1">
                 Increase by
               </label>
               <div className="relative">

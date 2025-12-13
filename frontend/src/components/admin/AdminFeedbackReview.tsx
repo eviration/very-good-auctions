@@ -180,7 +180,7 @@ export default function AdminFeedbackReview() {
       <div className={`${selectedFeedback ? 'w-1/2 border-r border-gray-200 pr-4' : 'w-full'}`}>
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h2 className="text-2xl font-bold text-charcoal">Feedback</h2>
+            <h2 className="text-2xl font-bold text-white">Feedback</h2>
             <p className="text-gray-500">Manage user feedback and requests</p>
           </div>
         </div>
@@ -189,7 +189,7 @@ export default function AdminFeedbackReview() {
         {stats && (
           <div className="grid grid-cols-4 gap-3 mb-6">
             <div className="bg-white rounded-lg p-3 shadow-sm text-center">
-              <p className="text-xl font-bold text-charcoal">{stats.total}</p>
+              <p className="text-xl font-bold text-white">{stats.total}</p>
               <p className="text-xs text-gray-500">Total</p>
             </div>
             <div className="bg-blue-50 rounded-lg p-3 shadow-sm text-center border border-blue-100">
@@ -278,7 +278,7 @@ export default function AdminFeedbackReview() {
                 }`}
               >
                 <div className="flex items-start justify-between mb-2">
-                  <h4 className="font-medium text-charcoal line-clamp-1">{item.title}</h4>
+                  <h4 className="font-medium text-white line-clamp-1">{item.title}</h4>
                   <div className="flex gap-2 ml-2 flex-shrink-0">
                     {getTypeBadge(item.feedback_type)}
                     {getStatusBadge(item.status)}
@@ -306,7 +306,7 @@ export default function AdminFeedbackReview() {
                   {getTypeBadge(selectedFeedback.feedback_type)}
                   {getPriorityBadge(selectedFeedback.priority)}
                 </div>
-                <h3 className="text-lg font-semibold text-charcoal">{selectedFeedback.title}</h3>
+                <h3 className="text-lg font-semibold text-white">{selectedFeedback.title}</h3>
                 <p className="text-sm text-gray-500">
                   {selectedFeedback.user_email || 'Anonymous'} - {formatDate(selectedFeedback.created_at)}
                 </p>

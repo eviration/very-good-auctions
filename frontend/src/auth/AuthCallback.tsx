@@ -29,7 +29,7 @@ export function AuthCallback() {
     <div className="min-h-[60vh] flex items-center justify-center">
       <div className="text-center">
         <div className="w-12 h-12 border-4 border-sage border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-        <p className="text-lg text-charcoal">Completing sign in...</p>
+        <p className="text-lg text-white">Completing sign in...</p>
       </div>
     </div>
   )

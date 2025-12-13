@@ -267,7 +267,7 @@ export default function OrganizationDashboardPage() {
           <Link to={`/organizations/${slug}`} className="text-sage hover:underline">
             &larr; Back to Public Page
           </Link>
-          <h1 className="text-2xl font-bold text-charcoal mt-2">{organization.name}</h1>
+          <h1 className="text-2xl font-bold text-white mt-2">{organization.name}</h1>
           <p className="text-gray-500">
             {organization.membership?.role === 'owner' ? 'Owner' :
              organization.membership?.role === 'admin' ? 'Admin' : 'Member'}
@@ -308,7 +308,7 @@ export default function OrganizationDashboardPage() {
               className={`pb-4 text-sm font-medium capitalize border-b-2 transition-colors ${
                 activeTab === tab
                   ? 'border-sage text-sage'
-                  : 'border-transparent text-gray-500 hover:text-charcoal'
+                  : 'border-transparent text-gray-500 hover:text-white'
               }`}
             >
               {tab}
@@ -340,7 +340,7 @@ export default function OrganizationDashboardPage() {
           </div>
 
           <div className="bg-white rounded-lg shadow-sm border border-sage/20 p-6">
-            <h2 className="text-lg font-semibold text-charcoal mb-4">Quick Actions</h2>
+            <h2 className="text-lg font-semibold text-white mb-4">Quick Actions</h2>
             <div className="flex flex-wrap gap-4">
               {isAdmin && (
                 <Link
@@ -371,7 +371,7 @@ export default function OrganizationDashboardPage() {
         <div className="space-y-6">
           {/* Header with Create button */}
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-charcoal">Your Auctions</h2>
+            <h2 className="text-lg font-semibold text-white">Your Auctions</h2>
             {isAdmin && (
               <Link
                 to="/events/create"
@@ -398,7 +398,7 @@ export default function OrganizationDashboardPage() {
               <svg className="w-16 h-16 mx-auto text-sage/30 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
               </svg>
-              <h3 className="text-lg font-semibold text-charcoal mb-2">No auctions yet</h3>
+              <h3 className="text-lg font-semibold text-white mb-2">No auctions yet</h3>
               <p className="text-gray-500 mb-6">Create your first auction to start fundraising!</p>
               {isAdmin && (
                 <Link
@@ -420,12 +420,12 @@ export default function OrganizationDashboardPage() {
               <table className="w-full">
                 <thead className="bg-sage/10">
                   <tr>
-                    <th className="text-left px-6 py-3 text-sm font-medium text-charcoal">Auction</th>
-                    <th className="text-left px-6 py-3 text-sm font-medium text-charcoal">Status</th>
-                    <th className="text-left px-6 py-3 text-sm font-medium text-charcoal">Date</th>
-                    <th className="text-left px-6 py-3 text-sm font-medium text-charcoal">Items</th>
-                    <th className="text-left px-6 py-3 text-sm font-medium text-charcoal">Raised</th>
-                    <th className="text-right px-6 py-3 text-sm font-medium text-charcoal">Actions</th>
+                    <th className="text-left px-6 py-3 text-sm font-medium text-white">Auction</th>
+                    <th className="text-left px-6 py-3 text-sm font-medium text-white">Status</th>
+                    <th className="text-left px-6 py-3 text-sm font-medium text-white">Date</th>
+                    <th className="text-left px-6 py-3 text-sm font-medium text-white">Items</th>
+                    <th className="text-left px-6 py-3 text-sm font-medium text-white">Raised</th>
+                    <th className="text-right px-6 py-3 text-sm font-medium text-white">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-sage/10">
@@ -434,7 +434,7 @@ export default function OrganizationDashboardPage() {
                       <td className="px-6 py-4">
                         <Link
                           to={`/events/${event.slug}`}
-                          className="font-medium text-charcoal hover:text-sage"
+                          className="font-medium text-white hover:text-sage"
                         >
                           {event.name}
                         </Link>
@@ -457,7 +457,7 @@ export default function OrganizationDashboardPage() {
                       <td className="px-6 py-4 text-sm text-gray-500">
                         {event.itemCount || 0}
                       </td>
-                      <td className="px-6 py-4 text-sm font-medium text-charcoal">
+                      <td className="px-6 py-4 text-sm font-medium text-white">
                         ${(event.totalRaised || 0).toLocaleString()}
                       </td>
                       <td className="px-6 py-4 text-right">
@@ -513,11 +513,11 @@ export default function OrganizationDashboardPage() {
             <table className="w-full">
               <thead className="bg-sage/10">
                 <tr>
-                  <th className="text-left px-6 py-3 text-sm font-medium text-charcoal">Member</th>
-                  <th className="text-left px-6 py-3 text-sm font-medium text-charcoal">Role</th>
-                  <th className="text-left px-6 py-3 text-sm font-medium text-charcoal">Joined</th>
+                  <th className="text-left px-6 py-3 text-sm font-medium text-white">Member</th>
+                  <th className="text-left px-6 py-3 text-sm font-medium text-white">Role</th>
+                  <th className="text-left px-6 py-3 text-sm font-medium text-white">Joined</th>
                   {canManageMembers && (
-                    <th className="text-right px-6 py-3 text-sm font-medium text-charcoal">Actions</th>
+                    <th className="text-right px-6 py-3 text-sm font-medium text-white">Actions</th>
                   )}
                 </tr>
               </thead>
@@ -525,7 +525,7 @@ export default function OrganizationDashboardPage() {
                 {members.map((member) => (
                   <tr key={member.id}>
                     <td className="px-6 py-4">
-                      <div className="font-medium text-charcoal">{member.displayName}</div>
+                      <div className="font-medium text-white">{member.displayName}</div>
                       <div className="text-sm text-gray-500">{member.email}</div>
                     </td>
                     <td className="px-6 py-4">
@@ -561,12 +561,12 @@ export default function OrganizationDashboardPage() {
           {/* Pending Invitations */}
           {canManageMembers && invitations.length > 0 && (
             <div className="bg-white rounded-lg shadow-sm border border-sage/20 p-6">
-              <h3 className="font-semibold text-charcoal mb-4">Pending Invitations</h3>
+              <h3 className="font-semibold text-white mb-4">Pending Invitations</h3>
               <div className="space-y-3">
                 {invitations.map((invitation) => (
                   <div key={invitation.id} className="flex items-center justify-between py-2 border-b border-sage/10 last:border-0">
                     <div>
-                      <div className="font-medium text-charcoal">{invitation.email}</div>
+                      <div className="font-medium text-white">{invitation.email}</div>
                       <div className="text-sm text-gray-500">
                         Invited as {invitation.role} &bull; Expires {new Date(invitation.expiresAt).toLocaleDateString()}
                       </div>
@@ -589,7 +589,7 @@ export default function OrganizationDashboardPage() {
       {activeTab === 'settings' && isAdmin && (
         <div className="bg-white rounded-lg shadow-sm border border-sage/20 p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-charcoal">Organization Settings</h2>
+            <h2 className="text-lg font-semibold text-white">Organization Settings</h2>
             {!editMode ? (
               <button
                 onClick={() => {
@@ -630,7 +630,7 @@ export default function OrganizationDashboardPage() {
 
           {/* Logo Upload Section */}
           <div className="mb-8 pb-6 border-b border-sage/20">
-            <h3 className="text-sm font-medium text-charcoal mb-3">Organization Logo</h3>
+            <h3 className="text-sm font-medium text-white mb-3">Organization Logo</h3>
             <div className="flex items-start gap-6">
               <ImageDropZone
                 currentImageUrl={organization.logoUrl}
@@ -674,7 +674,7 @@ export default function OrganizationDashboardPage() {
           {editMode ? (
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-charcoal mb-1">Name</label>
+                <label className="block text-sm font-medium text-white mb-1">Name</label>
                 <input
                   type="text"
                   value={editData.name || ''}
@@ -683,7 +683,7 @@ export default function OrganizationDashboardPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-charcoal mb-1">Description</label>
+                <label className="block text-sm font-medium text-white mb-1">Description</label>
                 <textarea
                   rows={4}
                   value={editData.description || ''}
@@ -692,7 +692,7 @@ export default function OrganizationDashboardPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-charcoal mb-1">Contact Email</label>
+                <label className="block text-sm font-medium text-white mb-1">Contact Email</label>
                 <input
                   type="email"
                   value={editData.contactEmail || ''}
@@ -701,7 +701,7 @@ export default function OrganizationDashboardPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-charcoal mb-1">Phone</label>
+                <label className="block text-sm font-medium text-white mb-1">Phone</label>
                 <input
                   type="tel"
                   value={editData.contactPhone || ''}
@@ -710,7 +710,7 @@ export default function OrganizationDashboardPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-charcoal mb-1">Website</label>
+                <label className="block text-sm font-medium text-white mb-1">Website</label>
                 <input
                   type="url"
                   value={editData.websiteUrl || ''}
@@ -723,23 +723,23 @@ export default function OrganizationDashboardPage() {
             <dl className="space-y-4">
               <div>
                 <dt className="text-sm text-gray-500">Name</dt>
-                <dd className="font-medium text-charcoal">{organization.name}</dd>
+                <dd className="font-medium text-white">{organization.name}</dd>
               </div>
               <div>
                 <dt className="text-sm text-gray-500">Description</dt>
-                <dd className="text-charcoal">{organization.description || '-'}</dd>
+                <dd className="text-white">{organization.description || '-'}</dd>
               </div>
               <div>
                 <dt className="text-sm text-gray-500">Contact Email</dt>
-                <dd className="text-charcoal">{organization.contactEmail || '-'}</dd>
+                <dd className="text-white">{organization.contactEmail || '-'}</dd>
               </div>
               <div>
                 <dt className="text-sm text-gray-500">Phone</dt>
-                <dd className="text-charcoal">{organization.contactPhone || '-'}</dd>
+                <dd className="text-white">{organization.contactPhone || '-'}</dd>
               </div>
               <div>
                 <dt className="text-sm text-gray-500">Website</dt>
-                <dd className="text-charcoal">{organization.websiteUrl || '-'}</dd>
+                <dd className="text-white">{organization.websiteUrl || '-'}</dd>
               </div>
             </dl>
           )}
@@ -779,11 +779,11 @@ export default function OrganizationDashboardPage() {
       {showInviteModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-4">
-            <h2 className="text-lg font-semibold text-charcoal mb-4">Invite Member</h2>
+            <h2 className="text-lg font-semibold text-white mb-4">Invite Member</h2>
             <form onSubmit={handleInvite}>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-charcoal mb-1">Email</label>
+                  <label className="block text-sm font-medium text-white mb-1">Email</label>
                   <input
                     type="email"
                     required
@@ -794,7 +794,7 @@ export default function OrganizationDashboardPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-charcoal mb-1">Role</label>
+                  <label className="block text-sm font-medium text-white mb-1">Role</label>
                   <select
                     value={inviteRole}
                     onChange={(e) => setInviteRole(e.target.value as 'admin' | 'member')}
@@ -856,7 +856,7 @@ export default function OrganizationDashboardPage() {
 
                   {/* What will be deleted */}
                   <div className="bg-gray-50 rounded-lg p-4">
-                    <h3 className="font-semibold text-charcoal mb-3">What will be permanently deleted:</h3>
+                    <h3 className="font-semibold text-white mb-3">What will be permanently deleted:</h3>
                     <ul className="space-y-2 text-sm text-gray-700">
                       <li className="flex justify-between">
                         <span>Events</span>
@@ -882,7 +882,7 @@ export default function OrganizationDashboardPage() {
                   {/* Financial Summary */}
                   {(deletionSummary.financial.totalRaised > 0 || deletionSummary.financial.completedPayouts > 0) && (
                     <div className="bg-blue-50 rounded-lg p-4">
-                      <h3 className="font-semibold text-charcoal mb-3">Financial History:</h3>
+                      <h3 className="font-semibold text-white mb-3">Financial History:</h3>
                       <ul className="space-y-2 text-sm text-gray-700">
                         <li className="flex justify-between">
                           <span>Total Raised</span>
@@ -903,7 +903,7 @@ export default function OrganizationDashboardPage() {
                   {/* Confirmation input */}
                   {deletionSummary.canDelete && (
                     <div>
-                      <label className="block text-sm font-medium text-charcoal mb-2">
+                      <label className="block text-sm font-medium text-white mb-2">
                         Type <span className="font-bold text-red-600">{deletionSummary.organization.name}</span> to confirm:
                       </label>
                       <input

@@ -89,7 +89,7 @@ export default function MyItemsPage() {
         <div className="max-w-6xl mx-auto px-4 py-12">
           <div className="flex justify-center py-16">
             <div className="w-16 h-16 rounded-clay bg-clay-mint shadow-clay-pressed flex items-center justify-center">
-              <div className="w-8 h-8 border-3 border-charcoal border-t-transparent rounded-full animate-spin" />
+              <div className="w-8 h-8 border-3 border-white border-t-transparent rounded-full animate-spin" />
             </div>
           </div>
         </div>
@@ -102,8 +102,8 @@ export default function MyItemsPage() {
       <div className="max-w-6xl mx-auto px-4 py-12">
         {/* Header */}
         <div className="clay-section mb-8">
-          <h1 className="font-display text-4xl font-black text-charcoal mb-2">My Items</h1>
-          <p className="text-charcoal-light font-medium">Items you've submitted to auction events</p>
+          <h1 className="font-display text-4xl font-black text-white mb-2">My Items</h1>
+          <p className="text-white/70 font-medium">Items you've submitted to auction events</p>
         </div>
 
         {error && (
@@ -115,20 +115,20 @@ export default function MyItemsPage() {
         {/* Summary Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <div className="clay-card p-5">
-            <p className="text-sm text-charcoal-light font-bold">Total Items</p>
-            <p className="text-3xl font-black text-charcoal">{items.length}</p>
+            <p className="text-sm text-white/70 font-bold">Total Items</p>
+            <p className="text-3xl font-black text-white">{items.length}</p>
           </div>
           <div className="clay-card p-5 bg-clay-butter/30">
-            <p className="text-sm text-charcoal-light font-bold">Pending Review</p>
-            <p className="text-3xl font-black text-charcoal">{pendingCount}</p>
+            <p className="text-sm text-white/70 font-bold">Pending Review</p>
+            <p className="text-3xl font-black text-white">{pendingCount}</p>
           </div>
           <div className="clay-card p-5 bg-clay-mint/30">
-            <p className="text-sm text-charcoal-light font-bold">Approved</p>
-            <p className="text-3xl font-black text-charcoal">{approvedCount}</p>
+            <p className="text-sm text-white/70 font-bold">Approved</p>
+            <p className="text-3xl font-black text-white">{approvedCount}</p>
           </div>
           <div className="clay-card p-5 bg-clay-peach/30">
-            <p className="text-sm text-charcoal-light font-bold">Needs Action</p>
-            <p className="text-3xl font-black text-charcoal">{needsActionCount}</p>
+            <p className="text-sm text-white/70 font-bold">Needs Action</p>
+            <p className="text-3xl font-black text-white">{needsActionCount}</p>
           </div>
         </div>
 
@@ -159,7 +159,7 @@ export default function MyItemsPage() {
           <div className="clay-section text-center py-16">
             <div className="w-20 h-20 bg-clay-lavender rounded-clay flex items-center justify-center mx-auto mb-6 shadow-clay">
               <svg
-                className="w-10 h-10 text-charcoal"
+                className="w-10 h-10 text-white"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -172,10 +172,10 @@ export default function MyItemsPage() {
                 />
               </svg>
             </div>
-            <h2 className="text-2xl font-black text-charcoal mb-2">
+            <h2 className="text-2xl font-black text-white mb-2">
               {filter === 'all' ? 'No items submitted' : `No ${filter} items`}
             </h2>
-            <p className="text-charcoal-light font-medium mb-8">
+            <p className="text-white/70 font-medium mb-8">
               {filter === 'all'
                 ? 'Submit items to auction events to see them here'
                 : 'Try changing the filter to see other items'}
@@ -198,8 +198,8 @@ export default function MyItemsPage() {
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="font-black text-lg text-charcoal">{event.name}</h3>
-                      <p className="text-sm text-charcoal-light font-medium">
+                      <h3 className="font-black text-lg text-white">{event.name}</h3>
+                      <p className="text-sm text-white/70 font-medium">
                         Ends {formatDate(event.endTime)}
                       </p>
                     </div>
@@ -230,7 +230,7 @@ export default function MyItemsPage() {
                       ) : (
                         <div className="w-20 h-20 bg-clay-lavender/30 rounded-clay shadow-clay-sm flex items-center justify-center flex-shrink-0">
                           <svg
-                            className="w-8 h-8 text-charcoal-light"
+                            className="w-8 h-8 text-white/70"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -249,9 +249,9 @@ export default function MyItemsPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">
                           <div>
-                            <h4 className="font-bold text-charcoal">{item.title}</h4>
+                            <h4 className="font-bold text-white">{item.title}</h4>
                             {item.description && (
-                              <p className="text-sm text-charcoal-light font-medium line-clamp-2 mt-1">
+                              <p className="text-sm text-white/70 font-medium line-clamp-2 mt-1">
                                 {item.description}
                               </p>
                             )}
@@ -274,17 +274,17 @@ export default function MyItemsPage() {
 
                         <div className="flex flex-wrap gap-4 mt-3 text-sm">
                           {item.startingPrice && (
-                            <span className="text-charcoal-light font-medium">
-                              Starting: <span className="font-black text-charcoal">${item.startingPrice.toFixed(2)}</span>
+                            <span className="text-white/70 font-medium">
+                              Starting: <span className="font-black text-white">${item.startingPrice.toFixed(2)}</span>
                             </span>
                           )}
                           {item.currentBid && (
-                            <span className="text-charcoal-light font-medium">
-                              Current bid: <span className="font-black text-charcoal">${item.currentBid.toFixed(2)}</span>
+                            <span className="text-white/70 font-medium">
+                              Current bid: <span className="font-black text-white">${item.currentBid.toFixed(2)}</span>
                             </span>
                           )}
                           {item.bidCount > 0 && (
-                            <span className="text-charcoal-light font-medium">
+                            <span className="text-white/70 font-medium">
                               {item.bidCount} bid{item.bidCount !== 1 ? 's' : ''}
                             </span>
                           )}
@@ -297,10 +297,10 @@ export default function MyItemsPage() {
                               ? 'bg-clay-peach/20'
                               : 'bg-clay-coral/20'
                           }`}>
-                            <p className="font-bold text-charcoal mb-1">
+                            <p className="font-bold text-white mb-1">
                               {item.submissionStatus === 'resubmit_requested' ? 'Please update:' : 'Rejection reason:'}
                             </p>
-                            <p className="text-charcoal-light">{item.rejectionReason}</p>
+                            <p className="text-white/70">{item.rejectionReason}</p>
                             {item.allowResubmit && (
                               <Link
                                 to={`/events/${event.slug}/items/${item.id}`}
@@ -312,7 +312,7 @@ export default function MyItemsPage() {
                           </div>
                         )}
 
-                        <p className="text-xs text-charcoal-light mt-3">
+                        <p className="text-xs text-white/70 mt-3">
                           Submitted {formatDate(item.createdAt)}
                         </p>
                       </div>

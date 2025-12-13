@@ -66,7 +66,7 @@ export default function OrganizationsPage() {
     <div className="max-w-7xl mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-charcoal">Organizations</h1>
+          <h1 className="text-3xl font-bold text-white">Organizations</h1>
           <p className="text-gray-600 mt-1">
             Browse verified organizations running fundraiser auctions
           </p>
@@ -161,7 +161,7 @@ export default function OrganizationsPage() {
                   )}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <h3 className="font-semibold text-charcoal truncate">
+                      <h3 className="font-semibold text-white truncate">
                         {org.name}
                       </h3>
                       {org.status === 'verified' && (
