@@ -9,20 +9,54 @@ type EventFilter = 'all' | 'live' | 'upcoming' | 'ended'
 
 function OurStory() {
   return (
-    <div className="glass-section mb-6">
-      <div className="max-w-3xl mx-auto px-4 py-8 text-center">
+    <div className="glass-section mb-6 bg-gradient-to-br from-purple-500/10 via-transparent to-pink-500/10">
+      <div className="max-w-3xl mx-auto text-center px-4 py-8">
+        <div className="inline-flex items-center gap-2 bg-gradient-to-r from-pink-500/20 to-purple-500/20 border border-pink-400/30 px-4 py-1.5 rounded-full mb-4">
+          <span className="font-semibold text-sm text-white">Our Story</span>
+        </div>
+
         <h2 className="font-display text-2xl md:text-3xl font-bold text-white mb-4">
-          Our Story
+          Built for the little guys
         </h2>
-        <p className="text-white/70 leading-relaxed">
-          Very Good Auctions was born from a simple observation: running a charity auction shouldn't require
-          expensive software or technical expertise. We built this platform to help schools, churches, nonprofits,
-          and community groups raise more money with less hassle. Every feature was designed with real fundraisers
-          in mind—from mobile-friendly bidding to simple payment collection.
+
+        <p className="text-white/70 font-medium leading-relaxed mb-4">
+          Very Good Auctions started when our small church wanted to run a silent auction fundraiser.
+          We tried the big auction platforms, but they were overwhelming&mdash;dozens of features we'd never use,
+          confusing dashboards, and fees that ate into our fundraising goals.
         </p>
-        <p className="text-white/60 text-sm mt-4">
-          Made with care in Austin, Texas
+
+        <p className="text-white/70 font-medium leading-relaxed mb-6">
+          So we built something simpler. A platform where volunteers can set up an auction in minutes,
+          donors can bid from their phones during the event, and every dollar raised goes further.
+          No complexity, no headaches&mdash;just a very good auction.
         </p>
+
+        <div className="flex flex-wrap justify-center gap-6 text-sm">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-teal-500/30 border border-teal-400/40 rounded-full flex items-center justify-center">
+              <svg className="w-4 h-4 text-teal-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <span className="font-semibold text-white">Simple setup</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-pink-500/30 border border-pink-400/40 rounded-full flex items-center justify-center">
+              <svg className="w-4 h-4 text-pink-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <span className="font-semibold text-white">Mobile-friendly bidding</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-purple-500/30 border border-purple-400/40 rounded-full flex items-center justify-center">
+              <svg className="w-4 h-4 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
+              </svg>
+            </div>
+            <span className="font-semibold text-white">Made with care in Snohomish, WA with the help of AI from who knows where</span>
+          </div>
+        </div>
       </div>
     </div>
   )
@@ -42,7 +76,7 @@ function HowItWorks() {
               <span className="text-xl font-bold text-sage">1</span>
             </div>
             <h3 className="font-semibold text-white mb-2">Create Your Auction</h3>
-            <p className="text-white/60 text-sm">
+            <p className="text-white/80 text-sm">
               Set up your event in minutes. Add items, set prices, and customize your auction.
             </p>
           </div>
@@ -52,7 +86,7 @@ function HowItWorks() {
               <span className="text-xl font-bold text-amber-300">2</span>
             </div>
             <h3 className="font-semibold text-white mb-2">Share With Bidders</h3>
-            <p className="text-white/60 text-sm">
+            <p className="text-white/80 text-sm">
               Guests browse and bid from their phones. No app download required.
             </p>
           </div>
@@ -62,7 +96,7 @@ function HowItWorks() {
               <span className="text-xl font-bold text-teal-300">3</span>
             </div>
             <h3 className="font-semibold text-white mb-2">Collect & Fulfill</h3>
-            <p className="text-white/60 text-sm">
+            <p className="text-white/80 text-sm">
               Winners pay securely. You handle pickup or shipping your way.
             </p>
           </div>
