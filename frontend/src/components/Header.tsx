@@ -107,20 +107,12 @@ export default function Header() {
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-12 h-12 rounded-glass bg-gradient-to-br from-purple-500/30 to-pink-500/30 border border-white/20 shadow-glass-sm flex items-center justify-center transition-all duration-200 group-hover:shadow-glass-glow group-hover:-translate-y-0.5">
-              <svg
-                className="w-7 h-7 text-white"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2.5}
-                  d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
+            <div className="w-12 h-12 rounded-glass bg-gradient-to-br from-purple-500/30 to-pink-500/30 border border-white/20 shadow-glass-sm flex items-center justify-center transition-all duration-200 group-hover:shadow-glass-glow group-hover:-translate-y-0.5 overflow-hidden">
+              <img
+                src="/gavel.png"
+                alt="Gavel"
+                className="w-8 h-8 object-contain brightness-0 invert"
+              />
             </div>
             <div>
               <h1 className="font-display text-xl font-black text-white leading-tight">
