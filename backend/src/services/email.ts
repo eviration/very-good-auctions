@@ -26,6 +26,8 @@ interface SendEmailParams {
   subject: string
   htmlContent: string
   plainTextContent?: string
+  senderDisplayName?: string  // e.g., "Spring Fair via VGA"
+  replyToEmail?: string       // e.g., organization's contact email
 }
 
 export interface SendEmailResult {
@@ -40,7 +42,7 @@ export async function sendEmail(params: SendEmailParams): Promise<boolean> {
 }
 
 export async function sendEmailWithDetails(params: SendEmailParams): Promise<SendEmailResult> {
-  const { to, subject, htmlContent, plainTextContent } = params
+  const { to, subject, htmlContent, plainTextContent, senderDisplayName, replyToEmail } = params
 
   const client = getEmailClient()
 
@@ -48,6 +50,8 @@ export async function sendEmailWithDetails(params: SendEmailParams): Promise<Sen
     // Log email for development/testing when no email service configured
     console.log('=== EMAIL (not sent - no connection string) ===')
     console.log(`To: ${to}`)
+    console.log(`From: ${senderDisplayName || 'Very Good Auctions'} <${senderAddress}>`)
+    console.log(`Reply-To: ${replyToEmail || replyToAddress}`)
     console.log(`Subject: ${subject}`)
     console.log(`Content: ${plainTextContent || htmlContent}`)
     console.log('=================================================')
@@ -55,10 +59,16 @@ export async function sendEmailWithDetails(params: SendEmailParams): Promise<Sen
   }
 
   try {
-    console.log(`[Email] Attempting to send to: ${to} from: ${senderAddress}`)
+    // Build the sender address with optional display name
+    // Format: "Display Name <email@domain.com>" or just "email@domain.com"
+    const fromAddress = senderDisplayName
+      ? `${senderDisplayName} <${senderAddress}>`
+      : senderAddress
+
+    console.log(`[Email] Attempting to send to: ${to} from: ${fromAddress}`)
 
     const message: EmailMessage = {
-      senderAddress,
+      senderAddress: fromAddress,
       content: {
         subject,
         html: htmlContent,
@@ -67,7 +77,7 @@ export async function sendEmailWithDetails(params: SendEmailParams): Promise<Sen
       recipients: {
         to: [{ address: to }],
       },
-      replyTo: [{ address: replyToAddress }],
+      replyTo: [{ address: replyToEmail || replyToAddress }],
     }
 
     const poller = await client.beginSend(message)
@@ -1895,8 +1905,14 @@ export async function sendDonationLinkEmail(params: {
   accessCode?: string
   senderName?: string
   customMessage?: string
+  organizationContactEmail?: string  // For Reply-To header
 }): Promise<boolean> {
-  const { recipientEmail, eventName, organizationName, donationUrl, accessCode, senderName, customMessage } = params
+  const { recipientEmail, eventName, organizationName, donationUrl, accessCode, senderName, customMessage, organizationContactEmail } = params
+
+  // Create sender display name: "Organization Name via VGA" or "Sender via Organization via VGA"
+  const senderDisplayName = senderName
+    ? `${senderName} via ${organizationName} via VGA`
+    : `${organizationName} via VGA`
 
   const subject = senderName
     ? `${senderName} invites you to donate to ${eventName}`
@@ -1983,6 +1999,8 @@ Thank you for considering a donation to support ${organizationName}!
     subject,
     htmlContent: emailWrapper('Donation Invitation', content),
     plainTextContent,
+    senderDisplayName,
+    replyToEmail: organizationContactEmail,
   })
 }
 

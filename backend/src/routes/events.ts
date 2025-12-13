@@ -1621,7 +1621,7 @@ router.post(
       // Get event details including donation code and organization
       const result = await dbQuery(
         `SELECT e.name, e.donation_code, e.donation_code_enabled, e.access_code,
-                o.name as organization_name
+                o.name as organization_name, o.contact_email as organization_contact_email
          FROM auction_events e
          LEFT JOIN organizations o ON e.organization_id = o.id
          WHERE e.id = @eventId`,
@@ -1666,6 +1666,7 @@ router.post(
             accessCode: event.access_code,
             senderName,
             customMessage,
+            organizationContactEmail: event.organization_contact_email,
           })
           results.push({ email, success })
         } catch (emailError) {
