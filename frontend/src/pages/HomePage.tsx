@@ -7,6 +7,27 @@ import { useAuth } from '../auth/useAuth'
 
 type EventFilter = 'all' | 'live' | 'upcoming' | 'ended'
 
+function OurStory() {
+  return (
+    <div className="glass-section mb-6">
+      <div className="max-w-3xl mx-auto px-4 py-8 text-center">
+        <h2 className="font-display text-2xl md:text-3xl font-bold text-white mb-4">
+          Our Story
+        </h2>
+        <p className="text-white/70 leading-relaxed">
+          Very Good Auctions was born from a simple observation: running a charity auction shouldn't require
+          expensive software or technical expertise. We built this platform to help schools, churches, nonprofits,
+          and community groups raise more money with less hassle. Every feature was designed with real fundraisers
+          in mind—from mobile-friendly bidding to simple payment collection.
+        </p>
+        <p className="text-white/60 text-sm mt-4">
+          Made with care in Austin, Texas
+        </p>
+      </div>
+    </div>
+  )
+}
+
 function HowItWorks() {
   return (
     <div className="glass-section">
@@ -201,15 +222,17 @@ export default function HomePage() {
                   </div>
                 ))}
               </div>
-              {/* How It Works - shown below events */}
+              {/* Our Story & How It Works - shown below events */}
               <div className="mt-12">
+                <OurStory />
                 <HowItWorks />
               </div>
             </>
           ) : (
             <>
-              {/* How It Works - shown above empty state when no events */}
+              {/* Our Story & How It Works - shown above empty state when no events */}
               <div className="mb-8">
+                <OurStory />
                 <HowItWorks />
               </div>
               <div className="glass-section text-center py-16">
