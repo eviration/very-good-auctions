@@ -7,55 +7,43 @@ import { useAuth } from '../auth/useAuth'
 
 type EventFilter = 'all' | 'live' | 'upcoming' | 'ended'
 
-function PlatformStory() {
+function HowItWorks() {
   return (
-    <div className="glass-section bg-gradient-to-br from-purple-500/10 via-transparent to-pink-500/10">
-      <div className="max-w-3xl mx-auto text-center px-4 py-8">
-        <div className="inline-flex items-center gap-2 bg-gradient-to-r from-pink-500/20 to-purple-500/20 border border-pink-400/30 px-4 py-1.5 rounded-full mb-4">
-          <span className="text-xl text-pink-400">&#9829;</span>
-          <span className="font-semibold text-sm text-white">Our Story</span>
-        </div>
-
-        <h2 className="font-display text-2xl md:text-3xl font-bold text-white mb-4">
-          Built for the little guys
+    <div className="glass-section">
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        <h2 className="font-display text-2xl md:text-3xl font-bold text-white mb-8 text-center">
+          How It Works
         </h2>
 
-        <p className="text-white/70 font-medium leading-relaxed mb-4">
-          Very Good Auctions started when our small church wanted to run a silent auction fundraiser.
-          We tried the big auction platforms, but they were overwhelming&mdash;dozens of features we'd never use,
-          confusing dashboards, and fees that ate into our fundraising goals.
-        </p>
-
-        <p className="text-white/70 font-medium leading-relaxed mb-6">
-          So we built something simpler. A platform where volunteers can set up an auction in minutes,
-          donors can bid from their phones during the event, and every dollar raised goes further.
-          No complexity, no headaches&mdash;just a very good auction.
-        </p>
-
-        <div className="flex flex-wrap justify-center gap-6 text-sm">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-teal-500/30 border border-teal-400/40 rounded-full flex items-center justify-center">
-              <svg className="w-4 h-4 text-teal-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="text-center">
+            <div className="w-12 h-12 bg-sage/30 border border-sage/40 rounded-xl flex items-center justify-center mx-auto mb-4">
+              <span className="text-xl font-bold text-sage">1</span>
             </div>
-            <span className="font-semibold text-white">Simple setup</span>
+            <h3 className="font-semibold text-white mb-2">Create Your Auction</h3>
+            <p className="text-white/60 text-sm">
+              Set up your event in minutes. Add items, set prices, and customize your auction.
+            </p>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-pink-500/30 border border-pink-400/40 rounded-full flex items-center justify-center">
-              <svg className="w-4 h-4 text-pink-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-              </svg>
+
+          <div className="text-center">
+            <div className="w-12 h-12 bg-amber-500/30 border border-amber-400/40 rounded-xl flex items-center justify-center mx-auto mb-4">
+              <span className="text-xl font-bold text-amber-300">2</span>
             </div>
-            <span className="font-semibold text-white">Mobile-friendly bidding</span>
+            <h3 className="font-semibold text-white mb-2">Share With Bidders</h3>
+            <p className="text-white/60 text-sm">
+              Guests browse and bid from their phones. No app download required.
+            </p>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-purple-500/30 border border-purple-400/40 rounded-full flex items-center justify-center">
-              <svg className="w-4 h-4 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-              </svg>
+
+          <div className="text-center">
+            <div className="w-12 h-12 bg-teal-500/30 border border-teal-400/40 rounded-xl flex items-center justify-center mx-auto mb-4">
+              <span className="text-xl font-bold text-teal-300">3</span>
             </div>
-            <span className="font-semibold text-white">Made with love</span>
+            <h3 className="font-semibold text-white mb-2">Collect & Fulfill</h3>
+            <p className="text-white/60 text-sm">
+              Winners pay securely. You handle pickup or shipping your way.
+            </p>
           </div>
         </div>
       </div>
@@ -213,16 +201,16 @@ export default function HomePage() {
                   </div>
                 ))}
               </div>
-              {/* Platform Story - shown below events */}
+              {/* How It Works - shown below events */}
               <div className="mt-12">
-                <PlatformStory />
+                <HowItWorks />
               </div>
             </>
           ) : (
             <>
-              {/* Platform Story - shown above empty state when no events */}
+              {/* How It Works - shown above empty state when no events */}
               <div className="mb-8">
-                <PlatformStory />
+                <HowItWorks />
               </div>
               <div className="glass-section text-center py-16">
                 <div className="w-20 h-20 bg-gradient-to-br from-pink-500/30 to-purple-500/30 border border-pink-400/30 rounded-full flex items-center justify-center mx-auto mb-6 shadow-glass-glow-pink">
