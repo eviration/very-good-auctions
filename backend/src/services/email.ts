@@ -1914,9 +1914,7 @@ export async function sendDonationLinkEmail(params: {
     ? `${senderName} via ${organizationName} via VGA`
     : `${organizationName} via VGA`
 
-  const subject = senderName
-    ? `${senderName} invites you to donate to ${eventName}`
-    : `You're invited to donate to ${eventName}`
+  const subject = `${organizationName} invites you to donate to ${eventName}`
 
   const content = `
     <h2 style="margin: 0 0 20px 0; color: #1a1a1a; font-size: 20px; font-weight: 600;">
