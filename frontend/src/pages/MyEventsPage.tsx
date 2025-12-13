@@ -153,7 +153,7 @@ export default function MyEventsPage() {
               >
                 <div className="flex items-start gap-4">
                   {/* Event Thumbnail */}
-                  <div className="w-24 h-24 md:w-32 md:h-24 flex-shrink-0 rounded-lg overflow-hidden bg-white/10">
+                  <div className="w-20 h-20 md:w-24 md:h-20 flex-shrink-0 rounded-lg overflow-hidden bg-white/10">
                     {event.coverImageUrl ? (
                       <img
                         src={event.coverImageUrl}

@@ -196,7 +196,7 @@ export default function EventDetailPage() {
       <div className="glass-section overflow-hidden mb-8">
         {/* Banner Image */}
         {event.coverImageUrl && (
-          <div className="relative h-48 md:h-64 -m-8 mb-0 rounded-t-glass-xl overflow-hidden">
+          <div className="relative h-32 md:h-48 -m-8 mb-0 rounded-t-glass-xl overflow-hidden">
             <img
               src={event.coverImageUrl}
               alt={event.name}

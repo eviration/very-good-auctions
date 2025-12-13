@@ -840,7 +840,7 @@ export default function EventDashboardPage() {
       <div className="glass-section overflow-hidden mb-6">
         {/* Banner Image */}
         {event.coverImageUrl && (
-          <div className="relative h-32 md:h-40 -m-8 mb-0 rounded-t-glass-xl overflow-hidden">
+          <div className="relative h-24 md:h-32 -m-8 mb-0 rounded-t-glass-xl overflow-hidden">
             <img
               src={event.coverImageUrl}
               alt={event.name}
