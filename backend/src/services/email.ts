@@ -1886,6 +1886,106 @@ Log in to your dashboard to review, approve, or reject this submission.
 // UAT (User Acceptance Testing) Emails
 // =============================================
 
+// Donation link sharing email - sent to potential donors
+export async function sendDonationLinkEmail(params: {
+  recipientEmail: string
+  eventName: string
+  organizationName: string
+  donationUrl: string
+  accessCode?: string
+  senderName?: string
+  customMessage?: string
+}): Promise<boolean> {
+  const { recipientEmail, eventName, organizationName, donationUrl, accessCode, senderName, customMessage } = params
+
+  const subject = senderName
+    ? `${senderName} invites you to donate to ${eventName}`
+    : `You're invited to donate to ${eventName}`
+
+  const content = `
+    <h2 style="margin: 0 0 20px 0; color: #1a1a1a; font-size: 20px; font-weight: 600;">
+      Help Support ${organizationName}!
+    </h2>
+
+    <p style="margin: 0 0 20px 0; color: #4a4a4a; font-size: 16px; line-height: 1.6;">
+      ${senderName ? `<strong>${senderName}</strong> has invited you to donate an item to` : "You've been invited to donate an item to"} the <strong>${eventName}</strong> auction.
+    </p>
+
+    ${customMessage ? `
+    <div style="background-color: #f5f5f5; border-radius: 8px; padding: 20px; margin: 20px 0; border-left: 4px solid #5A7C6F;">
+      <p style="margin: 0; color: #4a4a4a; font-size: 14px; line-height: 1.6; white-space: pre-wrap;">${customMessage}</p>
+    </div>
+    ` : ''}
+
+    <div style="background-color: #f0f7f4; border-radius: 8px; padding: 20px; margin: 20px 0;">
+      <p style="margin: 0 0 10px 0; color: #4a4a4a; font-size: 14px;">
+        <strong>Event:</strong> ${eventName}
+      </p>
+      <p style="margin: 0 0 10px 0; color: #4a4a4a; font-size: 14px;">
+        <strong>Organization:</strong> ${organizationName}
+      </p>
+      ${accessCode ? `
+      <p style="margin: 0; color: #4a4a4a; font-size: 14px;">
+        <strong>Access Code:</strong> <span style="font-family: monospace; background: #e0e0e0; padding: 2px 8px; border-radius: 4px;">${accessCode}</span>
+      </p>
+      ` : ''}
+    </div>
+
+    <p style="margin: 0 0 30px 0; color: #4a4a4a; font-size: 16px; line-height: 1.6;">
+      Your donation helps ${organizationName} raise funds for their cause. Click below to submit an item for the auction.
+    </p>
+
+    <!-- CTA Button -->
+    <table role="presentation" style="width: 100%; border-collapse: collapse;">
+      <tr>
+        <td style="text-align: center; padding: 20px 0;">
+          <a href="${donationUrl}"
+             style="display: inline-block; background-color: #5A7C6F; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 6px; font-size: 16px; font-weight: 600;">
+            Donate an Item
+          </a>
+        </td>
+      </tr>
+    </table>
+
+    <p style="margin: 20px 0 0 0; color: #888888; font-size: 14px; line-height: 1.6;">
+      Thank you for considering a donation to support ${organizationName}!
+    </p>
+
+    <!-- Fallback link -->
+    <p style="margin: 20px 0 0 0; color: #888888; font-size: 12px; line-height: 1.6;">
+      If the button doesn't work, copy and paste this link into your browser:<br>
+      <a href="${donationUrl}" style="color: #5A7C6F; word-break: break-all;">${donationUrl}</a>
+    </p>
+  `
+
+  const plainTextContent = `
+Help Support ${organizationName}!
+
+${senderName ? `${senderName} has invited you to donate an item to` : "You've been invited to donate an item to"} the "${eventName}" auction.
+
+${customMessage ? `Message:\n${customMessage}\n` : ''}
+
+Event: ${eventName}
+Organization: ${organizationName}
+${accessCode ? `Access Code: ${accessCode}` : ''}
+
+Your donation helps ${organizationName} raise funds for their cause.
+
+Donate an item here: ${donationUrl}
+
+Thank you for considering a donation to support ${organizationName}!
+
+© ${new Date().getFullYear()} Very Good Auctions. All rights reserved.
+`
+
+  return sendEmail({
+    to: recipientEmail,
+    subject,
+    htmlContent: emailWrapper('Donation Invitation', content),
+    plainTextContent,
+  })
+}
+
 // UAT invitation email - sent to invite testers
 export async function sendUatInvitationEmail(params: {
   to: string

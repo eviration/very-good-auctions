@@ -1669,6 +1669,25 @@ class ApiClient {
     })
   }
 
+  async shareDonationLinkViaEmail(
+    eventIdOrSlug: string,
+    data: {
+      emails: string[]
+      customMessage?: string
+    }
+  ): Promise<{
+    success: boolean
+    message: string
+    results: Array<{ email: string; success: boolean; error?: string }>
+    totalSent: number
+    totalFailed: number
+  }> {
+    return this.request(`/events/${eventIdOrSlug}/donation-settings/share-via-email`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+  }
+
   // =====================================================
   // Submission Management (auth required)
   // =====================================================

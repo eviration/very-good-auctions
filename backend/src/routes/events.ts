@@ -12,6 +12,7 @@ import {
   processEventCancellation,
 } from '../services/platformFees.js'
 import { uploadToBlob, deleteImage } from '../services/storage.js'
+import { sendDonationLinkEmail } from '../services/email.js'
 
 const router = Router()
 
@@ -1577,6 +1578,116 @@ router.delete(
       )
 
       res.json({ success: true, message: 'Donation code deleted' })
+    } catch (error) {
+      next(error)
+    }
+  }
+)
+
+/**
+ * POST /api/events/:idOrSlug/donation-settings/share-via-email
+ * Send donation link invitation emails to multiple recipients.
+ * Requires event admin access.
+ */
+router.post(
+  '/:idOrSlug/donation-settings/share-via-email',
+  authenticate,
+  [
+    param('idOrSlug').notEmpty(),
+    body('emails').isArray({ min: 1, max: 50 }).withMessage('Must provide between 1 and 50 email addresses'),
+    body('emails.*').isEmail().withMessage('Invalid email address'),
+    body('customMessage').optional().isString().isLength({ max: 1000 }),
+  ],
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const errors = validationResult(req)
+      if (!errors.isEmpty()) {
+        throw badRequest('Validation failed', errors.mapped())
+      }
+
+      const eventId = await resolveEventId(req.params.idOrSlug)
+      if (!eventId) {
+        throw notFound('Event not found')
+      }
+
+      const userId = req.user!.id
+      const access = await checkEventAccess(eventId, userId)
+      if (!access) {
+        throw forbidden('You do not have access to this event')
+      }
+
+      const { emails, customMessage } = req.body
+
+      // Get event details including donation code and organization
+      const result = await dbQuery(
+        `SELECT e.name, e.donation_code, e.donation_code_enabled, e.access_code,
+                o.name as organization_name
+         FROM auction_events e
+         LEFT JOIN organizations o ON e.organization_id = o.id
+         WHERE e.id = @eventId`,
+        { eventId }
+      )
+
+      if (result.recordset.length === 0) {
+        throw notFound('Event not found')
+      }
+
+      const event = result.recordset[0]
+
+      // Check if donation code exists and is enabled
+      if (!event.donation_code) {
+        throw badRequest('No donation code has been generated for this event. Please generate one first.')
+      }
+
+      if (!event.donation_code_enabled) {
+        throw badRequest('Public donations are currently disabled for this event.')
+      }
+
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000'
+      const donationUrl = `${frontendUrl}/donate/${event.donation_code}`
+
+      // Get sender name
+      const userResult = await dbQuery(
+        'SELECT display_name FROM users WHERE id = @userId',
+        { userId }
+      )
+      const senderName = userResult.recordset[0]?.display_name || req.user!.name || req.user!.email
+
+      // Send emails to all recipients
+      const results: { email: string; success: boolean; error?: string }[] = []
+
+      for (const email of emails) {
+        try {
+          const success = await sendDonationLinkEmail({
+            recipientEmail: email,
+            eventName: event.name,
+            organizationName: event.organization_name || 'the organizer',
+            donationUrl,
+            accessCode: event.access_code,
+            senderName,
+            customMessage,
+          })
+          results.push({ email, success })
+        } catch (emailError) {
+          console.error(`Failed to send donation link email to ${email}:`, emailError)
+          results.push({
+            email,
+            success: false,
+            error: emailError instanceof Error ? emailError.message : 'Unknown error',
+          })
+        }
+      }
+
+      const successCount = results.filter((r) => r.success).length
+      const failCount = results.filter((r) => !r.success).length
+
+      res.json({
+        success: true,
+        message: `Sent ${successCount} email${successCount !== 1 ? 's' : ''} successfully${failCount > 0 ? `, ${failCount} failed` : ''}.`,
+        results,
+        totalSent: successCount,
+        totalFailed: failCount,
+      })
     } catch (error) {
       next(error)
     }

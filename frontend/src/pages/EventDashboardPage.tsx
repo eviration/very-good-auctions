@@ -165,6 +165,12 @@ export default function EventDashboardPage() {
   const [editItemImagesToDelete, setEditItemImagesToDelete] = useState<string[]>([])
   const editItemFileInputRef = useRef<HTMLInputElement>(null)
 
+  // Email sharing state
+  const [emailShareText, setEmailShareText] = useState('')
+  const [emailShareMessage, setEmailShareMessage] = useState('')
+  const [sendingEmails, setSendingEmails] = useState(false)
+  const [emailShareResult, setEmailShareResult] = useState<{ success: boolean; message: string } | null>(null)
+
   const fetchData = useCallback(async () => {
     if (!slug) return
 
@@ -732,6 +738,51 @@ export default function EventDashboardPage() {
       setTimeout(() => setSuccessMessage(null), 5000)
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Failed to update donation settings')
+    }
+  }
+
+  const handleShareDonationLinkViaEmail = async () => {
+    if (!event || !emailShareText.trim()) return
+
+    // Parse emails: split by commas, semicolons, spaces, or newlines
+    const emails = emailShareText
+      .split(/[,;\s\n]+/)
+      .map((e) => e.trim().toLowerCase())
+      .filter((e) => e.length > 0 && e.includes('@'))
+
+    if (emails.length === 0) {
+      setEmailShareResult({ success: false, message: 'Please enter at least one valid email address.' })
+      return
+    }
+
+    if (emails.length > 50) {
+      setEmailShareResult({ success: false, message: 'Maximum 50 email addresses allowed at once.' })
+      return
+    }
+
+    setSendingEmails(true)
+    setEmailShareResult(null)
+
+    try {
+      const result = await apiClient.shareDonationLinkViaEmail(event.id, {
+        emails,
+        customMessage: emailShareMessage.trim() || undefined,
+      })
+
+      setEmailShareResult({ success: true, message: result.message })
+      if (result.totalSent > 0) {
+        setEmailShareText('')
+        setEmailShareMessage('')
+        setSuccessMessage(`Sent ${result.totalSent} invitation email${result.totalSent !== 1 ? 's' : ''}!`)
+        setTimeout(() => setSuccessMessage(null), 5000)
+      }
+    } catch (err) {
+      setEmailShareResult({
+        success: false,
+        message: err instanceof Error ? err.message : 'Failed to send emails',
+      })
+    } finally {
+      setSendingEmails(false)
     }
   }
 
@@ -1356,6 +1407,58 @@ export default function EventDashboardPage() {
                     </button>
                   </div>
                   <p className="text-xs text-gray-500 mt-1">Donors can also enter this code manually at the donate page</p>
+                </div>
+
+                {/* Email Sharing Section */}
+                <div className="pt-4 border-t border-sage/20">
+                  <label className="block text-sm font-medium text-charcoal mb-1">Share via Email</label>
+                  <p className="text-xs text-gray-500 mb-2">
+                    Enter email addresses separated by commas, spaces, or new lines (max 50)
+                  </p>
+                  <textarea
+                    value={emailShareText}
+                    onChange={(e) => setEmailShareText(e.target.value)}
+                    placeholder="email1@example.com, email2@example.com..."
+                    rows={3}
+                    className="w-full px-4 py-2 border border-sage/30 rounded-lg bg-white text-sm resize-none mb-2"
+                  />
+                  <label className="block text-sm font-medium text-charcoal mb-1">Custom Message (optional)</label>
+                  <textarea
+                    value={emailShareMessage}
+                    onChange={(e) => setEmailShareMessage(e.target.value)}
+                    placeholder="Add a personal message to include in the invitation email..."
+                    rows={2}
+                    className="w-full px-4 py-2 border border-sage/30 rounded-lg bg-white text-sm resize-none mb-2"
+                  />
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={handleShareDonationLinkViaEmail}
+                      disabled={sendingEmails || !emailShareText.trim()}
+                      className="px-4 py-2 bg-sage text-white rounded-lg hover:bg-sage/90 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
+                    >
+                      {sendingEmails ? (
+                        <>
+                          <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                          </svg>
+                          Sending...
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                          </svg>
+                          Send Invitations
+                        </>
+                      )}
+                    </button>
+                    {emailShareResult && (
+                      <span className={`text-sm ${emailShareResult.success ? 'text-green-600' : 'text-red-600'}`}>
+                        {emailShareResult.message}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
