@@ -296,15 +296,30 @@ export default function OrganizationDashboardPage() {
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
       <div className="flex items-center justify-between mb-6">
-        <div>
-          <Link to={`/organizations/${slug}`} className="text-sage hover:underline">
-            &larr; Back to Public Page
-          </Link>
-          <h1 className="text-2xl font-bold text-white mt-2">{organization.name}</h1>
-          <p className="text-gray-500">
-            {organization.membership?.role === 'owner' ? 'Owner' :
-             organization.membership?.role === 'admin' ? 'Admin' : 'Member'}
-          </p>
+        <div className="flex items-center gap-4">
+          {organization.logoUrl ? (
+            <img
+              src={organization.logoUrl}
+              alt={organization.name}
+              className="w-16 h-16 rounded-lg object-cover"
+            />
+          ) : (
+            <div className="w-16 h-16 rounded-lg bg-sage/20 flex items-center justify-center">
+              <span className="text-2xl font-bold text-sage">
+                {organization.name.charAt(0)}
+              </span>
+            </div>
+          )}
+          <div>
+            <Link to={`/organizations/${slug}`} className="text-sage hover:underline text-sm">
+              &larr; Back to Public Page
+            </Link>
+            <h1 className="text-2xl font-bold text-white">{organization.name}</h1>
+            <p className="text-gray-500">
+              {organization.membership?.role === 'owner' ? 'Owner' :
+               organization.membership?.role === 'admin' ? 'Admin' : 'Member'}
+            </p>
+          </div>
         </div>
       </div>
 
