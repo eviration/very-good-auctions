@@ -1880,7 +1880,10 @@ export default function EventDashboardPage() {
         <div className="space-y-6">
           <div className="bg-white rounded-lg shadow-sm border border-sage/20 p-6">
             <div className="flex items-center justify-between mb-6">
+              <div>
               <h2 className="text-lg font-semibold text-white">Event Settings</h2>
+              <p className="text-sm text-gray-500">Edit any field below and click Save Changes to update</p>
+            </div>
               <div className="flex gap-2">
                 {hasSettingsChanges && (
                   <button
