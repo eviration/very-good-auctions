@@ -45,7 +45,7 @@ export default function EventCard({ event }: EventCardProps) {
           <img
             src={event.coverImageUrl}
             alt={event.name}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-purple-500/30 via-pink-500/20 to-blue-500/30 flex items-center justify-center">
