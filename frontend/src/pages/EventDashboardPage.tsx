@@ -1886,7 +1886,7 @@ export default function EventDashboardPage() {
                   <button
                     onClick={handleResetSettings}
                     disabled={saving}
-                    className="px-4 py-2 border border-sage/30 rounded-lg hover:bg-sage/10 text-white/70"
+                    className="px-4 py-2 border border-sage/30 rounded-lg hover:bg-sage/10 text-gray-600"
                   >
                     Reset
                   </button>
