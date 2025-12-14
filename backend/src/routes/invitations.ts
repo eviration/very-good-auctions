@@ -113,10 +113,9 @@ router.post(
         throw badRequest('Invitation has expired')
       }
 
-      // Check email matches (case insensitive)
-      if (invitation.email.toLowerCase() !== userEmail.toLowerCase()) {
-        throw badRequest('This invitation was sent to a different email address')
-      }
+      // Note: We no longer require email to match - having the secret token is
+      // proof they received the invitation. This allows users to sign in with
+      // a different provider (e.g., Google) than the email the invite was sent to.
 
       // Check if user is already a member
       const existingMember = await dbQuery(
@@ -181,7 +180,6 @@ router.post(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { token } = req.params
-      const userEmail = req.user!.email
 
       // Get invitation
       const inviteResult = await dbQuery(
@@ -195,10 +193,8 @@ router.post(
 
       const invitation = inviteResult.recordset[0]
 
-      // Check email matches
-      if (invitation.email.toLowerCase() !== userEmail.toLowerCase()) {
-        throw badRequest('This invitation was sent to a different email address')
-      }
+      // Note: We no longer require email to match - having the secret token is
+      // proof they received the invitation.
 
       // Mark as declined
       await dbQuery(
