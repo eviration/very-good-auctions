@@ -185,7 +185,16 @@ export default function OrganizationDashboardPage() {
 
     setSaving(true)
     try {
-      await apiClient.updateOrganization(organization.id, editData)
+      // Clean up empty strings - convert to undefined so they're not sent
+      // This prevents validation errors for optional URL/email fields
+      const cleanedData: UpdateOrganizationRequest = {
+        ...editData,
+        websiteUrl: editData.websiteUrl?.trim() || undefined,
+        contactEmail: editData.contactEmail?.trim() || undefined,
+        contactPhone: editData.contactPhone?.trim() || undefined,
+        description: editData.description?.trim() || undefined,
+      }
+      await apiClient.updateOrganization(organization.id, cleanedData)
       // Refresh org data
       const org = await apiClient.getOrganization(slug!)
       setOrganization(org)
