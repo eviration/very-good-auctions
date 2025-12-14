@@ -124,7 +124,18 @@ export default function CreateOrganizationPage() {
     setError(null)
 
     try {
-      const org = await apiClient.createOrganization(formData)
+      // Clean up empty strings - convert to undefined so they're not sent
+      // This prevents validation errors for optional URL/email fields
+      const cleanedData: CreateOrganizationRequest = {
+        name: formData.name,
+        orgType: formData.orgType,
+        contactEmail: formData.contactEmail,
+        description: formData.description?.trim() || undefined,
+        contactPhone: formData.contactPhone?.trim() || undefined,
+        websiteUrl: formData.websiteUrl?.trim() || undefined,
+        taxId: formData.taxId?.trim() || undefined,
+      }
+      const org = await apiClient.createOrganization(cleanedData)
 
       if (logoFile) {
         try {
