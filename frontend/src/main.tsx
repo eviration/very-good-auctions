@@ -18,7 +18,13 @@ msalInstance.initialize().then(async () => {
     const response = await msalInstance.handleRedirectPromise()
     if (response) {
       console.log('MSAL redirect handled successfully in main.tsx')
-      // The user is now authenticated - the app will render with the account
+      // Navigate to the return URL if we're on the callback page
+      const returnUrl = sessionStorage.getItem('returnUrl')
+      if (returnUrl && window.location.pathname === '/auth/callback') {
+        sessionStorage.removeItem('returnUrl')
+        window.location.replace(returnUrl)
+        return // Don't render the app yet, we're navigating away
+      }
     }
   } catch (error) {
     console.error('Error handling MSAL redirect:', error)
