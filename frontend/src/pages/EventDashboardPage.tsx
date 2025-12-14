@@ -114,7 +114,6 @@ export default function EventDashboardPage() {
   const [showResubmitModal, setShowResubmitModal] = useState<string | null>(null)
   const [resubmitReason, setResubmitReason] = useState('')
 
-  const [editMode, setEditMode] = useState(false)
   const [editData, setEditData] = useState<UpdateEventRequest>({})
   const [saving, setSaving] = useState(false)
 
@@ -198,6 +197,31 @@ export default function EventDashboardPage() {
   useEffect(() => {
     fetchData()
   }, [fetchData])
+
+  // Initialize editData when event loads
+  useEffect(() => {
+    if (event) {
+      setEditData({
+        name: event.name,
+        description: event.description || '',
+      })
+    }
+  }, [event])
+
+  // Check if any settings have changed
+  const hasSettingsChanges = event ? (
+    editData.name !== event.name ||
+    editData.description !== (event.description || '')
+  ) : false
+
+  const handleResetSettings = () => {
+    if (event) {
+      setEditData({
+        name: event.name,
+        description: event.description || '',
+      })
+    }
+  }
 
   const handlePublish = async () => {
     if (!event) return
@@ -506,8 +530,8 @@ export default function EventDashboardPage() {
     try {
       const updated = await apiClient.updateEvent(event.id, editData)
       setEvent(updated)
-      setEditMode(false)
-      setEditData({})
+      setSuccessMessage('Settings saved successfully')
+      setTimeout(() => setSuccessMessage(null), 5000)
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Failed to save changes')
     } finally {
@@ -1857,74 +1881,46 @@ export default function EventDashboardPage() {
           <div className="bg-white rounded-lg shadow-sm border border-sage/20 p-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-semibold text-white">Event Settings</h2>
-              {!editMode ? (
-                <button
-                  onClick={() => {
-                    setEditMode(true)
-                    setEditData({
-                      name: event.name,
-                      description: event.description,
-                    })
-                  }}
-                  className="text-sage hover:underline"
-                >
-                  Edit
-                </button>
-              ) : (
-                <div className="flex gap-2">
+              <div className="flex gap-2">
+                {hasSettingsChanges && (
                   <button
-                    onClick={() => {
-                      setEditMode(false)
-                      setEditData({})
-                    }}
-                    className="px-4 py-2 border border-sage/30 rounded-lg hover:bg-sage/10"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleSaveSettings}
+                    onClick={handleResetSettings}
                     disabled={saving}
-                    className="bg-sage text-white px-4 py-2 rounded-lg hover:bg-sage/90 disabled:opacity-50"
+                    className="px-4 py-2 border border-sage/30 rounded-lg hover:bg-sage/10 text-white/70"
                   >
-                    {saving ? 'Saving...' : 'Save Changes'}
+                    Reset
                   </button>
-                </div>
-              )}
+                )}
+                <button
+                  onClick={handleSaveSettings}
+                  disabled={saving || !hasSettingsChanges}
+                  className="bg-sage text-white px-4 py-2 rounded-lg hover:bg-sage/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {saving ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
             </div>
 
-            {editMode ? (
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-white mb-1">Name</label>
-                  <input
-                    type="text"
-                    value={editData.name || ''}
-                    onChange={(e) => setEditData((prev) => ({ ...prev, name: e.target.value }))}
-                    className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-sage/50"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-white mb-1">Description</label>
-                  <textarea
-                    rows={4}
-                    value={editData.description || ''}
-                    onChange={(e) => setEditData((prev) => ({ ...prev, description: e.target.value }))}
-                    className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-sage/50"
-                  />
-                </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-white mb-1">Name</label>
+                <input
+                  type="text"
+                  value={editData.name || ''}
+                  onChange={(e) => setEditData((prev) => ({ ...prev, name: e.target.value }))}
+                  className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-sage/50"
+                />
               </div>
-            ) : (
-              <dl className="space-y-4">
-                <div>
-                  <dt className="text-sm text-gray-500">Name</dt>
-                  <dd className="font-medium text-white">{event.name}</dd>
-                </div>
-                <div>
-                  <dt className="text-sm text-gray-500">Description</dt>
-                  <dd className="text-white">{event.description || '-'}</dd>
-                </div>
-              </dl>
-            )}
+              <div>
+                <label className="block text-sm font-medium text-white mb-1">Description</label>
+                <textarea
+                  rows={4}
+                  value={editData.description || ''}
+                  onChange={(e) => setEditData((prev) => ({ ...prev, description: e.target.value }))}
+                  className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-sage/50"
+                />
+              </div>
+            </div>
           </div>
 
           {/* Cover Image Section */}

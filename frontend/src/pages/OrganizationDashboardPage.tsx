@@ -24,10 +24,31 @@ export default function OrganizationDashboardPage() {
   const [inviteRole, setInviteRole] = useState<'admin' | 'member'>('member')
   const [inviting, setInviting] = useState(false)
 
-  const [editMode, setEditMode] = useState(false)
   const [editData, setEditData] = useState<UpdateOrganizationRequest>({})
   const [saving, setSaving] = useState(false)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
+
+  // Initialize editData when organization loads
+  useEffect(() => {
+    if (organization) {
+      setEditData({
+        name: organization.name,
+        description: organization.description || '',
+        contactEmail: organization.contactEmail || '',
+        contactPhone: organization.contactPhone || '',
+        websiteUrl: organization.websiteUrl || '',
+      })
+    }
+  }, [organization])
+
+  // Check if any settings have changed
+  const hasSettingsChanges = organization ? (
+    editData.name !== organization.name ||
+    editData.description !== (organization.description || '') ||
+    editData.contactEmail !== (organization.contactEmail || '') ||
+    editData.contactPhone !== (organization.contactPhone || '') ||
+    editData.websiteUrl !== (organization.websiteUrl || '')
+  ) : false
 
   // Logo upload state
   const [logoFile, setLogoFile] = useState<File | null>(null)
@@ -168,12 +189,24 @@ export default function OrganizationDashboardPage() {
       // Refresh org data
       const org = await apiClient.getOrganization(slug!)
       setOrganization(org)
-      setEditMode(false)
-      setEditData({})
+      setSuccessMessage('Settings saved successfully')
+      setTimeout(() => setSuccessMessage(null), 5000)
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Failed to save changes')
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handleResetSettings = () => {
+    if (organization) {
+      setEditData({
+        name: organization.name,
+        description: organization.description || '',
+        contactEmail: organization.contactEmail || '',
+        contactPhone: organization.contactPhone || '',
+        websiteUrl: organization.websiteUrl || '',
+      })
     }
   }
 
@@ -590,42 +623,24 @@ export default function OrganizationDashboardPage() {
         <div className="bg-white rounded-lg shadow-sm border border-sage/20 p-6">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-lg font-semibold text-white">Organization Settings</h2>
-            {!editMode ? (
-              <button
-                onClick={() => {
-                  setEditMode(true)
-                  setEditData({
-                    name: organization.name,
-                    description: organization.description,
-                    contactEmail: organization.contactEmail,
-                    contactPhone: organization.contactPhone,
-                    websiteUrl: organization.websiteUrl,
-                  })
-                }}
-                className="text-sage hover:underline"
-              >
-                Edit
-              </button>
-            ) : (
-              <div className="flex gap-2">
+            <div className="flex gap-2">
+              {hasSettingsChanges && (
                 <button
-                  onClick={() => {
-                    setEditMode(false)
-                    setEditData({})
-                  }}
-                  className="px-4 py-2 border border-sage/30 rounded-lg hover:bg-sage/10"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSaveSettings}
+                  onClick={handleResetSettings}
                   disabled={saving}
-                  className="bg-sage text-white px-4 py-2 rounded-lg hover:bg-sage/90 disabled:opacity-50"
+                  className="px-4 py-2 border border-sage/30 rounded-lg hover:bg-sage/10 text-white/70"
                 >
-                  {saving ? 'Saving...' : 'Save Changes'}
+                  Reset
                 </button>
-              </div>
-            )}
+              )}
+              <button
+                onClick={handleSaveSettings}
+                disabled={saving || !hasSettingsChanges}
+                className="bg-sage text-white px-4 py-2 rounded-lg hover:bg-sage/90 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {saving ? 'Saving...' : 'Save Changes'}
+              </button>
+            </div>
           </div>
 
           {/* Logo Upload Section */}
@@ -671,78 +686,53 @@ export default function OrganizationDashboardPage() {
             </div>
           </div>
 
-          {editMode ? (
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-white mb-1">Name</label>
-                <input
-                  type="text"
-                  value={editData.name || ''}
-                  onChange={(e) => setEditData((prev) => ({ ...prev, name: e.target.value }))}
-                  className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-sage/50"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-white mb-1">Description</label>
-                <textarea
-                  rows={4}
-                  value={editData.description || ''}
-                  onChange={(e) => setEditData((prev) => ({ ...prev, description: e.target.value }))}
-                  className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-sage/50"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-white mb-1">Contact Email</label>
-                <input
-                  type="email"
-                  value={editData.contactEmail || ''}
-                  onChange={(e) => setEditData((prev) => ({ ...prev, contactEmail: e.target.value }))}
-                  className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-sage/50"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-white mb-1">Phone</label>
-                <input
-                  type="tel"
-                  value={editData.contactPhone || ''}
-                  onChange={(e) => setEditData((prev) => ({ ...prev, contactPhone: e.target.value }))}
-                  className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-sage/50"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-white mb-1">Website</label>
-                <input
-                  type="url"
-                  value={editData.websiteUrl || ''}
-                  onChange={(e) => setEditData((prev) => ({ ...prev, websiteUrl: e.target.value }))}
-                  className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-sage/50"
-                />
-              </div>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-white mb-1">Name</label>
+              <input
+                type="text"
+                value={editData.name || ''}
+                onChange={(e) => setEditData((prev) => ({ ...prev, name: e.target.value }))}
+                className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-sage/50"
+              />
             </div>
-          ) : (
-            <dl className="space-y-4">
-              <div>
-                <dt className="text-sm text-gray-500">Name</dt>
-                <dd className="font-medium text-white">{organization.name}</dd>
-              </div>
-              <div>
-                <dt className="text-sm text-gray-500">Description</dt>
-                <dd className="text-white">{organization.description || '-'}</dd>
-              </div>
-              <div>
-                <dt className="text-sm text-gray-500">Contact Email</dt>
-                <dd className="text-white">{organization.contactEmail || '-'}</dd>
-              </div>
-              <div>
-                <dt className="text-sm text-gray-500">Phone</dt>
-                <dd className="text-white">{organization.contactPhone || '-'}</dd>
-              </div>
-              <div>
-                <dt className="text-sm text-gray-500">Website</dt>
-                <dd className="text-white">{organization.websiteUrl || '-'}</dd>
-              </div>
-            </dl>
-          )}
+            <div>
+              <label className="block text-sm font-medium text-white mb-1">Description</label>
+              <textarea
+                rows={4}
+                value={editData.description || ''}
+                onChange={(e) => setEditData((prev) => ({ ...prev, description: e.target.value }))}
+                className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-sage/50"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-white mb-1">Contact Email</label>
+              <input
+                type="email"
+                value={editData.contactEmail || ''}
+                onChange={(e) => setEditData((prev) => ({ ...prev, contactEmail: e.target.value }))}
+                className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-sage/50"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-white mb-1">Phone</label>
+              <input
+                type="tel"
+                value={editData.contactPhone || ''}
+                onChange={(e) => setEditData((prev) => ({ ...prev, contactPhone: e.target.value }))}
+                className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-sage/50"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-white mb-1">Website</label>
+              <input
+                type="url"
+                value={editData.websiteUrl || ''}
+                onChange={(e) => setEditData((prev) => ({ ...prev, websiteUrl: e.target.value }))}
+                className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-sage/50"
+              />
+            </div>
+          </div>
 
           {isOwner && (
             <div className="mt-8 pt-6 border-t border-red-200">
