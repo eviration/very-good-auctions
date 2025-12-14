@@ -8,8 +8,9 @@ import { loginRequest } from '../auth/authConfig'
 export default function InvitationAcceptPage() {
   const { token } = useParams<{ token: string }>()
   const navigate = useNavigate()
-  const { instance, accounts } = useMsal()
+  const { instance, accounts, inProgress } = useMsal()
   const isAuthenticated = accounts.length > 0
+  const isAuthInProgress = inProgress !== 'none'
 
   const [invitation, setInvitation] = useState<OrganizationInvitation | null>(null)
   const [loading, setLoading] = useState(true)
@@ -36,10 +37,9 @@ export default function InvitationAcceptPage() {
   }, [token])
 
   const handleLogin = () => {
-    instance.loginRedirect({
-      ...loginRequest,
-      redirectUri: window.location.href,
-    })
+    // Store the invitation URL so we can return here after login
+    sessionStorage.setItem('returnUrl', window.location.pathname)
+    instance.loginRedirect(loginRequest)
   }
 
   const handleAccept = async () => {
@@ -180,7 +180,12 @@ export default function InvitationAcceptPage() {
         {/* Actions */}
         {!isExpired && !isAlreadyProcessed && (
           <div className="space-y-4">
-            {!isAuthenticated ? (
+            {isAuthInProgress ? (
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sage mx-auto mb-2"></div>
+                <p className="text-sm text-gray-500">Checking authentication...</p>
+              </div>
+            ) : !isAuthenticated ? (
               <div className="text-center">
                 <p className="text-sm text-gray-500 mb-4">
                   Sign in to accept this invitation
