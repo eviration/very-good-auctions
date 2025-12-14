@@ -647,7 +647,7 @@ export default function OrganizationDashboardPage() {
         <div className="bg-white rounded-lg shadow-sm border border-sage/20 p-6">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h2 className="text-lg font-semibold text-white">Organization Settings</h2>
+              <h2 className="text-lg font-semibold text-gray-900">Organization Settings</h2>
               <p className="text-sm text-gray-500">Edit any field below and click Save Changes to update</p>
             </div>
             <div className="flex gap-2">
@@ -672,7 +672,7 @@ export default function OrganizationDashboardPage() {
 
           {/* Logo Upload Section */}
           <div className="mb-8 pb-6 border-b border-sage/20">
-            <h3 className="text-sm font-medium text-white mb-3">Organization Logo</h3>
+            <h3 className="text-sm font-medium text-gray-700 mb-3">Organization Logo</h3>
             <div className="flex items-start gap-6">
               <ImageDropZone
                 currentImageUrl={organization.logoUrl}
@@ -715,7 +715,7 @@ export default function OrganizationDashboardPage() {
 
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-white mb-1">Name</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
               <input
                 type="text"
                 value={editData.name || ''}
@@ -724,7 +724,7 @@ export default function OrganizationDashboardPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-white mb-1">Description</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
               <textarea
                 rows={4}
                 value={editData.description || ''}
@@ -733,7 +733,7 @@ export default function OrganizationDashboardPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-white mb-1">Contact Email</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Contact Email</label>
               <input
                 type="email"
                 value={editData.contactEmail || ''}
@@ -742,7 +742,7 @@ export default function OrganizationDashboardPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-white mb-1">Phone</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
               <input
                 type="tel"
                 value={editData.contactPhone || ''}
@@ -751,7 +751,7 @@ export default function OrganizationDashboardPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-white mb-1">Website</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Website</label>
               <input
                 type="url"
                 value={editData.websiteUrl || ''}
