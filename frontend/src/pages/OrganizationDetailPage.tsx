@@ -117,7 +117,7 @@ export default function OrganizationDetailPage() {
               )}
             </div>
 
-            {organization.membership && (
+            {organization.membership && organization.membership.role !== 'member' && (
               <div className="mt-4">
                 <Link
                   to={`/organizations/${slug}/manage`}
