@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { apiClient } from '../services/api'
-import type { Organization, OrganizationType } from '../types'
+import type { Organization, OrganizationType, AuctionEvent } from '../types'
 
 const ORG_TYPE_LABELS: Record<OrganizationType, string> = {
   nonprofit: 'Nonprofit',
@@ -15,6 +15,7 @@ const ORG_TYPE_LABELS: Record<OrganizationType, string> = {
 export default function OrganizationDetailPage() {
   const { slug } = useParams<{ slug: string }>()
   const [organization, setOrganization] = useState<Organization | null>(null)
+  const [events, setEvents] = useState<AuctionEvent[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -26,6 +27,16 @@ export default function OrganizationDetailPage() {
         setLoading(true)
         const org = await apiClient.getOrganization(slug)
         setOrganization(org)
+
+        // Fetch events for this organization
+        const eventsResponse = await apiClient.getEvents({ organizationId: org.id })
+        // Filter to only upcoming/active/scheduled events (not ended, cancelled, or draft)
+        const now = new Date()
+        const upcomingEvents = eventsResponse.data.filter(event =>
+          event.status === 'active' || event.status === 'scheduled' ||
+          (event.status !== 'draft' && event.status !== 'cancelled' && new Date(event.endTime) > now)
+        )
+        setEvents(upcomingEvents)
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load organization')
       } finally {
@@ -84,7 +95,7 @@ export default function OrganizationDetailPage() {
 
           <div className="flex-1">
             <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold text-white">{organization.name}</h1>
+              <h1 className="text-2xl font-bold text-gray-900">{organization.name}</h1>
               {organization.status === 'verified' && (
                 <span className="text-sage flex items-center gap-1" title="Verified Organization">
                   <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
@@ -155,15 +166,67 @@ export default function OrganizationDetailPage() {
         </div>
       </div>
 
-      {/* Events Section - Placeholder for Sprint 7 */}
+      {/* Events Section */}
       <div className="mt-8">
         <h2 className="text-xl font-semibold text-white mb-4">Upcoming Events</h2>
-        <div className="bg-white rounded-lg shadow-sm border border-sage/20 p-8 text-center">
-          <p className="text-gray-500">No upcoming events</p>
-          <p className="text-sm text-gray-400 mt-2">
-            Check back soon for fundraiser auctions from this organization
-          </p>
-        </div>
+        {events.length > 0 ? (
+          <div className="space-y-4">
+            {events.map(event => (
+              <Link
+                key={event.id}
+                to={`/events/${event.slug}`}
+                className="block bg-white rounded-lg shadow-sm border border-sage/20 p-4 hover:shadow-md transition-shadow"
+              >
+                <div className="flex gap-4">
+                  {event.coverImageUrl && (
+                    <img
+                      src={event.coverImageUrl}
+                      alt={event.name}
+                      className="w-24 h-24 rounded-lg object-cover"
+                    />
+                  )}
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-gray-900">{event.name}</h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      {new Date(event.startTime).toLocaleDateString('en-US', {
+                        month: 'long',
+                        day: 'numeric',
+                        year: 'numeric'
+                      })}
+                      {' - '}
+                      {new Date(event.endTime).toLocaleDateString('en-US', {
+                        month: 'long',
+                        day: 'numeric',
+                        year: 'numeric'
+                      })}
+                    </p>
+                    {event.description && (
+                      <p className="text-sm text-gray-500 mt-2 line-clamp-2">
+                        {event.description}
+                      </p>
+                    )}
+                    <span className={`inline-block mt-2 text-xs px-2 py-1 rounded-full ${
+                      event.status === 'active'
+                        ? 'bg-green-100 text-green-700'
+                        : event.status === 'scheduled'
+                        ? 'bg-blue-100 text-blue-700'
+                        : 'bg-gray-100 text-gray-600'
+                    }`}>
+                      {event.status === 'active' ? 'Live Now' : event.status === 'scheduled' ? 'Upcoming' : event.status.charAt(0).toUpperCase() + event.status.slice(1)}
+                    </span>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div className="bg-white rounded-lg shadow-sm border border-sage/20 p-8 text-center">
+            <p className="text-gray-500">No upcoming events</p>
+            <p className="text-sm text-gray-400 mt-2">
+              Check back soon for fundraiser auctions from this organization
+            </p>
+          </div>
+        )}
       </div>
     </div>
   )
