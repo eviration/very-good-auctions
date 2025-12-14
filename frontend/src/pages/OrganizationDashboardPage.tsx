@@ -570,11 +570,11 @@ export default function OrganizationDashboardPage() {
             <table className="w-full">
               <thead className="bg-sage/10">
                 <tr>
-                  <th className="text-left px-6 py-3 text-sm font-medium text-white">Member</th>
-                  <th className="text-left px-6 py-3 text-sm font-medium text-white">Role</th>
-                  <th className="text-left px-6 py-3 text-sm font-medium text-white">Joined</th>
+                  <th className="text-left px-6 py-3 text-sm font-medium text-gray-700">Member</th>
+                  <th className="text-left px-6 py-3 text-sm font-medium text-gray-700">Role</th>
+                  <th className="text-left px-6 py-3 text-sm font-medium text-gray-700">Joined</th>
                   {canManageMembers && (
-                    <th className="text-right px-6 py-3 text-sm font-medium text-white">Actions</th>
+                    <th className="text-right px-6 py-3 text-sm font-medium text-gray-700">Actions</th>
                   )}
                 </tr>
               </thead>
@@ -582,7 +582,7 @@ export default function OrganizationDashboardPage() {
                 {members.map((member) => (
                   <tr key={member.id}>
                     <td className="px-6 py-4">
-                      <div className="font-medium text-white">{member.displayName}</div>
+                      <div className="font-medium text-gray-900">{member.displayName}</div>
                       <div className="text-sm text-gray-500">{member.email}</div>
                     </td>
                     <td className="px-6 py-4">
