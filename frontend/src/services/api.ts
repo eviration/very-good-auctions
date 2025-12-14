@@ -46,25 +46,32 @@ class ApiClient {
 
   private async request<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit & { skipAuth?: boolean } = {}
   ): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`
-    
+    const { skipAuth, ...fetchOptions } = options
+
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      ...(options.headers as Record<string, string>),
+      ...(fetchOptions.headers as Record<string, string>),
     }
 
-    // Add auth token if available
-    if (this.getAccessToken) {
-      const token = await this.getAccessToken()
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`
+    // Add auth token if available and not explicitly skipped
+    if (this.getAccessToken && !skipAuth) {
+      try {
+        const token = await this.getAccessToken()
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`
+        }
+      } catch (error) {
+        // If token acquisition fails, continue without auth for public endpoints
+        // The backend will return 401 if auth is actually required
+        console.log('Token acquisition failed, continuing without auth:', error)
       }
     }
 
     const response = await fetch(url, {
-      ...options,
+      ...fetchOptions,
       headers,
     })
 
@@ -459,9 +466,9 @@ class ApiClient {
     })
   }
 
-  // Public invitation endpoints
+  // Public invitation endpoints (skipAuth to avoid triggering login redirect)
   async getInvitation(token: string): Promise<OrganizationInvitation> {
-    return this.request(`/invitations/${token}`)
+    return this.request(`/invitations/${token}`, { skipAuth: true })
   }
 
   async acceptInvitation(token: string): Promise<{ organization: { id: string; name: string } }> {
